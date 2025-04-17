@@ -6,9 +6,11 @@
 Welcome to pyco2stats's documentation!
 ======================================
 
+
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
+
 
 Indices and tables
 ==================
