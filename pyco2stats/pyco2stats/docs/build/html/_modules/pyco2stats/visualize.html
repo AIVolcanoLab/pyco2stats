@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>pyco2stats.visualize &mdash; pyco2stats 0.1.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/sphinx_highlight.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            pyco2stats
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html">pyco2stats</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html#module-pyco2stats.gaussian_mixtures">pyco2stats Modules</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">pyco2stats</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">pyco2stats.visualize</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for pyco2stats.visualize</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">scipy.stats</span> <span class="kn">import</span> <span class="n">norm</span>
+<span class="kn">from</span> <span class="nn">.sinclair</span> <span class="kn">import</span> <span class="n">Sinclair</span>
+<span class="kn">from</span> <span class="nn">.gaussian_mixtures</span> <span class="kn">import</span> <span class="n">GMM</span>
+
+<div class="viewcode-block" id="Visualize"><a class="viewcode-back" href="../../modules.html#pyco2stats.visualize.Visualize">[docs]</a><span class="k">class</span> <span class="nc">Visualize</span><span class="p">:</span>
+    
+<div class="viewcode-block" id="Visualize.pp_raw_data"><a class="viewcode-back" href="../../modules.html#pyco2stats.visualize.Visualize.pp_raw_data">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">pp_raw_data</span><span class="p">(</span><span class="n">my_data</span><span class="p">,</span> <span class="n">ax</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Plot the raw probability plot plot data on the given Axes object.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        my_data : array-like</span>
+<span class="sd">            The input data to be plotted in the QQ plot.</span>
+<span class="sd">        ax : matplotlib.axes.Axes</span>
+<span class="sd">            The matplotlib Axes object where the QQ plot will be drawn.</span>
+<span class="sd">        **kwargs :</span>
+<span class="sd">            Additional keyword arguments passed to the scatter plot function.</span>
+<span class="sd">        </span>
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Get the theoretical quantiles and sorted data values</span>
+        <span class="n">osm</span><span class="p">,</span> <span class="n">osr</span> <span class="o">=</span> <span class="n">Sinclair</span><span class="o">.</span><span class="n">get_raw_data</span><span class="p">(</span><span class="n">my_data</span><span class="p">)</span>
+        
+        <span class="c1"># Scatter plot of theoretical quantiles vs. ordered data values</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">scatter</span><span class="p">(</span><span class="n">osm</span><span class="p">,</span> <span class="n">osr</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Visualize.pp_combined_population"><a class="viewcode-back" href="../../modules.html#pyco2stats.visualize.Visualize.pp_combined_population">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">pp_combined_population</span><span class="p">(</span><span class="n">meds</span><span class="p">,</span> <span class="n">stds</span><span class="p">,</span> <span class="n">fds</span><span class="p">,</span> <span class="n">mminy</span><span class="p">,</span> <span class="n">mmaxy</span><span class="p">,</span> <span class="n">ax</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Plot combined Gaussian mixture distribution on the provided Axes object.</span>
+<span class="sd">        </span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        meds : list or array</span>
+<span class="sd">            Means for each Gaussian component.</span>
+<span class="sd">        stds : list or array</span>
+<span class="sd">            Standard deviations for each Gaussian component.</span>
+<span class="sd">        fds : list or array</span>
+<span class="sd">            Weights (relative importance) for each Gaussian component.</span>
+<span class="sd">        mminy : float</span>
+<span class="sd">            Minimum value for generating ylon values.</span>
+<span class="sd">        mmaxy : float</span>
+<span class="sd">            Maximum value for generating ylon values.</span>
+<span class="sd">        ax : matplotlib.axes.Axes</span>
+<span class="sd">            The matplotlib Axes object where the plot will be drawn.</span>
+<span class="sd">        **kwargs :</span>
+<span class="sd">            Additional keyword arguments passed to the plot function.</span>
+<span class="sd">        </span>
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Calculate the sigma values and ylon values for the combined population</span>
+        <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">Sinclair</span><span class="o">.</span><span class="n">calculate_combined_population</span><span class="p">(</span><span class="n">meds</span><span class="p">,</span> <span class="n">stds</span><span class="p">,</span> <span class="n">fds</span><span class="p">,</span> <span class="n">mminy</span><span class="p">,</span> <span class="n">mmaxy</span><span class="p">)</span>
+        
+        <span class="c1"># Plot the calculated sigma values against ylon values</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+        
+<div class="viewcode-block" id="Visualize.pp_single_populations"><a class="viewcode-back" href="../../modules.html#pyco2stats.visualize.Visualize.pp_single_populations">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">pp_single_populations</span><span class="p">(</span><span class="n">meds</span><span class="p">,</span> <span class="n">stds</span><span class="p">,</span> <span class="n">mminy</span><span class="p">,</span> <span class="n">mmaxy</span><span class="p">,</span> <span class="n">ax</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Plot the individual Gaussian population curves on the provided Axes object.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        meds : List or array </span>
+<span class="sd">            Means for each Gaussian component.</span>
+<span class="sd">        stds : List or array</span>
+<span class="sd">            Standard deviations for each Gaussian component.</span>
+<span class="sd">        mminy : float</span>
+<span class="sd">            Minimum value for generating ylon values.</span>
+<span class="sd">        mmaxy : float</span>
+<span class="sd">            Maximum value for generating ylon values.</span>
+<span class="sd">        ax : matplotlib.axes.Axes</span>
+<span class="sd">            The Matplotlib Axes object where the curves will be plotted.</span>
+<span class="sd">        **kwargs :</span>
+<span class="sd">            Additional keyword arguments passed to the plot function for styling.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Initialize a counter for labeling each Gaussian component</span>
+        <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span>
+        
+        <span class="c1"># Loop through each Gaussian component defined by its mean (med) and standard deviation (std)</span>
+        <span class="k">for</span> <span class="n">med</span><span class="p">,</span> <span class="n">std</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">meds</span><span class="p">,</span> <span class="n">stds</span><span class="p">):</span>
+            <span class="c1"># Increment the counter to create a label for the current Gaussian component</span>
+            <span class="n">i</span> <span class="o">+=</span> <span class="mi">1</span>
+            
+            <span class="c1"># Calculate the transformed sigma values and corresponding ylon values for the current Gaussian component</span>
+            <span class="c1"># This is done by considering the current component as a single population with a weight of 1</span>
+            <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">Sinclair</span><span class="o">.</span><span class="n">calculate_combined_population</span><span class="p">([</span><span class="n">med</span><span class="p">],</span> <span class="p">[</span><span class="n">std</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">mminy</span><span class="p">,</span> <span class="n">mmaxy</span><span class="p">)</span>
+            
+            <span class="c1"># Plot the calculated values on the provided Axes object</span>
+            <span class="c1"># The **kwargs allows for additional styling options such as color and linestyle</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;Population &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="p">))</span></div>
+
+        <span class="c1"># Optionally, you might want to add a legend here to label each population curve</span>
+        <span class="c1"># ax.legend()  # Uncomment this line if you want to automatically add a legend</span>
+
+
+<div class="viewcode-block" id="Visualize.pp_add_percentiles"><a class="viewcode-back" href="../../modules.html#pyco2stats.visualize.Visualize.pp_add_percentiles">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">pp_add_percentiles</span><span class="p">(</span><span class="n">ax</span><span class="p">,</span> <span class="n">percentiles</span><span class="o">=</span><span class="s1">&#39;full&#39;</span><span class="p">,</span> <span class="n">label_size</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Plot vertical percentile lines on the provided Axes object and label them.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        ax : matplotlib.axes.Axes</span>
+<span class="sd">            The matplotlib Axes object where the percentiles will be plotted.</span>
+<span class="sd">        percentiles : string</span>
+<span class="sd">            The type of percentiles to plot (&#39;full&#39;, &#39;half&#39;, &#39;even&#39;, &#39;deciles&#39;).</span>
+<span class="sd">        label_size : int</span>
+<span class="sd">            Font size for the labels.</span>
+<span class="sd">        **kwargs:</span>
+<span class="sd">            Additional keyword arguments passed to the ax.axvline function.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">peri</span> <span class="o">=</span> <span class="p">[</span><span class="o">-</span><span class="mf">2.326</span><span class="p">,</span> <span class="o">-</span><span class="mf">2.055</span><span class="p">,</span> <span class="o">-</span><span class="mf">1.751</span><span class="p">,</span> <span class="o">-</span><span class="mf">1.555</span><span class="p">,</span> <span class="o">-</span><span class="mf">1.405</span><span class="p">,</span> <span class="o">-</span><span class="mf">1.282</span><span class="p">,</span> <span class="o">-</span><span class="mf">1.037</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.842</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.675</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.525</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.385</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.255</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span>
+                <span class="mf">0.255</span><span class="p">,</span> <span class="mf">0.385</span><span class="p">,</span> <span class="mf">0.525</span><span class="p">,</span> <span class="mf">0.675</span><span class="p">,</span> <span class="mf">0.842</span><span class="p">,</span> <span class="mf">1.037</span><span class="p">,</span> <span class="mf">1.282</span><span class="p">,</span> <span class="mf">1.405</span><span class="p">,</span> <span class="mf">1.555</span><span class="p">,</span> <span class="mf">1.751</span><span class="p">,</span> <span class="mf">2.055</span><span class="p">,</span> <span class="mf">2.326</span><span class="p">]</span>
+        <span class="n">perilab</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">15</span><span class="p">,</span> <span class="mi">20</span><span class="p">,</span> <span class="mi">25</span><span class="p">,</span> <span class="mi">30</span><span class="p">,</span> <span class="mi">35</span><span class="p">,</span> <span class="mi">40</span><span class="p">,</span> <span class="mi">50</span><span class="p">,</span> <span class="mi">60</span><span class="p">,</span> <span class="mi">65</span><span class="p">,</span> <span class="mi">70</span><span class="p">,</span> <span class="mi">75</span><span class="p">,</span> <span class="mi">80</span><span class="p">,</span> <span class="mi">85</span><span class="p">,</span> <span class="mi">90</span><span class="p">,</span> <span class="mi">92</span><span class="p">,</span> <span class="mi">94</span><span class="p">,</span> <span class="mi">96</span><span class="p">,</span> <span class="mi">98</span><span class="p">,</span> <span class="mi">99</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="n">percentiles</span> <span class="o">==</span> <span class="s1">&#39;half&#39;</span><span class="p">:</span>
+            <span class="n">peri</span> <span class="o">=</span> <span class="p">[</span><span class="o">-</span><span class="mf">2.326</span><span class="p">,</span> <span class="o">-</span><span class="mf">1.751</span><span class="p">,</span> <span class="o">-</span><span class="mf">1.405</span><span class="p">,</span> <span class="o">-</span><span class="mf">1.037</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.675</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.385</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mf">0.255</span><span class="p">,</span> <span class="mf">0.525</span><span class="p">,</span> <span class="mf">0.842</span><span class="p">,</span> <span class="mf">1.282</span><span class="p">,</span> <span class="mf">1.555</span><span class="p">,</span> <span class="mf">2.055</span><span class="p">]</span>
+            <span class="n">perilab</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="mi">15</span><span class="p">,</span> <span class="mi">25</span><span class="p">,</span> <span class="mi">35</span><span class="p">,</span> <span class="mi">50</span><span class="p">,</span> <span class="mi">65</span><span class="p">,</span> <span class="mi">75</span><span class="p">,</span> <span class="mi">85</span><span class="p">,</span> <span class="mi">92</span><span class="p">,</span> <span class="mi">96</span><span class="p">,</span> <span class="mi">99</span><span class="p">]</span>
+        <span class="k">elif</span> <span class="n">percentiles</span> <span class="o">==</span> <span class="s1">&#39;even&#39;</span><span class="p">:</span>
+            <span class="n">peri</span> <span class="o">=</span> <span class="p">[</span><span class="o">-</span><span class="mf">2.055</span><span class="p">,</span> <span class="o">-</span><span class="mf">1.751</span><span class="p">,</span> <span class="o">-</span><span class="mf">1.555</span><span class="p">,</span> <span class="o">-</span><span class="mf">1.405</span><span class="p">,</span> <span class="o">-</span><span class="mf">1.282</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.842</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.525</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.255</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mf">0.255</span><span class="p">,</span> <span class="mf">0.525</span><span class="p">,</span> <span class="mf">0.842</span><span class="p">,</span> <span class="mf">1.282</span><span class="p">,</span> <span class="mf">1.405</span><span class="p">,</span> <span class="mf">1.555</span><span class="p">,</span> <span class="mf">1.751</span><span class="p">,</span> <span class="mf">2.055</span><span class="p">]</span>
+            <span class="n">perilab</span> <span class="o">=</span> <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">20</span><span class="p">,</span> <span class="mi">30</span><span class="p">,</span> <span class="mi">40</span><span class="p">,</span> <span class="mi">50</span><span class="p">,</span> <span class="mi">60</span><span class="p">,</span> <span class="mi">70</span><span class="p">,</span> <span class="mi">80</span><span class="p">,</span> <span class="mi">90</span><span class="p">,</span> <span class="mi">92</span><span class="p">,</span> <span class="mi">94</span><span class="p">,</span> <span class="mi">96</span><span class="p">,</span> <span class="mi">98</span><span class="p">]</span>
+        <span class="k">elif</span> <span class="n">percentiles</span> <span class="o">==</span> <span class="s1">&#39;deciles&#39;</span><span class="p">:</span>
+            <span class="n">peri</span> <span class="o">=</span> <span class="p">[</span><span class="o">-</span><span class="mf">1.282</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.842</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.525</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.255</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mf">0.255</span><span class="p">,</span> <span class="mf">0.525</span><span class="p">,</span> <span class="mf">0.842</span><span class="p">,</span> <span class="mf">1.282</span><span class="p">]</span>
+            <span class="n">perilab</span> <span class="o">=</span> <span class="p">[</span><span class="mi">10</span><span class="p">,</span> <span class="mi">20</span><span class="p">,</span> <span class="mi">30</span><span class="p">,</span> <span class="mi">40</span><span class="p">,</span> <span class="mi">50</span><span class="p">,</span> <span class="mi">60</span><span class="p">,</span> <span class="mi">70</span><span class="p">,</span> <span class="mi">80</span><span class="p">,</span> <span class="mi">90</span><span class="p">]</span>
+
+        <span class="n">ax2</span> <span class="o">=</span> <span class="n">ax</span><span class="o">.</span><span class="n">twiny</span><span class="p">()</span>
+        <span class="n">ax2</span><span class="o">.</span><span class="n">set_xlim</span><span class="p">(</span><span class="n">ax</span><span class="o">.</span><span class="n">get_xlim</span><span class="p">())</span>
+        <span class="n">ax2</span><span class="o">.</span><span class="n">set_xticks</span><span class="p">(</span><span class="n">peri</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">percentiles</span> <span class="o">==</span> <span class="s1">&#39;full&#39;</span><span class="p">:</span>
+            <span class="n">labels</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">label</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">perilab</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">i</span> <span class="o">%</span> <span class="mi">2</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="n">labels</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="si">{</span><span class="n">label</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>  <span class="c1"># Move even indices up</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">labels</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">label</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>  <span class="c1"># Move odd indices down</span>
+            <span class="n">ax2</span><span class="o">.</span><span class="n">set_xticklabels</span><span class="p">(</span><span class="n">labels</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="n">label_size</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">ax2</span><span class="o">.</span><span class="n">set_xticklabels</span><span class="p">(</span><span class="n">perilab</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="n">label_size</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">my_line</span> <span class="ow">in</span> <span class="n">peri</span><span class="p">:</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">axvline</span><span class="p">(</span><span class="n">my_line</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>  <span class="c1"># Draw vertical lines at the specified percentiles</span></div>
+
+<div class="viewcode-block" id="Visualize.qq_plot"><a class="viewcode-back" href="../../modules.html#pyco2stats.visualize.Visualize.qq_plot">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">qq_plot</span><span class="p">(</span><span class="n">ax</span><span class="p">,</span> <span class="n">observed_data</span><span class="p">,</span> <span class="n">reference_population</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Plot vertical percentile lines on the provided Axes object and label them.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        ax : matplotlib.axes.Axes</span>
+<span class="sd">            The matplotlib Axes object where the percentiles will be plotted.</span>
+<span class="sd">        observed_data : array</span>
+<span class="sd">            The observation list/array to be plotted.</span>
+<span class="sd">        reference_population : array</span>
+<span class="sd">            The reference population to confront the observations to.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        
+        <span class="c1"># Sort both observed data and reference population</span>
+        <span class="n">observed_data_sorted</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">observed_data</span><span class="p">)</span>
+        <span class="n">reference_population_sorted</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">reference_population</span><span class="p">)</span>
+
+        <span class="c1"># Number of data points</span>
+        <span class="n">n</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">observed_data_sorted</span><span class="p">)</span>
+
+        <span class="c1"># Calculate the empirical percentiles for the observed data</span>
+        <span class="n">percentiles</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">100</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span>
+
+        <span class="c1"># Match the reference percentiles to the same empirical percentiles</span>
+        <span class="n">reference_percentiles</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">percentile</span><span class="p">(</span><span class="n">reference_population_sorted</span><span class="p">,</span> <span class="n">percentiles</span><span class="p">)</span>
+
+
+        <span class="c1"># Plot the observed data percentiles vs. reference population percentiles</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">observed_data_sorted</span><span class="p">,</span> <span class="n">reference_percentiles</span><span class="p">,</span> <span class="s1">&#39;o&#39;</span><span class="p">,</span> <span class="n">markersize</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;Observed Data vs. Reference Population&#39;</span><span class="p">)</span>
+
+        <span class="c1"># Plot the 45-degree line for reference</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">([</span><span class="n">observed_data_sorted</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">observed_data_sorted</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]],</span> <span class="p">[</span><span class="n">observed_data_sorted</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">observed_data_sorted</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]],</span> <span class="s1">&#39;r--&#39;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;45-degree Line&#39;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Visualize.plot_gmm_pdf"><a class="viewcode-back" href="../../modules.html#pyco2stats.visualize.Visualize.plot_gmm_pdf">[docs]</a>    <span class="k">def</span> <span class="nf">plot_gmm_pdf</span><span class="p">(</span><span class="n">ax</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">meds</span><span class="p">,</span> <span class="n">stds</span><span class="p">,</span> <span class="n">weights</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">pdf_plot_kwargs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">component_plot_kwargs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">hist_plot_kwargs</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Plot the Gaussian Mixture Model PDF and its components.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        ax : matplotlib.axes.Axes</span>
+<span class="sd">            The matplotlib Axes object where the percentiles will be plotted.</span>
+<span class="sd">        x : array</span>
+<span class="sd">            X values.</span>
+<span class="sd">        meds : list or array</span>
+<span class="sd">            Means of the Gaussian components.</span>
+<span class="sd">        stds : list or array</span>
+<span class="sd">            Standard deviations of the Gaussian components.</span>
+<span class="sd">        weights : list or array</span>
+<span class="sd">            Weights of the Gaussian components.</span>
+<span class="sd">        data : list or array</span>
+<span class="sd">            Optional raw data to plot as a histogram.</span>
+<span class="sd">        pdf_plot_kwargs : dict</span>
+<span class="sd">            Keyword arguments for the main GMM PDF plot.</span>
+<span class="sd">        component_plot_kwargs : dict</span>
+<span class="sd">            Keyword arguments for the individual component plots.</span>
+<span class="sd">        hist_plot_kwargs : dict</span>
+<span class="sd">            Keyword arguments for the histogram plot.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">pdf_plot_kwargs</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">pdf_plot_kwargs</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">if</span> <span class="n">component_plot_kwargs</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">component_plot_kwargs</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">if</span> <span class="n">hist_plot_kwargs</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">hist_plot_kwargs</span> <span class="o">=</span> <span class="p">{}</span>
+
+        <span class="c1"># Compute the Gaussian Mixture PDF</span>
+        <span class="n">pdf</span> <span class="o">=</span> <span class="n">GMM</span><span class="o">.</span><span class="n">gaussian_mixture_pdf</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">meds</span><span class="p">,</span> <span class="n">stds</span><span class="p">,</span> <span class="n">weights</span><span class="p">)</span>
+
+        <span class="c1"># Plot the Gaussian Mixture PDF</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">pdf</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;Gaussian Mixture PDF&#39;</span><span class="p">,</span> <span class="o">**</span><span class="n">pdf_plot_kwargs</span><span class="p">)</span>
+
+        <span class="c1"># Plot each Gaussian component</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="n">med</span><span class="p">,</span> <span class="n">std</span><span class="p">,</span> <span class="n">weight</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">meds</span><span class="p">,</span> <span class="n">stds</span><span class="p">,</span> <span class="n">weights</span><span class="p">)):</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">weight</span> <span class="o">*</span> <span class="n">norm</span><span class="o">.</span><span class="n">pdf</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">med</span><span class="p">,</span> <span class="n">std</span><span class="p">),</span> <span class="n">label</span><span class="o">=</span><span class="sa">f</span><span class="s1">&#39;Component </span><span class="si">{</span><span class="n">i</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">,</span> <span class="o">**</span><span class="n">component_plot_kwargs</span><span class="p">)</span>
+
+        <span class="c1"># Plot the histogram of the raw data if provided</span>
+        <span class="k">if</span> <span class="n">data</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">hist</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">bins</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span> <span class="n">density</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="o">**</span><span class="n">hist_plot_kwargs</span><span class="p">)</span>
+
+        <span class="n">ax</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span></div></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright .</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

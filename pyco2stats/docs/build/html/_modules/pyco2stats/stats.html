@@ -1,0 +1,1169 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>pyco2stats.stats &mdash; pyco2stats 0.1.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/sphinx_highlight.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            pyco2stats
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html">pyco2stats</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html#module-pyco2stats.gaussian_mixtures">pyco2stats Modules</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">pyco2stats</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">pyco2stats.stats</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for pyco2stats.stats</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">scipy.special</span> <span class="k">as</span> <span class="nn">sp</span>
+<span class="kn">import</span> <span class="nn">scipy.stats</span> <span class="k">as</span> <span class="nn">stats</span>
+<span class="kn">import</span> <span class="nn">statsmodels.api</span> <span class="k">as</span> <span class="nn">sm</span>
+
+<span class="kn">from</span> <span class="nn">scipy.stats.mstats</span> <span class="kn">import</span> <span class="n">scoreatpercentile</span> <span class="k">as</span> <span class="n">scipy_scoreatpercentile</span>
+<span class="kn">from</span> <span class="nn">scipy.stats.mstats</span> <span class="kn">import</span> <span class="n">trim</span> <span class="k">as</span> <span class="n">scipy_trim</span>
+<span class="kn">from</span> <span class="nn">scipy.stats</span> <span class="kn">import</span> <span class="n">trimboth</span> <span class="k">as</span> <span class="n">scipy_trimboth</span>
+<span class="kn">from</span> <span class="nn">scipy.stats.mstats</span> <span class="kn">import</span> <span class="n">trimtail</span> <span class="k">as</span> <span class="n">scipy_trimtail</span>
+<span class="kn">from</span> <span class="nn">scipy.stats</span> <span class="kn">import</span> <span class="n">tmean</span> <span class="k">as</span> <span class="n">scipy_tmean</span>
+<span class="kn">from</span> <span class="nn">scipy.stats.mstats</span> <span class="kn">import</span> <span class="n">trimmed_std</span> <span class="k">as</span> <span class="n">scipy_trimmed_std</span> 
+<span class="kn">from</span> <span class="nn">scipy.stats.mstats</span> <span class="kn">import</span> <span class="n">winsorize</span> <span class="k">as</span> <span class="n">scipy_winsorize</span>
+
+<span class="kn">from</span> <span class="nn">astropy.stats</span> <span class="kn">import</span> <span class="n">biweight_location</span> <span class="k">as</span> <span class="n">astropy_biweight_location</span>
+<span class="kn">from</span> <span class="nn">astropy.stats</span> <span class="kn">import</span> <span class="n">biweight_scale</span> <span class="k">as</span> <span class="n">astropy_biweight_scale</span>
+<span class="kn">from</span> <span class="nn">astropy.stats</span> <span class="kn">import</span> <span class="n">median_absolute_deviation</span> <span class="k">as</span> <span class="n">astropy_median_absolute_deviation</span>
+<span class="kn">from</span> <span class="nn">astropy.stats</span> <span class="kn">import</span> <span class="n">mad_std</span> <span class="k">as</span> <span class="n">astropy_mad_std</span>
+<span class="kn">from</span> <span class="nn">astropy.stats</span> <span class="kn">import</span> <span class="n">sigma_clip</span> <span class="k">as</span> <span class="n">astropy_sigma_clip</span>
+<span class="kn">from</span> <span class="nn">astropy.stats</span> <span class="kn">import</span> <span class="n">sigma_clipped_stats</span> <span class="k">as</span> <span class="n">astropy_sigma_clipped_stats</span>
+
+<div class="viewcode-block" id="Stats"><a class="viewcode-back" href="../../modules.html#pyco2stats.stats.Stats">[docs]</a><span class="k">class</span> <span class="nc">Stats</span><span class="p">:</span>
+<div class="viewcode-block" id="Stats.sample_from_pdf"><a class="viewcode-back" href="../../modules.html#pyco2stats.stats.Stats.sample_from_pdf">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">sample_from_pdf</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">pdf</span><span class="p">,</span> <span class="n">n_samples</span><span class="o">=</span><span class="mi">1000</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Sample data points from a given probability density function (PDF).</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        x : array</span>
+<span class="sd">            x values corresponding to the PDF.</span>
+<span class="sd">        pdf : array</span>
+<span class="sd">            PDF values corresponding to each x value.</span>
+<span class="sd">        n_samples : int</span>
+<span class="sd">            Number of samples to generate. Default is 1000.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        sampled_data: array</span>
+<span class="sd">            Array of sampled data points.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Ensure the PDF is normalized (sum equals 1)</span>
+        <span class="n">pdf</span> <span class="o">=</span> <span class="n">pdf</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">pdf</span><span class="p">)</span>
+
+        <span class="c1"># Step 1: Create the Cumulative Distribution Function (CDF) from the PDF</span>
+        <span class="n">cdf</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cumsum</span><span class="p">(</span><span class="n">pdf</span><span class="p">)</span>
+        
+        <span class="c1"># Step 2: Generate random values uniformly distributed between 0 and 1</span>
+        <span class="n">random_values</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="n">n_samples</span><span class="p">)</span>
+
+        <span class="c1"># Step 3: Use the CDF to map these random values to the corresponding x values</span>
+        <span class="c1"># Find the indices where the random values fit in the CDF</span>
+        <span class="n">sample_indices</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">searchsorted</span><span class="p">(</span><span class="n">cdf</span><span class="p">,</span> <span class="n">random_values</span><span class="p">)</span>
+
+        <span class="c1"># Get the x values corresponding to these indices</span>
+        <span class="n">sampled_data</span> <span class="o">=</span> <span class="n">x</span><span class="p">[</span><span class="n">sample_indices</span><span class="p">]</span>
+        
+        <span class="k">return</span> <span class="n">sampled_data</span></div>
+
+<div class="viewcode-block" id="Stats.mvue_lnorm_dist"><a class="viewcode-back" href="../../modules.html#pyco2stats.stats.Stats.mvue_lnorm_dist">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">mvue_lnorm_dist</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">confidence</span><span class="o">=</span><span class="mf">0.95</span><span class="p">,</span> <span class="n">transformed</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">sighel</span><span class="o">=</span><span class="s1">&#39;log&#39;</span><span class="p">,</span> <span class="n">M</span> <span class="o">=</span> <span class="mi">15</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Calculate the Minimum Variances Unbiased Estimator (MVUE) mean and confidence interval for log-normally distributed data using Sichel&#39;s function.</span>
+<span class="sd">        </span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        data : array-like</span>
+<span class="sd">            Log-normally distributed data.</span>
+<span class="sd">        confidence : float</span>
+<span class="sd">            Confidence level for the interval. Default is 0.95.</span>
+<span class="sd">        transformed : bool</span>
+<span class="sd">            if True, it assumes that data are ln transformed</span>
+<span class="sd">        sighel : string</span>
+<span class="sd">            if log, it computes the Sichel function in the logarithmic space. Default is &#39;log&#39;.</span>
+<span class="sd">        M : int</span>
+<span class="sd">            if sighel is not &#39;log&#39;this is the order up to which the Sichel function has to be computed. Default is 15.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        mvue_mean : float</span>
+<span class="sd">            MVUE mean.</span>
+<span class="sd">        mvue_ci_lower : float</span>
+<span class="sd">            MVUE lower limit of the confidence interval.</span>
+<span class="sd">        mvue_i_upper : float</span>
+<span class="sd">            MVUE upper limit of the confidence interval.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Step 1: Transform the data using the natural log if not already transformed</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">transformed</span><span class="p">:</span>
+            <span class="n">log_data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">log_data</span> <span class="o">=</span> <span class="n">data</span>
+
+        <span class="c1"># Step 2: Calculate the sample mean and variance of the log-transformed data</span>
+        <span class="n">n</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">log_data</span><span class="p">)</span>
+        <span class="n">sample_mean_log</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">log_data</span><span class="p">)</span>
+        <span class="n">sample_variance_log</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">var</span><span class="p">(</span><span class="n">log_data</span><span class="p">,</span> <span class="n">ddof</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>  <span class="c1"># Using unbiased estimator with ddof=1</span>
+
+        <span class="c1"># Step 3: Calculate Sichel&#39;s function ψ_n</span>
+        <span class="k">if</span> <span class="n">sighel</span> <span class="o">==</span> <span class="s1">&#39;log&#39;</span><span class="p">:</span>
+            <span class="n">psi_n</span> <span class="o">=</span> <span class="n">Stats</span><span class="o">.</span><span class="n">sichel_function_log</span><span class="p">(</span><span class="mf">0.5</span> <span class="o">*</span> <span class="n">sample_variance_log</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1">#psi_n = Stats.sichel_function_15(0.5 * sample_variance_log, n)</span>
+            <span class="n">psi_n</span> <span class="o">=</span> <span class="n">Stats</span><span class="o">.</span><span class="n">sichel_function</span><span class="p">(</span><span class="mf">0.5</span> <span class="o">*</span> <span class="n">sample_variance_log</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">M</span><span class="p">)</span>
+
+        <span class="c1"># Step 4: Estimate the mean of the log-normal distribution using MVUE</span>
+        <span class="n">mvue_mean</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">sample_mean_log</span><span class="p">)</span> <span class="o">*</span> <span class="n">psi_n</span>
+
+        <span class="c1"># Step 5: Calculate the confidence interval for the mean of the log-normal distribution</span>
+        <span class="n">t_alpha_2</span> <span class="o">=</span> <span class="n">stats</span><span class="o">.</span><span class="n">t</span><span class="o">.</span><span class="n">ppf</span><span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">confidence</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> <span class="n">df</span><span class="o">=</span><span class="n">n</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">ci_lower_log</span> <span class="o">=</span> <span class="n">sample_mean_log</span> <span class="o">-</span> <span class="n">t_alpha_2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">sample_variance_log</span> <span class="o">/</span> <span class="n">n</span><span class="p">)</span>
+        <span class="n">ci_upper_log</span> <span class="o">=</span> <span class="n">sample_mean_log</span> <span class="o">+</span> <span class="n">t_alpha_2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">sample_variance_log</span> <span class="o">/</span> <span class="n">n</span><span class="p">)</span>
+
+        <span class="n">mvue_ci_lower</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">ci_lower_log</span><span class="p">)</span> <span class="o">*</span> <span class="n">psi_n</span>
+        <span class="n">mvue_ci_upper</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">ci_upper_log</span><span class="p">)</span> <span class="o">*</span> <span class="n">psi_n</span>
+
+        <span class="k">return</span> <span class="n">mvue_mean</span><span class="p">,</span> <span class="n">mvue_ci_lower</span><span class="p">,</span> <span class="n">mvue_ci_upper</span></div>
+
+<div class="viewcode-block" id="Stats.sichel_function"><a class="viewcode-back" href="../../modules.html#pyco2stats.stats.Stats.sichel_function">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">sichel_function</span><span class="p">(</span><span class="n">z</span> <span class="p">,</span> <span class="n">n</span> <span class="p">,</span> <span class="n">M</span><span class="p">):</span>
+<span class="w">        </span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Compute the value of a Sichel function witha rgument z of a given order (M) for a set of n samples. From the formula:</span>
+<span class="sd">        </span>
+<span class="sd">        .. math::</span>
+
+<span class="sd">            \Psi (z;n,M) = 1 + \frac{ z (n-1) }{ n } + \sum^{ M }_{ m = 2 } \frac{ z^{ m } (n-1)^{ 2m - 1 } }{ n^{ m } m! \prod_{ k=1 }^{ m-1 }(n+2k-1) }</span>
+
+<span class="sd">        </span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        z : float</span>
+<span class="sd">            The argument to the Sichel function.</span>
+<span class="sd">        n : int</span>
+<span class="sd">            The sample size.</span>
+<span class="sd">        M : int</span>
+<span class="sd">            The order of the Sichel function.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        sichel : float</span>
+<span class="sd">            The value of Sichel&#39;s function.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">sichel</span> <span class="o">=</span> <span class="mf">1.</span> <span class="o">+</span> <span class="n">z</span><span class="o">*</span><span class="p">(</span><span class="n">n</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">/</span><span class="n">n</span>
+
+        <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span><span class="n">M</span><span class="o">+</span><span class="mi">1</span><span class="p">):</span>
+
+            <span class="n">A</span> <span class="o">=</span> <span class="p">((</span><span class="n">z</span><span class="o">/</span><span class="n">n</span><span class="p">)</span><span class="o">**</span><span class="n">m</span><span class="p">)</span><span class="o">*</span><span class="p">((</span><span class="n">n</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">**</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">m</span><span class="o">-</span><span class="mi">1</span><span class="p">))</span><span class="o">/</span><span class="n">sp</span><span class="o">.</span><span class="n">factorial</span><span class="p">(</span><span class="n">m</span><span class="p">)</span>
+
+            <span class="n">B</span> <span class="o">=</span> <span class="mi">1</span>
+
+            <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="n">m</span><span class="p">):</span>
+
+                <span class="n">B</span> <span class="o">*=</span> <span class="n">n</span> <span class="o">+</span> <span class="mi">2</span><span class="o">*</span><span class="n">k</span> <span class="o">-</span> <span class="mi">1</span>
+
+            <span class="n">sichel</span> <span class="o">+=</span> <span class="n">A</span><span class="o">/</span><span class="n">B</span>
+            
+        <span class="k">return</span> <span class="n">sichel</span></div>
+
+<div class="viewcode-block" id="Stats.sichel_function_log"><a class="viewcode-back" href="../../modules.html#pyco2stats.stats.Stats.sichel_function_log">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">sichel_function_log</span><span class="p">(</span><span class="n">sigma_sq</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">max_terms</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="mf">1e-10</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Compute Sichel&#39;s function 𝛙_n using logarithmic space for stability.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        sigma_sq : float</span>
+<span class="sd">            The variance of the log-transformed data.</span>
+<span class="sd">        n : int</span>
+<span class="sd">            The sample size.</span>
+<span class="sd">        max_terms : int</span>
+<span class="sd">            Maximum number of terms to include in the series. Default is 20.</span>
+<span class="sd">        tol : float</span>
+<span class="sd">            Tolerance for convergence. Default is 1e-10.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        𝛙_n : float</span>
+<span class="sd">            The value of Sichel&#39;s function.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">psi_n</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">+</span> <span class="p">(</span><span class="n">n</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">/</span> <span class="n">n</span> <span class="o">*</span> <span class="n">sigma_sq</span>  <span class="c1"># Start with the first two terms</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="n">max_terms</span> <span class="o">+</span> <span class="mi">1</span><span class="p">):</span>
+            <span class="n">log_numerator</span> <span class="o">=</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">j</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">n</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="n">log_denominator</span> <span class="o">=</span> <span class="n">j</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">n</span><span class="p">)</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">n</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">n</span> <span class="o">+</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">j</span><span class="p">,</span> <span class="mi">2</span><span class="p">)))</span>
+            <span class="n">log_term</span> <span class="o">=</span> <span class="n">log_numerator</span> <span class="o">-</span> <span class="n">log_denominator</span> <span class="o">+</span> <span class="n">j</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">sigma_sq</span><span class="p">)</span> <span class="o">-</span> <span class="n">sp</span><span class="o">.</span><span class="n">gammaln</span><span class="p">(</span><span class="n">j</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="n">term</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">log_term</span><span class="p">)</span>
+            <span class="n">psi_n</span> <span class="o">+=</span> <span class="n">term</span>
+            <span class="k">if</span> <span class="n">term</span> <span class="o">&lt;</span> <span class="n">tol</span><span class="p">:</span>
+                <span class="k">break</span>
+        <span class="k">return</span> <span class="n">psi_n</span></div>
+
+<div class="viewcode-block" id="Stats.median"><a class="viewcode-back" href="../../modules.html#pyco2stats.stats.Stats.median">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">median</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">overwrite_input</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">keepdims</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Compute the median along the specified axis. Mutuated from numpy (https://numpy.org/doc/stable/reference/generated/numpy.median.html).</span>
+
+<span class="sd">        Returns the median of the array elements.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        a : array_like</span>
+<span class="sd">            Input array or object that can be converted to an array.</span>
+<span class="sd">        axis : {int, sequence of int, None}, optional</span>
+<span class="sd">            Axis or axes along which the medians are computed. The default,</span>
+<span class="sd">            axis=None, will compute the median along a flattened version of</span>
+<span class="sd">            the array.</span>
+<span class="sd">        out : ndarray, optional</span>
+<span class="sd">            Alternative output array in which to place the result. It must</span>
+<span class="sd">            have the same shape and buffer length as the expected output,</span>
+<span class="sd">            but the type (of the output) will be cast if necessary.</span>
+<span class="sd">        overwrite_input : bool, optional</span>
+<span class="sd">           If True, then allow use of memory of input array `a` for</span>
+<span class="sd">           calculations. The input array will be modified by the call to</span>
+<span class="sd">           `median`. This will save memory when you do not need to preserve</span>
+<span class="sd">           the contents of the input array. Treat the input as undefined,</span>
+<span class="sd">           but it will probably be fully or partially sorted. Default is</span>
+<span class="sd">           False. If `overwrite_input` is ``True`` and `a` is not already an</span>
+<span class="sd">           `ndarray`, an error will be raised.</span>
+<span class="sd">        keepdims : bool, optional</span>
+<span class="sd">            If this is set to True, the axes which are reduced are left</span>
+<span class="sd">            in the result as dimensions with size one. With this option,</span>
+<span class="sd">            the result will broadcast correctly against the original `arr`.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        median : ndarray</span>
+<span class="sd">            A new array holding the result. If the input contains integers</span>
+<span class="sd">            or floats smaller than ``float64``, then the output data-type is</span>
+<span class="sd">            ``np.float64``.  Otherwise, the data-type of the output is the</span>
+<span class="sd">            same as that of the input. If `out` is specified, that array is</span>
+<span class="sd">            returned instead.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">median</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">axis</span><span class="p">,</span> <span class="n">out</span><span class="p">,</span> <span class="n">overwrite_input</span><span class="p">,</span> <span class="n">keepdims</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Stats.median_absolute_deviation"><a class="viewcode-back" href="../../modules.html#pyco2stats.stats.Stats.median_absolute_deviation">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">median_absolute_deviation</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">func</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">ignore_nan</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Calculate the median absolute deviation (MAD) mutuated from astropy (https://docs.astropy.org/en/stable/api/astropy.stats.median_absolute_deviation.html).</span>
+
+<span class="sd">        The MAD is defined as ``median(abs(a - median(a)))``.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        data : array-like</span>
+<span class="sd">            Input array or object that can be converted to an array.</span>
+<span class="sd">        axis : None, int, or tuple of int, optional</span>
+<span class="sd">            The axis or axes along which the MADs are computed.  The default</span>
+<span class="sd">            (`None`) is to compute the MAD of the flattened array.</span>
+<span class="sd">        func : callable, optional</span>
+<span class="sd">            The function used to compute the median. Defaults to `numpy.ma.median`</span>
+<span class="sd">            for masked arrays, otherwise to `numpy.median`.</span>
+<span class="sd">        ignore_nan : bool</span>
+<span class="sd">            Ignore NaN values (treat them as if they are not in the array) when</span>
+<span class="sd">            computing the median.  This will use `numpy.ma.median` if ``axis`` is</span>
+<span class="sd">            specified, or `numpy.nanmedian` if ``axis==None`` and numpy&#39;s version</span>
+<span class="sd">            is &gt;1.10 because nanmedian is slightly faster in this case.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        mad : float or `~numpy.ndarray`</span>
+<span class="sd">            The median absolute deviation of the input array.  If ``axis``</span>
+<span class="sd">            is `None` then a scalar will be returned, otherwise a</span>
+<span class="sd">            `~numpy.ndarray` will be returned.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">astropy_median_absolute_deviation</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">axis</span><span class="p">,</span> <span class="n">func</span><span class="p">,</span> <span class="n">ignore_nan</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Stats.mad_std"><a class="viewcode-back" href="../../modules.html#pyco2stats.stats.Stats.mad_std">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">mad_std</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">func</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">ignore_nan</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Calculate a robust standard deviation using the `median absolute</span>
+<span class="sd">        deviation (MAD), mutuated from astropy (https://docs.astropy.org/en/stable/api/astropy.stats.mad_std.html).</span>
+
+<span class="sd">        The standard deviation estimator is given by:</span>
+
+<span class="sd">        .. math::</span>
+
+<span class="sd">            \sigma \approx \frac{\textrm{MAD}}{\Phi^{-1}(\frac{3}{4})} \approx 1.4826 \textrm{MAD}</span>
+
+<span class="sd">        where :math:`\Phi^{-1}(P)` is the normal inverse cumulative</span>
+<span class="sd">        distribution function evaluated at probability :math:`P = 3/4`.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        data : array-like</span>
+<span class="sd">            Data array or object that can be converted to an array.</span>
+<span class="sd">        axis : None, int, or tuple of int, optional</span>
+<span class="sd">            The axis or axes along which the robust standard deviations are</span>
+<span class="sd">            computed.  The default (`None`) is to compute the robust</span>
+<span class="sd">            standard deviation of the flattened array.</span>
+<span class="sd">        func : callable, optional</span>
+<span class="sd">            The function used to compute the median. Defaults to `numpy.ma.median`</span>
+<span class="sd">            for masked arrays, otherwise to `numpy.median`.</span>
+<span class="sd">        ignore_nan : bool</span>
+<span class="sd">            Ignore NaN values (treat them as if they are not in the array) when</span>
+<span class="sd">            computing the median.  This will use `numpy.ma.median` if ``axis`` is</span>
+<span class="sd">            specified, or `numpy.nanmedian` if ``axis=None`` and numpy&#39;s version is</span>
+<span class="sd">            &gt;1.10 because nanmedian is slightly faster in this case.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        mad_std : float or `~numpy.ndarray`</span>
+<span class="sd">            The robust standard deviation of the input data.  If ``axis`` is</span>
+<span class="sd">            `None` then a scalar will be returned, otherwise a</span>
+<span class="sd">            `~numpy.ndarray` will be returned.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">astropy_mad_std</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">axis</span><span class="p">,</span> <span class="n">func</span><span class="p">,</span> <span class="n">ignore_nan</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Stats.sigma_clip"><a class="viewcode-back" href="../../modules.html#pyco2stats.stats.Stats.sigma_clip">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">sigma_clip</span><span class="p">(</span>
+        <span class="n">data</span><span class="p">,</span>
+        <span class="n">sigma</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+        <span class="n">sigma_lower</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">sigma_upper</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">maxiters</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>
+        <span class="n">cenfunc</span><span class="o">=</span><span class="s2">&quot;median&quot;</span><span class="p">,</span>
+        <span class="n">stdfunc</span><span class="o">=</span><span class="s2">&quot;std&quot;</span><span class="p">,</span>
+        <span class="n">axis</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">masked</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">return_bounds</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">copy</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">grow</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Perform sigma-clipping on the provided data. Mutuated from astropy (https://docs.astropy.org/en/stable/api/astropy.stats.sigma_clip.html).</span>
+
+<span class="sd">        The data will be iterated over, each time rejecting values that are</span>
+<span class="sd">        less or more than a specified number of standard deviations from a</span>
+<span class="sd">        center value.</span>
+
+<span class="sd">        Clipped (rejected) pixels are those where::</span>
+
+<span class="sd">            data &lt; center - (sigma_lower * std)</span>
+<span class="sd">            data &gt; center + (sigma_upper * std)</span>
+
+<span class="sd">        where::</span>
+
+<span class="sd">            center = cenfunc(data [, axis=])</span>
+<span class="sd">            std = stdfunc(data [, axis=])</span>
+
+<span class="sd">        Invalid data values (i.e., NaN or inf) are automatically clipped.</span>
+
+<span class="sd">        For an object-oriented interface to sigma clipping, see</span>
+<span class="sd">        :class:`SigmaClip`.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        data : array-like or `~numpy.ma.MaskedArray`</span>
+<span class="sd">            The data to be sigma clipped.</span>
+
+<span class="sd">        sigma : float, optional</span>
+<span class="sd">            The number of standard deviations to use for both the lower</span>
+<span class="sd">            and upper clipping limit. These limits are overridden by</span>
+<span class="sd">            ``sigma_lower`` and ``sigma_upper``, if input. The default is 3.</span>
+
+<span class="sd">        sigma_lower : float or None, optional</span>
+<span class="sd">            The number of standard deviations to use as the lower bound for</span>
+<span class="sd">            the clipping limit. If `None` then the value of ``sigma`` is</span>
+<span class="sd">            used. The default is `None`.</span>
+
+<span class="sd">        sigma_upper : float or None, optional</span>
+<span class="sd">            The number of standard deviations to use as the upper bound for</span>
+<span class="sd">            the clipping limit. If `None` then the value of ``sigma`` is</span>
+<span class="sd">            used. The default is `None`.</span>
+
+<span class="sd">        maxiters : int or None, optional</span>
+<span class="sd">            The maximum number of sigma-clipping iterations to perform or</span>
+<span class="sd">            `None` to clip until convergence is achieved (i.e., iterate</span>
+<span class="sd">            until the last iteration clips nothing). If convergence is</span>
+<span class="sd">            achieved prior to ``maxiters`` iterations, the clipping</span>
+<span class="sd">            iterations will stop. The default is 5.</span>
+
+<span class="sd">        cenfunc : {&#39;median&#39;, &#39;mean&#39;} or callable, optional</span>
+<span class="sd">            The statistic or callable function/object used to compute</span>
+<span class="sd">            the center value for the clipping. If using a callable</span>
+<span class="sd">            function/object and the ``axis`` keyword is used, then it must</span>
+<span class="sd">            be able to ignore NaNs (e.g., `numpy.nanmean`) and it must have</span>
+<span class="sd">            an ``axis`` keyword to return an array with axis dimension(s)</span>
+<span class="sd">            removed. The default is ``&#39;median&#39;``.</span>
+
+<span class="sd">        stdfunc : {&#39;std&#39;, &#39;mad_std&#39;} or callable, optional</span>
+<span class="sd">            The statistic or callable function/object used to compute the</span>
+<span class="sd">            standard deviation about the center value. If using a callable</span>
+<span class="sd">            function/object and the ``axis`` keyword is used, then it must</span>
+<span class="sd">            be able to ignore NaNs (e.g., `numpy.nanstd`) and it must have</span>
+<span class="sd">            an ``axis`` keyword to return an array with axis dimension(s)</span>
+<span class="sd">            removed. The default is ``&#39;std&#39;``.</span>
+
+<span class="sd">        axis : None or int or tuple of int, optional</span>
+<span class="sd">            The axis or axes along which to sigma clip the data. If `None`,</span>
+<span class="sd">            then the flattened data will be used. ``axis`` is passed to the</span>
+<span class="sd">            ``cenfunc`` and ``stdfunc``. The default is `None`.</span>
+
+<span class="sd">        masked : bool, optional</span>
+<span class="sd">            If `True`, then a `~numpy.ma.MaskedArray` is returned, where</span>
+<span class="sd">            the mask is `True` for clipped values. If `False`, then a</span>
+<span class="sd">            `~numpy.ndarray` is returned. The default is `True`.</span>
+
+<span class="sd">        return_bounds : bool, optional</span>
+<span class="sd">            If `True`, then the minimum and maximum clipping bounds are also</span>
+<span class="sd">            returned.</span>
+
+<span class="sd">        copy : bool, optional</span>
+<span class="sd">            If `True`, then the ``data`` array will be copied. If `False`</span>
+<span class="sd">            and ``masked=True``, then the returned masked array data will</span>
+<span class="sd">            contain the same array as the input ``data`` (if ``data`` is a</span>
+<span class="sd">            `~numpy.ndarray` or `~numpy.ma.MaskedArray`). If `False` and</span>
+<span class="sd">            ``masked=False``, the input data is modified in-place. The</span>
+<span class="sd">            default is `True`.</span>
+
+<span class="sd">        grow : float or `False`, optional</span>
+<span class="sd">            Radius within which to mask the neighbouring pixels of those</span>
+<span class="sd">            that fall outwith the clipping limits (only applied along</span>
+<span class="sd">            ``axis``, if specified). As an example, for a 2D image a value</span>
+<span class="sd">            of 1 will mask the nearest pixels in a cross pattern around each</span>
+<span class="sd">            deviant pixel, while 1.5 will also reject the nearest diagonal</span>
+<span class="sd">            neighbours and so on.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        result : array-like</span>
+<span class="sd">            If ``masked=True``, then a `~numpy.ma.MaskedArray` is returned,</span>
+<span class="sd">            where the mask is `True` for clipped values and where the input</span>
+<span class="sd">            mask was `True`.</span>
+
+<span class="sd">            If ``masked=False``, then a `~numpy.ndarray` is returned.</span>
+
+<span class="sd">            If ``return_bounds=True``, then in addition to the masked array</span>
+<span class="sd">            or array above, the minimum and maximum clipping bounds are</span>
+<span class="sd">            returned.</span>
+
+<span class="sd">            If ``masked=False`` and ``axis=None``, then the output array</span>
+<span class="sd">            is a flattened 1D `~numpy.ndarray` where the clipped values</span>
+<span class="sd">            have been removed. If ``return_bounds=True`` then the returned</span>
+<span class="sd">            minimum and maximum thresholds are scalars.</span>
+
+<span class="sd">            If ``masked=False`` and ``axis`` is specified, then the output</span>
+<span class="sd">            `~numpy.ndarray` will have the same shape as the input ``data``</span>
+<span class="sd">            and contain ``np.nan`` where values were clipped. If the input</span>
+<span class="sd">            ``data`` was a masked array, then the output `~numpy.ndarray`</span>
+<span class="sd">            will also contain ``np.nan`` where the input mask was `True`.</span>
+<span class="sd">            If ``return_bounds=True`` then the returned minimum and maximum</span>
+<span class="sd">            clipping thresholds will be `~numpy.ndarray`\\s.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">astropy_sigma_clip</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">sigma</span><span class="p">,</span> <span class="n">sigma_lower</span><span class="p">,</span> <span class="n">sigma_upper</span><span class="p">,</span> <span class="n">maxiters</span><span class="p">,</span> <span class="n">cenfunc</span><span class="p">,</span> <span class="n">stdfunc</span><span class="p">,</span> <span class="n">axis</span><span class="p">,</span> <span class="n">masked</span><span class="p">,</span> <span class="n">return_bounds</span><span class="p">,</span> <span class="n">copy</span><span class="p">,</span> <span class="n">grow</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Stats.sigma_clipped_stats"><a class="viewcode-back" href="../../modules.html#pyco2stats.stats.Stats.sigma_clipped_stats">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">sigma_clipped_stats</span><span class="p">(</span>
+            <span class="n">data</span><span class="p">,</span>
+            <span class="n">mask</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+            <span class="n">mask_value</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+            <span class="n">sigma</span><span class="o">=</span><span class="mf">3.0</span><span class="p">,</span>
+            <span class="n">sigma_lower</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+            <span class="n">sigma_upper</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+            <span class="n">maxiters</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>
+            <span class="n">cenfunc</span><span class="o">=</span><span class="s2">&quot;median&quot;</span><span class="p">,</span>
+            <span class="n">stdfunc</span><span class="o">=</span><span class="s2">&quot;std&quot;</span><span class="p">,</span>
+            <span class="n">std_ddof</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+            <span class="n">axis</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+            <span class="n">grow</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Calculate sigma-clipped statistics on the provided data, mutuated from astropy (https://docs.astropy.org/en/stable/api/astropy.stats.sigma_clipped_stats.html).</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        data : array-like or `~numpy.ma.MaskedArray`</span>
+<span class="sd">            Data array or object that can be converted to an array.</span>
+
+<span class="sd">        mask : `numpy.ndarray` (bool), optional</span>
+<span class="sd">            A boolean mask with the same shape as ``data``, where a `True`</span>
+<span class="sd">            value indicates the corresponding element of ``data`` is masked.</span>
+<span class="sd">            Masked pixels are excluded when computing the statistics.</span>
+
+<span class="sd">        mask_value : float, optional</span>
+<span class="sd">            A data value (e.g., ``0.0``) that is ignored when computing the</span>
+<span class="sd">            statistics. ``mask_value`` will be masked in addition to any</span>
+<span class="sd">            input ``mask``.</span>
+
+<span class="sd">        sigma : float, optional</span>
+<span class="sd">            The number of standard deviations to use for both the lower</span>
+<span class="sd">            and upper clipping limit. These limits are overridden by</span>
+<span class="sd">            ``sigma_lower`` and ``sigma_upper``, if input. The default is 3.</span>
+
+<span class="sd">        sigma_lower : float or None, optional</span>
+<span class="sd">            The number of standard deviations to use as the lower bound for</span>
+<span class="sd">            the clipping limit. If `None` then the value of ``sigma`` is</span>
+<span class="sd">            used. The default is `None`.</span>
+
+<span class="sd">        sigma_upper : float or None, optional</span>
+<span class="sd">            The number of standard deviations to use as the upper bound for</span>
+<span class="sd">            the clipping limit. If `None` then the value of ``sigma`` is</span>
+<span class="sd">            used. The default is `None`.</span>
+
+<span class="sd">        maxiters : int or None, optional</span>
+<span class="sd">            The maximum number of sigma-clipping iterations to perform or</span>
+<span class="sd">            `None` to clip until convergence is achieved (i.e., iterate</span>
+<span class="sd">            until the last iteration clips nothing). If convergence is</span>
+<span class="sd">            achieved prior to ``maxiters`` iterations, the clipping</span>
+<span class="sd">            iterations will stop. The default is 5.</span>
+
+<span class="sd">        cenfunc : {&#39;median&#39;, &#39;mean&#39;} or callable, optional</span>
+<span class="sd">            The statistic or callable function/object used to compute</span>
+<span class="sd">            the center value for the clipping. If using a callable</span>
+<span class="sd">            function/object and the ``axis`` keyword is used, then it must</span>
+<span class="sd">            be able to ignore NaNs (e.g., `numpy.nanmean`) and it must have</span>
+<span class="sd">            an ``axis`` keyword to return an array with axis dimension(s)</span>
+<span class="sd">            removed. The default is ``&#39;median&#39;``.</span>
+
+<span class="sd">        stdfunc : {&#39;std&#39;, &#39;mad_std&#39;} or callable, optional</span>
+<span class="sd">            The statistic or callable function/object used to compute the</span>
+<span class="sd">            standard deviation about the center value. If using a callable</span>
+<span class="sd">            function/object and the ``axis`` keyword is used, then it must</span>
+<span class="sd">            be able to ignore NaNs (e.g., `numpy.nanstd`) and it must have</span>
+<span class="sd">            an ``axis`` keyword to return an array with axis dimension(s)</span>
+<span class="sd">            removed. The default is ``&#39;std&#39;``.</span>
+
+<span class="sd">        std_ddof : int, optional</span>
+<span class="sd">            The delta degrees of freedom for the standard deviation</span>
+<span class="sd">            calculation. The divisor used in the calculation is ``N -</span>
+<span class="sd">            std_ddof``, where ``N`` represents the number of elements. The</span>
+<span class="sd">            default is 0.</span>
+
+<span class="sd">        axis : None or int or tuple of int, optional</span>
+<span class="sd">            The axis or axes along which to sigma clip the data. If `None`,</span>
+<span class="sd">            then the flattened data will be used. ``axis`` is passed to the</span>
+<span class="sd">            ``cenfunc`` and ``stdfunc``. The default is `None`.</span>
+
+<span class="sd">        grow : float or `False`, optional</span>
+<span class="sd">            Radius within which to mask the neighbouring pixels of those</span>
+<span class="sd">            that fall outwith the clipping limits (only applied along</span>
+<span class="sd">            ``axis``, if specified). As an example, for a 2D image a value</span>
+<span class="sd">            of 1 will mask the nearest pixels in a cross pattern around each</span>
+<span class="sd">            deviant pixel, while 1.5 will also reject the nearest diagonal</span>
+<span class="sd">            neighbours and so on.</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        The best performance will typically be obtained by setting</span>
+<span class="sd">        ``cenfunc`` and ``stdfunc`` to one of the built-in functions</span>
+<span class="sd">        specified as as string. If one of the options is set to a string</span>
+<span class="sd">        while the other has a custom callable, you may in some cases see</span>
+<span class="sd">        better performance if you have the `bottleneck`_ package installed.</span>
+
+<span class="sd">        .. _bottleneck:  https://github.com/pydata/bottleneck</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        mean, median, stddev : float</span>
+<span class="sd">            The mean, median, and standard deviation of the sigma-clipped</span>
+<span class="sd">            data.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">astropy_sigma_clipped_stats</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">mask</span><span class="p">,</span> <span class="n">mask_value</span><span class="p">,</span> <span class="n">sigma</span><span class="p">,</span> <span class="n">sigma_lower</span><span class="p">,</span> <span class="n">sigma_upper</span><span class="p">,</span> <span class="n">maxiters</span><span class="p">,</span> <span class="n">cenfunc</span><span class="p">,</span> <span class="n">stdfunc</span><span class="p">,</span> <span class="n">std_ddof</span><span class="p">,</span> <span class="n">axis</span><span class="p">,</span> <span class="n">grow</span><span class="p">)</span></div>
+   
+<div class="viewcode-block" id="Stats.biweight_location"><a class="viewcode-back" href="../../modules.html#pyco2stats.stats.Stats.biweight_location">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">biweight_location</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">c</span><span class="o">=</span><span class="mf">6.0</span><span class="p">,</span> <span class="n">M</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">ignore_nan</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Compute the biweight location. Mutuated from astropy (https://docs.astropy.org/en/stable/api/astropy.stats.biweight.biweight_location.html#astropy.stats.biweight.biweight_location).</span>
+
+<span class="sd">        The biweight location is a robust statistic for determining the</span>
+<span class="sd">        central location of a distribution.  It is given by:</span>
+
+<span class="sd">        .. math::</span>
+
+<span class="sd">            \zeta_{biloc}= M + \frac{ \sum_{|u_i|&lt;1}(x_i - M)\cdot (1 - u_i^2)^2}{\sum_{|u_i|&lt;1} (1 - u_i^2)^2}</span>
+
+<span class="sd">        where :math:`x` is the input data, :math:`M` is the sample median</span>
+<span class="sd">        (or the input initial location guess) and :math:`u_i` is given by:</span>
+
+<span class="sd">        .. math::</span>
+
+<span class="sd">            u_{i} = \frac{x_i - M}{c \cdot MAD}</span>
+
+<span class="sd">        where :math:`c` is the tuning constant and :math:`MAD` is the</span>
+<span class="sd">        `median absolute deviation</span>
+<span class="sd">        &lt;https://en.wikipedia.org/wiki/Median_absolute_deviation&gt;`_.  The</span>
+<span class="sd">        biweight location tuning constant ``c`` is typically 6.0 (the</span>
+<span class="sd">        default).</span>
+
+<span class="sd">        If :math:`MAD` is zero, then the median will be returned.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        data : array-like</span>
+<span class="sd">            Input array or object that can be converted to an array.</span>
+<span class="sd">            ``data`` can be a `~numpy.ma.MaskedArray`.</span>
+<span class="sd">        c : float, optional</span>
+<span class="sd">            Tuning constant for the biweight estimator (default = 6.0).</span>
+<span class="sd">        M : float or array-like, optional</span>
+<span class="sd">            Initial guess for the location.  If ``M`` is a scalar value,</span>
+<span class="sd">            then its value will be used for the entire array (or along each</span>
+<span class="sd">            ``axis``, if specified).  If ``M`` is an array, then its must be</span>
+<span class="sd">            an array containing the initial location estimate along each</span>
+<span class="sd">            ``axis`` of the input array.  If `None` (default), then the</span>
+<span class="sd">            median of the input array will be used (or along each ``axis``,</span>
+<span class="sd">            if specified).</span>
+<span class="sd">        axis : None, int, or tuple of int, optional</span>
+<span class="sd">            The axis or axes along which the biweight locations are</span>
+<span class="sd">            computed.  If `None` (default), then the biweight location of</span>
+<span class="sd">            the flattened input array will be computed.</span>
+<span class="sd">        ignore_nan : bool, optional</span>
+<span class="sd">            Whether to ignore NaN values in the input ``data``.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        biweight_location : float or `~numpy.ndarray`</span>
+<span class="sd">            The biweight location of the input data.  If ``axis`` is `None`</span>
+<span class="sd">            then a scalar will be returned, otherwise a `~numpy.ndarray`</span>
+<span class="sd">            will be returned.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">ignore_nan</span><span class="p">:</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">masked_invalid</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">astropy_biweight_location</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">c</span><span class="o">=</span><span class="n">c</span><span class="p">,</span> <span class="n">M</span><span class="o">=</span><span class="n">M</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="n">axis</span><span class="p">)</span></div>
+    
+<div class="viewcode-block" id="Stats.biweight_scale"><a class="viewcode-back" href="../../modules.html#pyco2stats.stats.Stats.biweight_scale">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">biweight_scale</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">c</span><span class="o">=</span><span class="mf">9.0</span><span class="p">,</span> <span class="n">M</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">modify_sample_size</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">ignore_nan</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Compute the biweight scale. Mutuated from astropy (https://docs.astropy.org/en/stable/api/astropy.stats.biweight.biweight_scale.html).</span>
+
+<span class="sd">        The biweight scale is a robust statistic for determining the</span>
+<span class="sd">        standard deviation of a distribution.  It is the square root of the</span>
+<span class="sd">        `biweight midvariance.</span>
+
+<span class="sd">        It is given by:</span>
+
+<span class="sd">        .. math::</span>
+
+<span class="sd">            \zeta_{biscl} = \sqrt{n}\frac{\sqrt{\sum_{|u_{i}| &lt; 1}(x_{i} - M)^2 (1 - u_{i}^{2})^{4}}} {|(\sum_{|u_{i}| &lt; 1}(1 - u_{i}^{2}) (1 - 5u_{i}^{2}))|}</span>
+
+<span class="sd">        where :math:`x` is the input data, :math:`M` is the sample median</span>
+<span class="sd">        (or the input location) and :math:`u_i` is given by:</span>
+
+<span class="sd">        .. math::</span>
+
+<span class="sd">            u_{i} = \frac{x_{i} - M}{c \cdot MAD}</span>
+
+<span class="sd">        where :math:`c` is the tuning constant and :math:`MAD` is the</span>
+<span class="sd">        `median absolute deviation</span>
+<span class="sd">        &lt;https://en.wikipedia.org/wiki/Median_absolute_deviation&gt;`_.  The</span>
+<span class="sd">        biweight midvariance tuning constant ``c`` is typically 9.0 (the</span>
+<span class="sd">        default).</span>
+
+<span class="sd">        If :math:`MAD` is zero, then zero will be returned.</span>
+
+<span class="sd">        For the standard definition of biweight scale, :math:`n` is the</span>
+<span class="sd">        total number of points in the array (or along the input ``axis``, if</span>
+<span class="sd">        specified).  That definition is used if ``modify_sample_size`` is</span>
+<span class="sd">        `False`, which is the default.</span>
+
+<span class="sd">        However, if ``modify_sample_size = True``, then :math:`n` is the</span>
+<span class="sd">        number of points for which :math:`|u_i| &lt; 1` (i.e. the total number</span>
+<span class="sd">        of non-rejected values), i.e.</span>
+
+<span class="sd">        .. math::</span>
+
+<span class="sd">            n = \sum_{|u_{i}| &lt; 1} 1</span>
+
+<span class="sd">        which results in a value closer to the true standard deviation for</span>
+<span class="sd">        small sample sizes or for a large number of rejected values.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        data : array-like</span>
+<span class="sd">            Input array or object that can be converted to an array.</span>
+<span class="sd">            ``data`` can be a `~numpy.ma.MaskedArray`.</span>
+<span class="sd">        c : float, optional</span>
+<span class="sd">            Tuning constant for the biweight estimator (default = 9.0).</span>
+<span class="sd">        M : float or array-like, optional</span>
+<span class="sd">            The location estimate.  If ``M`` is a scalar value, then its</span>
+<span class="sd">            value will be used for the entire array (or along each ``axis``,</span>
+<span class="sd">            if specified).  If ``M`` is an array, then its must be an array</span>
+<span class="sd">            containing the location estimate along each ``axis`` of the</span>
+<span class="sd">            input array.  If `None` (default), then the median of the input</span>
+<span class="sd">            array will be used (or along each ``axis``, if specified).</span>
+<span class="sd">        axis : None, int, or tuple of int, optional</span>
+<span class="sd">            The axis or axes along which the biweight scales are computed.</span>
+<span class="sd">            If `None` (default), then the biweight scale of the flattened</span>
+<span class="sd">            input array will be computed.</span>
+<span class="sd">        modify_sample_size : bool, optional</span>
+<span class="sd">            If `False` (default), then the sample size used is the total</span>
+<span class="sd">            number of elements in the array (or along the input ``axis``, if</span>
+<span class="sd">            specified), which follows the standard definition of biweight</span>
+<span class="sd">            scale.  If `True`, then the sample size is reduced to correct</span>
+<span class="sd">            for any rejected values (i.e. the sample size used includes only</span>
+<span class="sd">            the non-rejected values), which results in a value closer to the</span>
+<span class="sd">            true standard deviation for small sample sizes or for a large</span>
+<span class="sd">            number of rejected values.</span>
+<span class="sd">        ignore_nan : bool, optional</span>
+<span class="sd">            Whether to ignore NaN values in the input ``data``.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        biweight_scale : float or `~numpy.ndarray`</span>
+<span class="sd">            The biweight scale of the input data.  If ``axis`` is `None`</span>
+<span class="sd">            then a scalar will be returned, otherwise a `~numpy.ndarray`</span>
+<span class="sd">            will be returned.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">ignore_nan</span><span class="p">:</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">masked_invalid</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">astropy_biweight_scale</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">c</span><span class="o">=</span><span class="n">c</span><span class="p">,</span> <span class="n">M</span><span class="o">=</span><span class="n">M</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="n">axis</span><span class="p">,</span> <span class="n">modify_sample_size</span><span class="o">=</span><span class="n">modify_sample_size</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Stats.trim"><a class="viewcode-back" href="../../modules.html#pyco2stats.stats.Stats.trim">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">trim</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">limits</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">inclusive</span><span class="o">=</span><span class="p">(</span><span class="kc">True</span><span class="p">,</span> <span class="kc">True</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Trims an array by masking the data outside some given limits. Mutuated for scipy (https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.mstats.trim.html).</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        a : array_like</span>
+<span class="sd">            Input array.</span>
+<span class="sd">        limits : {None, tuple of float}, optional</span>
+<span class="sd">            Tuple of the percentages to cut on each side of the array, with respect</span>
+<span class="sd">            to the number of unmasked data, as floats between 0. and 1.</span>
+<span class="sd">            Noting n the number of unmasked data before trimming, the</span>
+<span class="sd">            (n*limits[0])th smallest data and the (n*limits[1])th largest data are</span>
+<span class="sd">            masked, and the total number of unmasked data after trimming</span>
+<span class="sd">            is n*(1.-sum(limits)). The value of one limit can be set to None to</span>
+<span class="sd">            indicate an open interval.</span>
+<span class="sd">        inclusive : {(True, True) tuple}, optional</span>
+<span class="sd">            Tuple indicating whether the number of data being masked on each side</span>
+<span class="sd">            should be truncated (True) or rounded (False).</span>
+<span class="sd">        axis : {None, int}, optional</span>
+<span class="sd">            Axis along which to trim. If None, the whole array is trimmed, but its</span>
+<span class="sd">            shape is maintained.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        trim_array : ndarray</span>
+<span class="sd">            Masked version of the input array.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">scipy_trim</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">limits</span><span class="p">,</span> <span class="n">inclusive</span><span class="p">,</span> <span class="n">axis</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Stats.trimmed_mean"><a class="viewcode-back" href="../../modules.html#pyco2stats.stats.Stats.trimmed_mean">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">trimmed_mean</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">limits</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">inclusive</span><span class="o">=</span><span class="p">(</span><span class="kc">True</span><span class="p">,</span> <span class="kc">True</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Compute the trimmed, mean given a lower and an upper limit. Mutuated from Scipy stats (https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.trim_mean.html).</span>
+
+<span class="sd">        This function finds the arithmetic mean of given values, ignoring values</span>
+<span class="sd">        outside the given `limits`.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        a : array_like</span>
+<span class="sd">            Array of values.</span>
+<span class="sd">        limits : None or (lower limit, upper limit), optional</span>
+<span class="sd">            Values in the input array less than the lower limit or greater than the</span>
+<span class="sd">            upper limit will be ignored.  When limits is None (default), then all</span>
+<span class="sd">            values are used.  Either of the limit values in the tuple can also be</span>
+<span class="sd">            None representing a half-open interval.</span>
+<span class="sd">        inclusive : (bool, bool), optional</span>
+<span class="sd">            A tuple consisting of the (lower flag, upper flag).  These flags</span>
+<span class="sd">            determine whether values exactly equal to the lower or upper limits</span>
+<span class="sd">            are included.  The default value is (True, True).</span>
+<span class="sd">        axis : int or None, optional</span>
+<span class="sd">            Axis along which to compute test. Default is None.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        tmean : ndarray</span>
+<span class="sd">            Trimmed mean.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">scipy_tmean</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">limits</span><span class="p">,</span> <span class="n">inclusive</span><span class="p">,</span> <span class="n">axis</span><span class="p">)</span></div>
+    
+<div class="viewcode-block" id="Stats.trimmed_std"><a class="viewcode-back" href="../../modules.html#pyco2stats.stats.Stats.trimmed_std">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">trimmed_std</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">limits</span><span class="o">=</span><span class="p">(</span><span class="mf">0.1</span><span class="p">,</span><span class="mf">0.1</span><span class="p">),</span> <span class="n">inclusive</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">),</span> <span class="n">relative</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">ddof</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns the trimmed standard deviation of the data along the given axis. Mutuated from Scipy stats (https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.mstats.trimmed_std.html).</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        a : array_like</span>
+<span class="sd">            Input array.</span>
+<span class="sd">        limits : tuple of float, optional</span>
+<span class="sd">            The lower and upper fraction of elements to trim. These fractions</span>
+<span class="sd">            should be between 0 and 1.</span>
+<span class="sd">        inclusive : tuple of {0, 1}, optional</span>
+<span class="sd">            Tuple indicating whether the number of data being masked on each side</span>
+<span class="sd">            should be truncated (1) or rounded (0).</span>
+<span class="sd">        relative : bool, optional</span>
+<span class="sd">            Whether to treat the `limits` as relative or absolute positions.</span>
+<span class="sd">        axis : int, optional</span>
+<span class="sd">            Axis along which to perform the trimming.</span>
+<span class="sd">        ddof : int, optional</span>
+<span class="sd">            Means Delta Degrees of Freedom. The denominator used in the calculations</span>
+<span class="sd">            is ``n - ddof``, where ``n`` represents the number of elements.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        trim_std : float or array</span>
+<span class="sd">            Trimmed standard deviation of the data along the given axis</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">scipy_trimmed_std</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">limits</span><span class="p">,</span> <span class="n">inclusive</span><span class="p">,</span> <span class="n">relative</span><span class="p">,</span> <span class="n">axis</span><span class="p">,</span> <span class="n">ddof</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Stats.trimboth"><a class="viewcode-back" href="../../modules.html#pyco2stats.stats.Stats.trimboth">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">trimboth</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">proportiontocut</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Slice off a proportion of items from both ends of an array. Mutuated from scipy (https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.trimboth.html).</span>
+
+<span class="sd">        Slice off the passed proportion of items from both ends of the passed</span>
+<span class="sd">        array (i.e., with `proportiontocut` = 0.1, slices leftmost 10% **and**</span>
+<span class="sd">        rightmost 10% of scores). The trimmed values are the lowest and</span>
+<span class="sd">        highest ones.</span>
+<span class="sd">        Slice off less if proportion results in a non-integer slice index (i.e.</span>
+<span class="sd">        conservatively slices off `proportiontocut`).</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        a : array_like</span>
+<span class="sd">            Data to trim.</span>
+<span class="sd">        proportiontocut : float</span>
+<span class="sd">            Proportion (in range 0-1) of total data set to trim of each end.</span>
+<span class="sd">        axis : int or None, optional</span>
+<span class="sd">            Axis along which to trim data. Default is 0. If None, compute over</span>
+<span class="sd">            the whole array `a`.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        out : ndarray</span>
+<span class="sd">            Trimmed version of array `a`. The order of the trimmed content</span>
+<span class="sd">            is undefined.</span>
+
+<span class="sd">        See Also</span>
+<span class="sd">        --------</span>
+<span class="sd">        trim_mean</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        Create an array of 10 values and trim 10% of those values from each end:</span>
+
+<span class="sd">        &gt;&gt;&gt; import numpy as np</span>
+<span class="sd">        &gt;&gt;&gt; from scipy import stats</span>
+<span class="sd">        &gt;&gt;&gt; a = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]</span>
+<span class="sd">        &gt;&gt;&gt; stats.trimboth(a, 0.1)</span>
+<span class="sd">        array([1, 3, 2, 4, 5, 6, 7, 8])</span>
+
+<span class="sd">        Note that the elements of the input array are trimmed by value, but the</span>
+<span class="sd">        output array is not necessarily sorted.</span>
+
+<span class="sd">        The proportion to trim is rounded down to the nearest integer. For</span>
+<span class="sd">        instance, trimming 25% of the values from each end of an array of 10</span>
+<span class="sd">        values will return an array of 6 values:</span>
+
+<span class="sd">        &gt;&gt;&gt; b = np.arange(10)</span>
+<span class="sd">        &gt;&gt;&gt; stats.trimboth(b, 1/4).shape</span>
+<span class="sd">        (6,)</span>
+
+<span class="sd">        Multidimensional arrays can be trimmed along any axis or across the entire</span>
+<span class="sd">        array:</span>
+
+<span class="sd">        &gt;&gt;&gt; c = [2, 4, 6, 8, 0, 1, 3, 5, 7, 9]</span>
+<span class="sd">        &gt;&gt;&gt; d = np.array([a, b, c])</span>
+<span class="sd">        &gt;&gt;&gt; stats.trimboth(d, 0.4, axis=0).shape</span>
+<span class="sd">        (1, 10)</span>
+<span class="sd">        &gt;&gt;&gt; stats.trimboth(d, 0.4, axis=1).shape</span>
+<span class="sd">        (3, 2)</span>
+<span class="sd">        &gt;&gt;&gt; stats.trimboth(d, 0.4, axis=None).shape</span>
+<span class="sd">        (6,)</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">scipy_trimboth</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">proportiontocut</span><span class="p">,</span> <span class="n">axis</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Stats.trimtail"><a class="viewcode-back" href="../../modules.html#pyco2stats.stats.Stats.trimtail">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">trimtail</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">proportiontocut</span><span class="o">=</span><span class="mf">0.2</span><span class="p">,</span> <span class="n">tail</span><span class="o">=</span><span class="s1">&#39;left&#39;</span><span class="p">,</span> <span class="n">inclusive</span><span class="o">=</span><span class="p">(</span><span class="kc">True</span><span class="p">,</span> <span class="kc">True</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Trims the data by masking values from one tail. Mutuated from scipy.stats (https://docs.scipy.org/doc/scipy-1.14.0/reference/generated/scipy.stats.mstats.trimtail.html).</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        data : array_like</span>
+<span class="sd">            Data to trim.</span>
+<span class="sd">        proportiontocut : float, optional</span>
+<span class="sd">            Percentage of trimming. If n is the number of unmasked values</span>
+<span class="sd">            before trimming, the number of values after trimming is</span>
+<span class="sd">            ``(1 - proportiontocut) * n``.  Default is 0.2.</span>
+<span class="sd">        tail : {&#39;left&#39;, &#39;right&#39;}, optional</span>
+<span class="sd">            If &#39;left&#39; the `proportiontocut` lowest values will be masked.</span>
+<span class="sd">            If &#39;right&#39; the `proportiontocut` highest values will be masked.</span>
+<span class="sd">            Default is &#39;left&#39;.</span>
+<span class="sd">        inclusive : {(bool, bool) tuple}, optional</span>
+<span class="sd">            Tuple indicating whether the number of data being masked on each side</span>
+<span class="sd">            should be rounded (True) or truncated (False).  Default is</span>
+<span class="sd">            (True, True).</span>
+<span class="sd">        axis : int, optional</span>
+<span class="sd">            Axis along which to perform the trimming.</span>
+<span class="sd">            If None, the input array is first flattened.  Default is None.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        trimtail : ndarray</span>
+<span class="sd">            Returned array of same shape as `data` with masked tail values.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">scipy_trimtail</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">proportiontocut</span><span class="p">,</span> <span class="n">tail</span><span class="p">,</span> <span class="n">inclusive</span><span class="p">,</span> <span class="n">axis</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Stats.winsorize"><a class="viewcode-back" href="../../modules.html#pyco2stats.stats.Stats.winsorize">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">winsorize</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">limits</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">inclusive</span><span class="o">=</span><span class="p">(</span><span class="kc">True</span><span class="p">,</span> <span class="kc">True</span><span class="p">),</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">nan_policy</span><span class="o">=</span><span class="s1">&#39;propagate&#39;</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns a Winsorized version of the input array. Mutuated from Scipy (https://docs.scipy.org/doc/scipy/reference/generated/scipy.stats.mstats.winsorize.html).</span>
+
+<span class="sd">        The (limits[0])th lowest values are set to the (limits[0])th percentile,</span>
+<span class="sd">        and the (limits[1])th highest values are set to the (1 - limits[1])th</span>
+<span class="sd">        percentile.</span>
+<span class="sd">        Masked values are skipped.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        a : sequence</span>
+<span class="sd">            Input array.</span>
+<span class="sd">        limits : {None, tuple of float}, optional</span>
+<span class="sd">            Tuple of the percentages to cut on each side of the array, with respect</span>
+<span class="sd">            to the number of unmasked data, as floats between 0. and 1.</span>
+<span class="sd">            Noting n the number of unmasked data before trimming, the</span>
+<span class="sd">            (n*limits[0])th smallest data and the (n*limits[1])th largest data are</span>
+<span class="sd">            masked, and the total number of unmasked data after trimming</span>
+<span class="sd">            is n*(1.-sum(limits)) The value of one limit can be set to None to</span>
+<span class="sd">            indicate an open interval.</span>
+<span class="sd">        inclusive : {(True, True) tuple}, optional</span>
+<span class="sd">            Tuple indicating whether the number of data being masked on each side</span>
+<span class="sd">            should be truncated (True) or rounded (False).</span>
+<span class="sd">        inplace : {False, True}, optional</span>
+<span class="sd">            Whether to winsorize in place (True) or to use a copy (False)</span>
+<span class="sd">        axis : {None, int}, optional</span>
+<span class="sd">            Axis along which to trim. If None, the whole array is trimmed, but its</span>
+<span class="sd">            shape is maintained.</span>
+<span class="sd">        nan_policy : {&#39;propagate&#39;, &#39;raise&#39;, &#39;omit&#39;}, optional</span>
+<span class="sd">            Defines how to handle when input contains nan.</span>
+<span class="sd">            The following options are available (default is &#39;propagate&#39;):</span>
+
+<span class="sd">              * &#39;propagate&#39;: allows nan values and may overwrite or propagate them</span>
+<span class="sd">              * &#39;raise&#39;: throws an error</span>
+<span class="sd">              * &#39;omit&#39;: performs the calculations ignoring nan values</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        This function is applied to reduce the effect of possibly spurious outliers</span>
+<span class="sd">        by limiting the extreme values.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        winsorized : ndarray</span>
+<span class="sd">            Winsorized array.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">scipy_winsorize</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">limits</span><span class="p">,</span> <span class="n">inclusive</span><span class="p">,</span> <span class="n">inplace</span><span class="p">,</span> <span class="n">axis</span><span class="p">,</span> <span class="n">nan_policy</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Stats.winsorized_mean"><a class="viewcode-back" href="../../modules.html#pyco2stats.stats.Stats.winsorized_mean">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">winsorized_mean</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">limits</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">inclusive</span><span class="o">=</span><span class="p">(</span><span class="kc">True</span><span class="p">,</span> <span class="kc">True</span><span class="p">),</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">nan_policy</span><span class="o">=</span><span class="s1">&#39;propagate&#39;</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns a Winsorized mean of the input array.</span>
+
+<span class="sd">        The (limits[0])th lowest values are set to the (limits[0])th percentile,</span>
+<span class="sd">        and the (limits[1])th highest values are set to the (1 - limits[1])th</span>
+<span class="sd">        percentile.</span>
+<span class="sd">        Masked values are skipped.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        a : sequence</span>
+<span class="sd">            Input array.</span>
+<span class="sd">        limits : {None, tuple of float}, optional</span>
+<span class="sd">            Tuple of the percentages to cut on each side of the array, with respect</span>
+<span class="sd">            to the number of unmasked data, as floats between 0. and 1.</span>
+<span class="sd">            Noting n the number of unmasked data before trimming, the</span>
+<span class="sd">            (n*limits[0])th smallest data and the (n*limits[1])th largest data are</span>
+<span class="sd">            masked, and the total number of unmasked data after trimming</span>
+<span class="sd">            is n*(1.-sum(limits)) The value of one limit can be set to None to</span>
+<span class="sd">            indicate an open interval.</span>
+<span class="sd">        inclusive : {(True, True) tuple}, optional</span>
+<span class="sd">            Tuple indicating whether the number of data being masked on each side</span>
+<span class="sd">            should be truncated (True) or rounded (False).</span>
+<span class="sd">        inplace : {False, True}, optional</span>
+<span class="sd">            Whether to winsorize in place (True) or to use a copy (False)</span>
+<span class="sd">        axis : {None, int}, optional</span>
+<span class="sd">            Axis along which to trim. If None, the whole array is trimmed, but its</span>
+<span class="sd">            shape is maintained.</span>
+<span class="sd">        nan_policy : {&#39;propagate&#39;, &#39;raise&#39;, &#39;omit&#39;}, optional</span>
+<span class="sd">            Defines how to handle when input contains nan.</span>
+<span class="sd">            The following options are available (default is &#39;propagate&#39;):</span>
+
+<span class="sd">              * &#39;propagate&#39;: allows nan values and may overwrite or propagate them</span>
+<span class="sd">              * &#39;raise&#39;: throws an error</span>
+<span class="sd">              * &#39;omit&#39;: performs the calculations ignoring nan values</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        This function is applied to reduce the effect of possibly spurious outliers</span>
+<span class="sd">        by limiting the extreme values.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        winsorized_mean : float</span>
+<span class="sd">            Winsorized mean of the array.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">scipy_winsorize</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">limits</span><span class="p">,</span> <span class="n">inclusive</span><span class="p">,</span> <span class="n">inplace</span><span class="p">,</span> <span class="n">axis</span><span class="p">,</span> <span class="n">nan_policy</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="Stats.winsorized_std"><a class="viewcode-back" href="../../modules.html#pyco2stats.stats.Stats.winsorized_std">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">winsorized_std</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">ddof</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">limits</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">inclusive</span><span class="o">=</span><span class="p">(</span><span class="kc">True</span><span class="p">,</span> <span class="kc">True</span><span class="p">),</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">nan_policy</span><span class="o">=</span><span class="s1">&#39;propagate&#39;</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns a Winsorized Standard Deviation of the input array.</span>
+
+<span class="sd">        The (limits[0])th lowest values are set to the (limits[0])th percentile,</span>
+<span class="sd">        and the (limits[1])th highest values are set to the (1 - limits[1])th</span>
+<span class="sd">        percentile.</span>
+<span class="sd">        Masked values are skipped.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        a : sequence</span>
+<span class="sd">            Input array.</span>
+<span class="sd">        ddof : int, optional</span>
+<span class="sd">            Delta Degrees of Freedom. The denominator used in calculations is `N - ddof`, </span>
+<span class="sd">            where `N` represents the number of elements. By default ddof is one.</span>
+<span class="sd">        limits : {None, tuple of float}, optional</span>
+<span class="sd">            Tuple of the percentages to cut on each side of the array, with respect</span>
+<span class="sd">            to the number of unmasked data, as floats between 0. and 1.</span>
+<span class="sd">            Noting n the number of unmasked data before trimming, the</span>
+<span class="sd">            (n*limits[0])th smallest data and the (n*limits[1])th largest data are</span>
+<span class="sd">            masked, and the total number of unmasked data after trimming</span>
+<span class="sd">            is n*(1.-sum(limits)) The value of one limit can be set to None to</span>
+<span class="sd">            indicate an open interval.</span>
+<span class="sd">        inclusive : {(True, True) tuple}, optional</span>
+<span class="sd">            Tuple indicating whether the number of data being masked on each side</span>
+<span class="sd">            should be truncated (True) or rounded (False).</span>
+<span class="sd">        inplace : {False, True}, optional</span>
+<span class="sd">            Whether to winsorize in place (True) or to use a copy (False).</span>
+<span class="sd">        axis : {None, int}, optional</span>
+<span class="sd">            Axis along which to trim. If None, the whole array is trimmed, but its</span>
+<span class="sd">            shape is maintained.</span>
+<span class="sd">        nan_policy : {&#39;propagate&#39;, &#39;raise&#39;, &#39;omit&#39;}, optional</span>
+<span class="sd">            Defines how to handle when input contains nan.</span>
+<span class="sd">            The following options are available (default is &#39;propagate&#39;):</span>
+
+<span class="sd">              * &#39;propagate&#39;: allows nan values and may overwrite or propagate them</span>
+<span class="sd">              * &#39;raise&#39;: throws an error</span>
+<span class="sd">              * &#39;omit&#39;: performs the calculations ignoring nan values</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        winsorized_std : float</span>
+<span class="sd">            Winsorized standard deviation of the array.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="n">scipy_winsorize</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">limits</span><span class="p">,</span> <span class="n">inclusive</span><span class="p">,</span> <span class="n">inplace</span><span class="p">,</span> <span class="n">axis</span><span class="p">,</span> <span class="n">nan_policy</span><span class="p">),</span> <span class="n">ddof</span><span class="o">=</span><span class="n">ddof</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Stats.Huber"><a class="viewcode-back" href="../../modules.html#pyco2stats.stats.Stats.Huber">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">Huber</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">c</span><span class="o">=</span><span class="mf">1.5</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="mf">1e-08</span><span class="p">,</span> <span class="n">maxiter</span><span class="o">=</span><span class="mi">30</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Huber&#39;s proposal 2 for estimating location and scale jointly. </span>
+<span class="sd">        Return joint estimates of Huber&#39;s scale and location. </span>
+<span class="sd">        Mutuated from statsmodels.robust (https://www.statsmodels.org/stable/generated/statsmodels.robust.scale.Huber.html#statsmodels.robust.scale.Huber).</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        c : float, optional</span>
+<span class="sd">            Threshold used in threshold for chi=psi**2.  Default value is 1.5.</span>
+<span class="sd">        tol : float, optional</span>
+<span class="sd">            Tolerance for convergence.  Default value is 1e-08.</span>
+<span class="sd">        maxiter : int, optional</span>
+<span class="sd">            Maximum number of iterations.  Default value is 30.</span>
+<span class="sd">        norm : statsmodels.robust.norms.RobustNorm, optional</span>
+<span class="sd">            A robust norm used in M estimator of location. If None,</span>
+<span class="sd">            the location estimator defaults to a one-step</span>
+<span class="sd">            fixed point version of the M-estimator using Huber&#39;s T.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        huber : tuple</span>
+<span class="sd">            Returns a tuple (location, scale) of the joint estimates.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">huber_proposal_2</span> <span class="o">=</span> <span class="n">sm</span><span class="o">.</span><span class="n">robust</span><span class="o">.</span><span class="n">Huber</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">tol</span><span class="p">,</span> <span class="n">maxiter</span><span class="p">,</span> <span class="n">norm</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">huber_proposal_2</span><span class="p">(</span><span class="n">data</span><span class="p">)</span></div></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright .</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,2 @@
+recursive-include pyco2stats *
+include README.md
