@@ -1,4 +1,4 @@
-[![Documentation Status](https://readthedocs.org/projects/pyfresco/badge/?version=latest)](https://pyfresco.readthedocs.io/en/latest/)
+[![Documentation Status](https://readthedocs.org/projects/AIVolcanoLab/pyco2stats/badge/?version=latest)](https://pyco2stats.readthedocs.io/en/latest/)
 
 # pyco2stats
 
