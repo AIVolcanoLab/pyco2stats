@@ -6,11 +6,11 @@
 Welcome to pyco2stats's documentation!
 ======================================
 
-
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
 
+   modules
 
 Indices and tables
 ==================
@@ -18,27 +18,3 @@ Indices and tables
 * :ref:`genindex`
 * :ref:`modindex`
 * :ref:`search`
-
-pyco2stats Modules
-==================
-
-.. automodule:: pyco2stats.gaussian_mixtures
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-.. automodule:: pyco2stats.sinclair
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-.. automodule:: pyco2stats.stats
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-.. automodule:: pyco2stats.visualize
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
