@@ -10,7 +10,7 @@ Welcome to pyco2stats's documentation!
    :maxdepth: 2
    :caption: Contents:
 
-   index
+   modules
 
 Indices and tables
 ==================
