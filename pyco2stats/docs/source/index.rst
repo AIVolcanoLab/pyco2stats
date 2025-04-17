@@ -10,25 +10,7 @@ Welcome to pyco2stats's documentation!
    :maxdepth: 2
    :caption: Contents:
 
-.. automodule:: pyco2stats.gaussian_mixtures
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-.. automodule:: pyco2stats.sinclair
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-.. automodule:: pyco2stats.stats
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-.. automodule:: pyco2stats.visualize
-   :members:
-   :undoc-members:
-   :show-inheritance:
+modules
 
 Indices and tables
 ==================
