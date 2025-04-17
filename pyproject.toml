@@ -9,3 +9,8 @@ requires_python = ">=3.7"
 license = { file = "LICENSE" }
 readme = "README.md"
 authors = [{name = "Maurizio Petrelli", email = "maurizio.petrelli@unipg.it"}, { name = "Marco Baroni", email = "mbaroni96@gmail.com"}]
+dependencies = [ "request>=2.0", "Thermobar"]
+
+[project.urls]
+"Source" = "https://github.com/AIVolcanoLab/pyco2stats"
+
