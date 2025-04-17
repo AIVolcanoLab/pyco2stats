@@ -6,9 +6,9 @@ setup(
     name="PyCO2stats",  
     version="0.1.0",  
     description="A package for statistical analysis and plotting in the context of CO2 data",
-    author="Your Name",
+    author="Maurizio Petrelli",
     author_email="maurizio.petrelli@unipg.it",
-    url="https://github.com/yourusername/PyCO2stats",  # URL to the package's repository
+    url="https://github.com/AIVolcanoLab/pyco2stats",  # URL to the package's repository
     packages=find_packages(exclude=["tests"]),  # Automatically find packages except the tests directory
     install_requires=[
         "numpy>=1.18.0",
