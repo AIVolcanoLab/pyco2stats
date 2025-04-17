@@ -4,7 +4,7 @@ sys.path.insert(0, os.path.abspath('../..'))
 
 # Project information
 project = 'pyco2stats'
-author = 'Maurizio Petrelli, Alessandra Ariano'
+author = 'Maurizio Petrelli, Alessandra Ariano, Marco Baroni'
 release = '0.1.0'
 
 # Add any Sphinx extension module names here, as strings.
