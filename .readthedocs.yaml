@@ -31,4 +31,4 @@ python:
   install:
     - method: pip
       path: .
-    - requirements: pyco2stats/docs/source/requirements.txt
+    - requirements: pyco2stats/docs/requirements.txt
