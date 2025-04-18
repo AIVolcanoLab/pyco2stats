@@ -1,17 +1,28 @@
-Metadata-Version: 2.1
+Metadata-Version: 2.4
 Name: PyCO2stats
-Version: 0.1.0
+Version: 0.1.1
 Summary: A package for statistical analysis and plotting in the context of CO2 data
-Home-page: https://github.com/yourusername/PyCO2stats
-Author: Your Name
-Author-email: maurizio.petrelli@unipg.it
-Classifier: Programming Language :: Python :: 3
-Classifier: License :: OSI Approved :: MIT License
-Classifier: Operating System :: OS Independent
-Requires-Python: >=3.6
-Requires-Dist: numpy>=1.18.0
-Requires-Dist: scipy>=1.4.0
-Requires-Dist: matplotlib>=3.1.0
-Provides-Extra: dev
-Requires-Dist: pytest>=6.0; extra == "dev"
-Requires-Dist: flake8>=3.8; extra == "dev"
+Author-email: Maurizio Petrelli <maurizio.petrelli@unipg.it>, Marco Baroni <mbaroni96@gmail.com>, Alessandra Ariano <alessandra.ariano@dottorandi.unipg.it>
+Project-URL: Homepage, https://github.com/AIVolcanoLab/pyco2stats
+Project-URL: Repository, https://github.com/AIVolcanoLab/pyco2stats
+Requires-Python: >=3.7
+Description-Content-Type: text/markdown
+
+[![Documentation Status](https://readthedocs.org/projects/pyco2stats/badge/?version=latest)](https://pyco2stats.readthedocs.io/en/latest/)
+
+# pyco2stats
+
+A Python package to do statistical analyses for CO2 degassing processes.
+
+## Features
+
+ - Gaussian mixtures: module that implements the possibility to perform gaussian mixtures models.
+ - Sinclair: module for the implementation of the Sinclair method.
+ - Stats: various statistical methods.
+ - Visualize: visualization module.
+
+## Installation
+
+pyco2stats can be installed using pip:
+
+pip install pyco2stats
