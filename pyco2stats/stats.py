@@ -23,13 +23,19 @@ class Stats:
         """
         Sample data points from a given probability density function (PDF).
 
-        Parameters:
-        - x (array): x values corresponding to the PDF.
-        - pdf (array): PDF values corresponding to each x value.
-        - n_samples (int): Number of samples to generate. Default is 1000.
+        Parameters
+        ----------
+        x : array 
+            X values corresponding to the PDF.
+        pdf : array
+            PDF values corresponding to each x value.
+        n_samples : int
+            Number of samples to generate. Default is 1000.
 
-        Returns:
-        - array: sampled data points.
+        Returns
+        -------
+        Array : array  
+            Sampled data points.
         """
         # Ensure the PDF is normalized (sum equals 1)
         pdf = pdf / np.sum(pdf)
@@ -58,13 +64,19 @@ class Stats:
         .. math::
         f(z|n,M) = 1 + \frac{z(n-1)}{n} + \sum^{M}_{m=2} \frac{z^{m}(n-1)^{2m-1}}{n^{m}m!\prod_{k=1}^{m-1}(n+2k-1)}
         
-        Parameters:
-        z (float): The argument to the Sichel function.
-        n (int): The sample size.
-        M (int): The order of the sSichel function.
+        Parameters
+        ----------
+        z : float 
+            The argument to the Sichel function.
+        n : int 
+            The sample size.
+        M : int 
+            The order of the sSichel function.
 
-        Returns:
-        float: The value of Sichel's function.
+        Returns
+        -------
+        Sichel : float 
+            The value of Sichel's function.
         """
 
         sichel = 1. + z*(n-1)/n
@@ -82,50 +94,27 @@ class Stats:
             sichel += A/B
             
         return sichel
-        
-
-    #@staticmethod
-    #def sichel_function_15(z, n, M):
-    #    """
-    #    Compute Sichel's function using 15 terms.
-    #    
-    #    Parameters:
-    #    z (float): The argument to the Sichel function.
-    #    n (int): The sample size.
-    #
-    #    Returns:
-    #    float: The value of Sichel's function.
-    #    """
-    #    sf_15 = (1 + z * (n-1)/n +
-    #             ((z**2) * (n-1)**3)/(n**2*(n+1)*sp.factorial(2)) +
-    #             ((z**3) * (n-1)**5)/(n**3*(n+1)*(n+3)*sp.factorial(3)) +
-    #             ((z**4) * (n-1)**7)/(n**4*(n+1)*(n+3)*(n+5)*sp.factorial(4)) +
-    #             ((z**5) * (n-1)**9)/(n**5*(n+1)*(n+3)*(n+5)*(n+7)*sp.factorial(5)) +
-    #             ((z**6) * (n-1)**11)/(n**6*(n+1)*(n+3)*(n+5)*(n+7)*(n+9)*sp.factorial(6)) +
-    #             ((z**7) * (n-1)**13)/(n**7*(n+1)*(n+3)*(n+5)*(n+7)*(n+9)*(n+11)*sp.factorial(7)) +
-    #             ((z**8) * (n-1)**15)/(n**8*(n+1)*(n+3)*(n+5)*(n+7)*(n+9)*(n+11)*(n+13)*sp.factorial(8)) +
-    #             ((z**9) * (n-1)**17)/(n**9*(n+1)*(n+3)*(n+5)*(n+7)*(n+9)*(n+11)*(n+13)*(n+15)*sp.factorial(9)) +
-    #             ((z**10) * (n-1)**19)/(n**10*(n+1)*(n+3)*(n+5)*(n+7)*(n+9)*(n+11)*(n+13)*(n+15)*(n+17)*sp.factorial(10)) +
-    #             ((z**11) * (n-1)**21)/(n**11*(n+1)*(n+3)*(n+5)*(n+7)*(n+9)*(n+11)*(n+13)*(n+15)*(n+17)*(n+19)*sp.factorial(11)) +
-    #             ((z**12) * (n-1)**23)/(n**12*(n+1)*(n+3)*(n+5)*(n+7)*(n+9)*(n+11)*(n+13)*(n+15)*(n+17)*(n+19)*(n+21)*sp.factorial(12)) +
-    #             ((z**13) * (n-1)**25)/(n**13*(n+1)*(n+3)*(n+5)*(n+7)*(n+9)*(n+11)*(n+13)*(n+15)*(n+17)*(n+19)*(n+21)*(n+23)*sp.factorial(13)) +
-    #             ((z**14) * (n-1)**27)/(n**14*(n+1)*(n+3)*(n+5)*(n+7)*(n+9)*(n+11)*(n+13)*(n+15)*(n+17)*(n+19)*(n+21)*(n+23)*(n+25)*sp.factorial(14)) +
-    #             ((z**15) * (n-1)**29)/(n**15*(n+1)*(n+3)*(n+5)*(n+7)*(n+9)*(n+11)*(n+13)*(n+15)*(n+17)*(n+19)*(n+21)*(n+23)*(n+25)*(n+27)*sp.factorial(15)))
-    #    return sf_15
 
     @staticmethod
     def sichel_function_log(sigma_sq, n, max_terms=20, tol=1e-10):
         """
         Compute Sichel's function ψ_n using logarithmic space for stability.
 
-        Parameters:
-        sigma_sq (float): The variance of the log-transformed data.
-        n (int): The sample size.
-        max_terms (int): Maximum number of terms to include in the series. Default is 20.
-        tol (float): Tolerance for convergence. Default is 1e-10.
+        Parameters
+        ----------
+        sigma_sq : float
+            The variance of the log-transformed data.
+        n : int
+            The sample size.
+        max_terms : int
+            Maximum number of terms to include in the series. Default is 20.
+        tol : float
+            Tolerance for convergence. Default is 1e-10.
 
-        Returns:
-        psi_n (float): The value of Sichel's function.
+        Returns
+        -------
+        psi_n : float 
+            The value of Sichel's function.
         """
         psi_n = 1 + (n - 1) / n * sigma_sq  # Start with the first two terms
         for j in range(2, max_terms + 1):
@@ -143,13 +132,19 @@ class Stats:
         """
         Calculate the Minimum Variances Unbiased Estimator mean and confidence interval for log-normally distributed data using Sichel's function.
         
-        Parameters:
-        data (array-like): Log-normally distributed data.
-        confidence (float): Confidence level for the interval. Default is 0.95.
-        transformed (bool): if True, it assumes that data are ln transformed. Default is False.
+        Parameters
+        ----------
+        data : array like
+            Log-normally distributed data.
+        confidence : float 
+            Confidence level for the interval. Default is 0.95.
+        transformed : bool 
+            If True, it assumes that data are ln transformed. Default is False.
 
-        Returns:
-        dict: A dictionary containing the MVUE mean and confidence interval.
+        Returns
+        -------
+        Output: dictionary
+            A dictionary containing the MVUE mean and confidence interval.
         """
         # Step 1: Transform the data using the natural log if not already transformed
         if not transformed:
@@ -807,40 +802,6 @@ class Stats:
         See Also
         --------
         trim_mean
-
-        Examples
-        --------
-        Create an array of 10 values and trim 10% of those values from each end:
-
-        >>> import numpy as np
-        >>> from scipy import stats
-        >>> a = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
-        >>> stats.trimboth(a, 0.1)
-        array([1, 3, 2, 4, 5, 6, 7, 8])
-
-        Note that the elements of the input array are trimmed by value, but the
-        output array is not necessarily sorted.
-
-        The proportion to trim is rounded down to the nearest integer. For
-        instance, trimming 25% of the values from each end of an array of 10
-        values will return an array of 6 values:
-
-        >>> b = np.arange(10)
-        >>> stats.trimboth(b, 1/4).shape
-        (6,)
-
-        Multidimensional arrays can be trimmed along any axis or across the entire
-        array:
-
-        >>> c = [2, 4, 6, 8, 0, 1, 3, 5, 7, 9]
-        >>> d = np.array([a, b, c])
-        >>> stats.trimboth(d, 0.4, axis=0).shape
-        (1, 10)
-        >>> stats.trimboth(d, 0.4, axis=1).shape
-        (3, 2)
-        >>> stats.trimboth(d, 0.4, axis=None).shape
-        (6,)
-
         """
         return scipy_trimboth(a, proportiontocut, axis)
 
