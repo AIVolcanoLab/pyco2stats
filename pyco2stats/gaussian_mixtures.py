@@ -15,23 +15,30 @@ class GMM:
         
         From 10.1016/j.ijggc.2016.02.012
 
-        Parameters:
-
-        -----------------
+        Parameters
+        ----------
         
-        data (array-like): The input data to fit the GMM to.
-        n_components (int): The number of Gaussian components in the mixture.
-        max_iter (int): The maximum number of iterations for the EM algorithm. Default is 100.
-        tol (float): The tolerance for convergence. Default is 1e-6.
+        data : array like
+            The input data to fit the GMM to.
+        n_components : int
+         The number of Gaussian components in the mixture.
+        max_iter : int
+         The maximum number of iterations for the EM algorithm. Default is 100.
+        tol : float
+         The tolerance for convergence. Default is 1e-6.
 
         Returns:
 
         -----------------
         
-        means (ndarray): The means of the Gaussian components.
-        std_devs (ndarray): The standard deviations of the Gaussian components.
-        weights (ndarray): The weights (mixing proportions) of the Gaussian components.
-        log_likelihoods (list): The log-likelihood values over the iterations.
+        means : ndarray
+         The means of the Gaussian components.
+        std_devs : ndarray
+         The standard deviations of the Gaussian components.
+        weights : ndarray
+         The weights (mixing proportions) of the Gaussian components.
+        log_likelihoods : list
+         The log-likelihood values over the iterations.
         """
         
         n = len(data)  # Number of data points
@@ -81,21 +88,35 @@ class GMM:
         """
         Fit a Gaussian Mixture Model (GMM) mutuated from sklearn.
 
-        Parameters:
-        - X (array-like): The input data to fit the GMM to.
-        - n_components (int): The number of Gaussian components in the mixture.
-        - max_iter (int): The maximum number of iterations for the EM algorithm. Default is 100.
-        - tol (float): The tolerance for convergence. Default is 1e-10.
-        - n_init (int): The number of initializations to perform. The best results are kept. Default is 20.
-        - suppress_warnings (bool): If True, suppresses the generation of warnings. Default is True.
-        - covariance_type (string): can be 'full', 'tied', 'diag' or 'spherical'. Describes the type of covariance parameters to use. Default is 'spherical'.
+        Parameters
+        ----------
+        X : arraylike
+            The input data to fit the GMM to.
+        n_components : int
+            The number of Gaussian components in the mixture.
+        max_iter : int
+            The maximum number of iterations for the EM algorithm. Default is 100.
+        tol : flaot
+            The tolerance for convergence. Default is 1e-10.
+        n_init : int
+            The number of initializations to perform. The best results are kept. Default is 20.
+        suppress_warnings : bool
+            If True, suppresses the generation of warnings. Default is True.
+        covariance_type : string
+            Can be 'full', 'tied', 'diag' or 'spherical'. Describes the type of covariance parameters to use. Default is 'spherical'.
 
-        Returns:
-        - means (ndarray): The means of the Gaussian components.
-        - std_devs (ndarray): The standard deviations of the Gaussian components.
-        - weights (ndarray): The weights (mixing proportions) of the Gaussian components.
-        - max_iter (int): maximum number of iteration (given as input).
-        - log_likelihoods (list): The log-likelihood values over the iterations.
+        Returns
+        -------
+        means : ndarray
+            The means of the Gaussian components.
+        std_devs : ndarray
+            The standard deviations of the Gaussian components.
+        weights : ndarray
+            The weights (mixing proportions) of the Gaussian components.
+        max_iter : int
+            Maximum number of iteration (given as input).
+        log_likelihoods : list
+            The log-likelihood values over the iterations.
         """
         
         # Standardize data to avoid numerical issues
@@ -151,19 +172,31 @@ class GMM:
         """
         Optimize a Gaussian Mixture Model (GMM) using PyTorch with specified constraints on means and standard deviations.
         
-        Parameters:
-        - X (array-like): Input data to fit the GMM.
-        - mean_constraints (list of tuples): List of tuples specifying (min, max) constraints for each component's mean.
-        - std_constraints (list of tuples): List of tuples specifying (min, max) constraints for each component's standard deviation.
-        - n_components (int): Number of Gaussian components in the mixture.
-        - n_epochs (int): Number of iterations for optimization. Default is 5000.
-        - lr (float): Learning rate for the optimizer. Default is 0.001.
-        - verbose (bool): If True, prints progress every 200 epochs. Default is True.
+        Parameters
+        ----------
+        X : array like
+            Input data to fit the GMM.
+        mean_constraints : list of tuples
+          List of tuples specifying (min, max) constraints for each component's mean.
+        std_constraints : list of tuples
+          List of tuples specifying (min, max) constraints for each component's standard deviation.
+        n_components : int
+          Number of Gaussian components in the mixture.
+        n_epochs : int
+          Number of iterations for optimization. Default is 5000.
+        lr : float
+          Learning rate for the optimizer. Default is 0.001.
+        verbose : bool
+          If True, prints progress every 200 epochs. Default is True.
         
-        Returns:
-        - optimized_means (ndarray): Optimized means of the Gaussian components.
-        - optimized_stds (ndarray): Optimized standard deviations of the Gaussian components.
-        - optimized_weights (ndarray): Optimized weights (mixing proportions) of the Gaussian components.
+        Returns
+        -------
+        optimized_means : ndarray
+          Optimized means of the Gaussian components.
+        optimized_stds : ndarray
+          Optimized standard deviations of the Gaussian components.
+        optimized_weights : ndarray
+          Optimized weights (mixing proportions) of the Gaussian components.
         """
         # Convert input data to a PyTorch tensor
         X = torch.tensor(X, dtype=torch.float32)
@@ -239,14 +272,21 @@ class GMM:
         """
         Compute the PDF of a Gaussian Mixture Model.
         
-        Parameters:
-        - x (array-like): x values at which to compute the PDF.
-        - means (list or array): means for each Gaussian component.
-        - stds (list or array): standard deviations for each Gaussian component.
-        - weights (list or array): weights (relative importance that must sum to 1) for each Gaussian component.
+        Parameters
+        ----------
+        x : array like
+            X values at which to compute the PDF.
+        means : list or array 
+            Means for each Gaussian component.
+        stds : list or array
+           Standard deviations for each Gaussian component.
+        weights : list or array
+           Weights (relative importance that must sum to 1) for each Gaussian component.
         
-        Returns:
-        - pdf (array): The computed PDF values for the Gaussian Mixture Model at each x.
+        Returns
+        -------
+        pdf (array): array
+           The computed PDF values for the Gaussian Mixture Model at each x.
         """
         
         
