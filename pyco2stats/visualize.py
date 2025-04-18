@@ -10,13 +10,18 @@ class Visualize:
         """
         Plot the raw probability plot plot data on the given Axes object.
 
-        Parameters:
-        - my_data (array-like): The input data to be plotted in the QQ plot.
-        - ax (matplotlib.axes.Axes): The matplotlib Axes object where the QQ plot will be drawn.
-        - **kwargs: Additional keyword arguments passed to the scatter plot function.
+        Parameters
+        ----------
+        my_data : array like 
+            The input data to be plotted in the QQ plot.
+        ax : matplotlib.axes.Axes
+            The matplotlib Axes object where the QQ plot will be drawn.
+        **kwargs: 
+            Additional keyword arguments passed to the scatter plot function.
         
-        Returns:
-        - None
+        Returns
+        -------
+        None
         """
         # Get the theoretical quantiles and sorted data values
         osm, osr = Sinclair.get_raw_data(my_data)
@@ -29,17 +34,26 @@ class Visualize:
         """
         Plot combined Gaussian mixture distribution on the provided Axes object.
         
-        Parameters:
-        - meds (list of array): Means for each Gaussian component.
-        - stds (list of array): Standard deviations for each Gaussian component.
-        - fds (list of array): Weights (relative importance) for each Gaussian component.
-        - mminy (int or float): Minimum value for generating ylon values.
-        - mmaxy (int or float): Maximum value for generating ylon values.
-        - ax (matplotlib.axes.Axes): The matplotlib Axes object where the plot will be drawn.
-        - **kwargs: Additional keyword arguments passed to the plot function.
+        Parameters
+        ----------
+        meds : list or array
+            Means for each Gaussian component.
+        stds : list or array
+           Standard deviations for each Gaussian component.
+        fds : list or array
+           Weights (relative importance) for each Gaussian component.
+        mminy : int or float
+           Minimum value for generating ylon values.
+        mmaxy : int or float
+           Maximum value for generating ylon values.
+        ax : matplotlib.axes.Axes
+           The matplotlib Axes object where the plot will be drawn.
+        **kwargs: 
+           Additional keyword arguments passed to the plot function.
         
-        Returns:
-        - None
+        Returns
+        -------
+        None
         """
         # Calculate the sigma values and ylon values for the combined population
         x, y = Sinclair.calculate_combined_population(meds, stds, fds, mminy, mmaxy)
@@ -52,16 +66,24 @@ class Visualize:
         """
         Plot the individual Gaussian population curves on the provided Axes object.
 
-        Parameters:
-        - meds (list or array): means for each Gaussian component.
-        - stds (list or array): standard deviations for each Gaussian component.
-        - mminy (int or float): Minimum value for generating ylon values.
-        - mmaxy (int or float): Maximum value for generating ylon values.
-        - ax (matplotlib.axes.Axes): The Matplotlib Axes object where the curves will be plotted.
-        - **kwargs: Additional keyword arguments passed to the plot function for styling.
+        Parameters
+        ----------
+        meds : list or array
+            means for each Gaussian component.
+        stds : list or array
+           standard deviations for each Gaussian component.
+        mminy : int or float
+           Minimum value for generating ylon values.
+        mmaxy : int or float
+           Maximum value for generating ylon values.
+        ax : matplotlib.axes.Axes
+           The Matplotlib Axes object where the curves will be plotted.
+        **kwargs: 
+           Additional keyword arguments passed to the plot function for styling.
 
-        Returns:
-        - None: This function directly plots on the provided Axes object.
+        Returns
+        -------
+        None
         """
         # Initialize a counter for labeling each Gaussian component
         i = 0
@@ -88,14 +110,20 @@ class Visualize:
         """
         Plot vertical percentile lines on the provided Axes object and label them.
 
-        Parameters:
-        - ax (matplotlib.axes.Axes): The matplotlib Axes object where the percentiles will be plotted.
-        - percentiles (str): The type of percentiles to plot ('full', 'half', 'even', 'deciles').
-        - label_size (int): Font size for the labels.
-        - **kwargs: Additional keyword arguments passed to the ax.axvline function.
+        Parameters
+        ----------
+        ax : matplotlib.axes.Axes
+           The matplotlib Axes object where the percentiles will be plotted.
+        percentiles : string
+           The type of percentiles to plot ('full', 'half', 'even', 'deciles').
+        label_size : int
+           Font size for the labels.
+        **kwargs: 
+            Additional keyword arguments passed to the ax.axvline function.
 
-        Returns:
-        - None: This function directly plots on the provided Axes object.
+        Returns
+        -------
+        None
         """
         peri = [-2.326, -2.055, -1.751, -1.555, -1.405, -1.282, -1.037, -0.842, -0.675, -0.525, -0.385, -0.255, 0,
                 0.255, 0.385, 0.525, 0.675, 0.842, 1.037, 1.282, 1.405, 1.555, 1.751, 2.055, 2.326]
@@ -133,15 +161,20 @@ class Visualize:
     def qq_plot(ax, observed_data, reference_population):
         
         """
-        INSERIRE DESCRIZIONE
+        Quantile plot.
 
-        Parameters:
-        - ax (matplotlib.axes.Axes): The matplotlib Axes object where the quantiles will be plotted.
-        - observed_data (array-like): The observationally derived data.
-        - reference_population (array-like): The data referring to the reference population.
+        Parameters
+        ----------
+        ax : matplotlib.axes.Axes
+            The matplotlib Axes object where the quantiles will be plotted.
+        observed_data : array-like
+            The observationally derived data.
+        reference_population : array-like
+            The data referring to the reference population.
 
-        Returns:
-        - None: This function directly plots on the provided Axes object.
+        Returns
+        -------
+        None
         """
         
         # Sort both observed data and reference population
@@ -169,16 +202,30 @@ class Visualize:
         """
         Plot the Gaussian Mixture Model PDF and its components.
 
-        Parameters:
-        - ax: Matplotlib axis object.
-        - x (array): x values.
-        - meds (list or array): Means of the Gaussian components.
-        - stds (list or array): Standard deviations of the Gaussian components.
-        - weights (list or array): Weights of the Gaussian components.
-        - data (list or array , optional): Raw data to plot as a histogram.
-        - pdf_plot_kwargs (list): Keyword arguments for the main GMM PDF plot.
-        - component_plot_kwargs (list): Keyword arguments for the individual component plots.
-        - hist_plot_kwargs (list): Keyword arguments for the histogram plot.
+        Parameters
+        ----------
+        ax : matplotlib.axes.Axes
+            The matplotlib Axes object where the quantiles will be plotted.
+        x : array
+            x values.
+        meds : list or array
+           Means of the Gaussian components.
+        stds : list or array
+           Standard deviations of the Gaussian components.
+        weights : list or array
+           Weights of the Gaussian components.
+        data : list or array , optional
+           Raw data to plot as a histogram.
+        pdf_plot_kwargs : list
+           Keyword arguments for the main GMM PDF plot.
+        component_plot_kwargs : list
+           Keyword arguments for the individual component plots.
+        hist_plot_kwargs : list
+           Keyword arguments for the histogram plot.
+
+        Returns
+        -------
+        None
         """
         if pdf_plot_kwargs is None:
             pdf_plot_kwargs = {}
