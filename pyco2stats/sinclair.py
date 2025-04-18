@@ -8,12 +8,17 @@ class Sinclair:
         """
         Compute the theoretical quantiles and sorted data values for a QQ plot.
 
-        Parameters:
-        - my_data (array-like): The input data for which QQ plot data is to be calculated.
+        Parameters
+        ----------
+        my_data : array like
+            The input data for which QQ plot data is to be calculated.
         
-        Returns:
-        - osm (ndarray): Theoretical quantiles from the normal distribution.
-        - osr (ndarray): Ordered (sorted) values of the input data.
+        Returns
+        -------
+        osm : ndarray
+            Theoretical quantiles from the normal distribution.
+        osr : ndarray
+            Ordered (sorted) values of the input data.
         """
         # Calculate uniform order statistic medians
         osm_uniform = Sinclair._calc_uniform_order_statistic_medians(len(my_data))
@@ -34,18 +39,27 @@ class Sinclair:
         This function generates transformed sigma values for a range of ylon values,
         considering a mixture of Gaussian distributions with specified means, standard deviations, and weights.
         
-        Parameters:
+        Parameters
+        ----------
+        meds : list or array
+          List or array of means for each Gaussian component.
+        stds : list or array
+          List or array of standard deviations for each Gaussian component.
+        fds : list or array
+          List or array of weights (relative importance) for each Gaussian component.
+        mminy : int or float
+           Minimum value for generating ylon values.
+        mmaxy : int or float
+          Maximum value for generating ylon values.
+        n : int
+          Number of points to generate between mminy and mmaxy.
         
-        meds (list or array): List or array of means for each Gaussian component.
-        stds (list or array): List or array of standard deviations for each Gaussian component.
-        fds (list or array): List or array of weights (relative importance) for each Gaussian component.
-        mminy (int or float): Minimum value for generating ylon values.
-        mmaxy (int or float): Maximum value for generating ylon values.
-        n (int): Number of points to generate between mminy and mmaxy.
-        
-        Returns:
-        ixe (numpy array): Array of transformed sigma values corresponding to each ylon value.
-        ylon_1 (numpy array): Array of ylon values, linearly spaced between mminy and mmaxy.
+        Returns
+        -------
+        ixe : ndarray
+          Array of transformed sigma values corresponding to each ylon value.
+        ylon_1 : ndarray
+            Array of ylon values, linearly spaced between mminy and mmaxy.
         """
         # Generate n evenly spaced ylon values from mminy to mmaxy
         ylon_1 = np.linspace(mminy, mmaxy, n)
@@ -85,11 +99,15 @@ class Sinclair:
         
         This is used to estimate the theoretical quantiles for the QQ plot.
         
-        Parameters:
-        n (int) : The number of data points.
+        Parameters
+        ----------
+        n : int 
+            The number of data points.
         
-        Returns:
-        medians (ndarray) : The medians of the uniform order statistics.
+        Returns
+        -------
+        medians : ndarray
+            The medians of the uniform order statistics.
         """
         v = np.empty(n, dtype=np.float64)
         v[-1] = 0.5 ** (1.0 / n)  # Calculate the median for the last order statistic
