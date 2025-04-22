@@ -165,8 +165,14 @@ class GMM:
         - optimized_stds (ndarray): Optimized standard deviations of the Gaussian components.
         - optimized_weights (ndarray): Optimized weights (mixing proportions) of the Gaussian components.
         """
-        # Convert input data to a PyTorch tensor
-        X = torch.tensor(X, dtype=torch.float32)
+
+        if isinstance(X, torch.Tensor):
+            # If input is already a tensor, create a detached clone
+            # Use .to(torch.float32) to ensure correct dtype if needed
+            X = X.clone().detach().to(torch.float32)
+        else:
+            # If input is not a tensor (e.g., numpy array, list), convert normally
+            X = torch.tensor(X, dtype=torch.float32)
 
         # Initialize the means, standard deviations, and weights with initial values
         # Initialize the means by sampling within the mean constraints
