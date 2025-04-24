@@ -2,6 +2,7 @@ import numpy as np
 import scipy.special as sp
 import scipy.stats as stats
 import statsmodels.api as sm
+import warnings
 
 from scipy.stats.mstats import trim as scipy_trim
 from scipy.stats import trimboth as scipy_trimboth
@@ -9,6 +10,7 @@ from scipy.stats.mstats import trimtail as scipy_trimtail
 from scipy.stats import tmean as scipy_tmean
 from scipy.stats.mstats import trimmed_std as scipy_trimmed_std 
 from scipy.stats.mstats import winsorize as scipy_winsorize
+from scipy.special import hyp0f1
 
 from astropy.stats import biweight_location as astropy_biweight_location
 from astropy.stats import biweight_scale as astropy_biweight_scale
@@ -17,169 +19,199 @@ from astropy.stats import mad_std as astropy_mad_std
 from astropy.stats import sigma_clip as astropy_sigma_clip
 from astropy.stats import sigma_clipped_stats as astropy_sigma_clipped_stats
 
+
 class Stats:
     @staticmethod
-    def sample_from_pdf(x, pdf, n_samples=1000):
+    def umvu_mean_variance(y):
         """
-        Sample data points from a given probability density function (PDF).
+        Calculates the Uniformly Minimum Variance Unbiased (UMVU) estimators
+        for the mean and variance of a two-parameter lognormal distribution,
+        based on log-transformed data (y_i = ln(x_i)).
+        Corresponds to Equations V.5 and V.6 (citing the assumed source).
 
-        Parameters:
-        - x (array): x values corresponding to the PDF.
-        - pdf (array): PDF values corresponding to each x value.
-        - n_samples (int): Number of samples to generate. Default is 1000.
+        Args:
+            y (array_like): An array or list of log-transformed data points.
 
         Returns:
-        - array: sampled data points.
+            dict: A dictionary containing:
+                  'umvu_mean': The UMVU estimate of the lognormal mean (tau_hat).
+                  'umvu_variance': The UMVU estimate of the lognormal variance (kappa_hat_squared).
+
+        Raises:
+            ValueError: If the input 'y' is empty or has fewer than 3 elements,
+                        as the variance estimator requires at least 3 elements.
+            TypeError: If the input 'y' is not a type supported by NumPy.
+            # Note: hyp0f1 might raise errors for invalid arguments, e.g., arg2 < 0
+            # which should not happen for real variance s_y_squared >= 0.
         """
-        # Ensure the PDF is normalized (sum equals 1)
-        pdf = pdf / np.sum(pdf)
+        # --- Input Validation ---
+        if not isinstance(y, (list, np.ndarray)):
+             raise TypeError("Input 'y' must be a list or numpy array.")
 
-        # Step 1: Create the Cumulative Distribution Function (CDF) from the PDF
-        cdf = np.cumsum(pdf)
-        
-        # Step 2: Generate random values uniformly distributed between 0 and 1
-        random_values = np.random.rand(n_samples)
+        y_np = np.asarray(y)
+        n = len(y_np)
 
-        # Step 3: Use the CDF to map these random values to the corresponding x values
-        # Find the indices where the random values fit in the CDF
-        sample_indices = np.searchsorted(cdf, random_values)
+        # Variance estimator requires at least 3 points
+        if n < 3:
+            raise ValueError("Input 'y' must contain at least 3 elements to calculate the UMVU variance estimator.")
 
-        # Get the x values corresponding to these indices
-        sampled_data = x[sample_indices]
-        
-        return sampled_data
+        # --- Common Calculations ---
+        y_bar = np.mean(y_np)
+        s_y_squared = np.var(y_np, ddof=1)  # Sample variance of y (unbiased)
+
+        # --- UMVU Mean Estimate (Equation V.5) ---
+        # Arguments for hyp0f1
+        arg1_mean = (n - 1) / 2.0
+        arg2_mean = (n - 1)**2 / (4.0 * n) * s_y_squared
+
+        # Calculate the estimator
+        umvu_mean_estimate = np.exp(y_bar) * hyp0f1(arg1_mean, arg2_mean)
+
+        # --- UMVU Variance Estimate (Equation V.6) ---
+        # Arguments for hyp0f1
+        # arg1 is the same for both terms in V.6
+        arg1_variance = (n - 1) / 2.0 # This is the same as arg1_mean
+
+        arg2_variance_term1 = (n - 1)**2 / float(n) * s_y_squared
+        arg2_variance_term2 = (n - 1) * (n - 2) / (2.0 * n) * s_y_squared
+
+        # Calculate the two hyp0f1 terms
+        term1_variance = hyp0f1(arg1_variance, arg2_variance_term1)
+        term2_variance = hyp0f1(arg1_variance, arg2_variance_term2)
+
+        # Calculate the estimator
+        umvu_variance_estimate = np.exp(2 * y_bar) * (term1_variance - term2_variance)
+
+        # Ensure variance is non-negative due to potential floating point issues
+        # for very small variances close to zero.
+        umvu_variance_estimate = max(0.0, umvu_variance_estimate)
+
+
+        return umvu_mean_estimate, umvu_variance_estimate
+
+
 
     @staticmethod
-    def sichel_function(z , n , M):
-        
+    def lognormal_median_ci(data, confidence_level=0.95):
         """
-        Compute Sichel's function value. From the formula:
-        
-        .. math::
-        f(z|n,M) = 1 + \frac{z(n-1)}{n} + \sum^{M}_{m=2} \frac{z^{m}(n-1)^{2m-1}}{n^{m}m!\prod_{k=1}^{m-1}(n+2k-1)}
-        
-        Parameters:
-        z (float): The argument to the Sichel function.
-        n (int): The sample size.
-        M (int): The order of the sSichel function.
+        Estimates the median and its confidence interval for data assumed
+        to be log-normally distributed.
+
+        Args:
+            data (array-like): A list, numpy array, or pandas Series of
+                               positive numerical data points.
+            confidence_level (float): The desired confidence level (e.g., 0.95 for 95%).
+                                     Must be between 0 and 1.
 
         Returns:
-        float: The value of Sichel's function.
+            dict: A dictionary containing:
+                  'median_estimate': The point estimate of the median.
+                  'confidence_interval': A tuple (lower_bound, upper_bound)
+                                         for the median.
+                  Returns None if input data is invalid (e.g., non-positive values,
+                  not enough data points).
         """
+        # --- Input Validation ---
+        try:
+            # Convert to numpy array for easier handling
+            data = np.asarray(data)
 
-        sichel = 1. + z*(n-1)/n
+            # Check for non-positive values (logarithm is undefined)
+            if np.any(data <= 0):
+                print("Error: Data contains non-positive values. Log-normal "
+                      "distribution is only defined for positive values.")
+                return None
 
-        for m in range(2,M+1):
+            # Check for sufficient data
+            n = len(data)
+            if n < 2:
+                print("Error: Need at least two data points to estimate variance.")
+                return None
 
-            A = ((z/n)**m)*((n-1)**(2*m-1))/sp.factorial(m)
+            # Check confidence level validity
+            if not (0 < confidence_level < 1):
+                print("Error: Confidence level must be between 0 and 1.")
+                return None
 
-            B = 1
+        except Exception as e:
+            print(f"Error processing input data: {e}")
+            return None
 
-            for k in range(1,m):
+        # --- Calculations ---
+        # 1. Log-transform the data
+        log_data = np.log(data)
 
-                B *= n + 2*k - 1
+        # 2. Calculate mean and standard deviation of log-transformed data
+        mu_hat = np.mean(log_data)
+        sigma_hat = np.std(log_data, ddof=1)  # Use ddof=1 for sample standard deviation
 
-            sichel += A/B
-            
-        return sichel
-        
+        # 3. Point estimate of the median
+        median_estimate = np.exp(mu_hat)
 
-    #@staticmethod
-    #def sichel_function_15(z, n, M):
-    #    """
-    #    Compute Sichel's function using 15 terms.
-    #    
-    #    Parameters:
-    #    z (float): The argument to the Sichel function.
-    #    n (int): The sample size.
-    #
-    #    Returns:
-    #    float: The value of Sichel's function.
-    #    """
-    #    sf_15 = (1 + z * (n-1)/n +
-    #             ((z**2) * (n-1)**3)/(n**2*(n+1)*sp.factorial(2)) +
-    #             ((z**3) * (n-1)**5)/(n**3*(n+1)*(n+3)*sp.factorial(3)) +
-    #             ((z**4) * (n-1)**7)/(n**4*(n+1)*(n+3)*(n+5)*sp.factorial(4)) +
-    #             ((z**5) * (n-1)**9)/(n**5*(n+1)*(n+3)*(n+5)*(n+7)*sp.factorial(5)) +
-    #             ((z**6) * (n-1)**11)/(n**6*(n+1)*(n+3)*(n+5)*(n+7)*(n+9)*sp.factorial(6)) +
-    #             ((z**7) * (n-1)**13)/(n**7*(n+1)*(n+3)*(n+5)*(n+7)*(n+9)*(n+11)*sp.factorial(7)) +
-    #             ((z**8) * (n-1)**15)/(n**8*(n+1)*(n+3)*(n+5)*(n+7)*(n+9)*(n+11)*(n+13)*sp.factorial(8)) +
-    #             ((z**9) * (n-1)**17)/(n**9*(n+1)*(n+3)*(n+5)*(n+7)*(n+9)*(n+11)*(n+13)*(n+15)*sp.factorial(9)) +
-    #             ((z**10) * (n-1)**19)/(n**10*(n+1)*(n+3)*(n+5)*(n+7)*(n+9)*(n+11)*(n+13)*(n+15)*(n+17)*sp.factorial(10)) +
-    #             ((z**11) * (n-1)**21)/(n**11*(n+1)*(n+3)*(n+5)*(n+7)*(n+9)*(n+11)*(n+13)*(n+15)*(n+17)*(n+19)*sp.factorial(11)) +
-    #             ((z**12) * (n-1)**23)/(n**12*(n+1)*(n+3)*(n+5)*(n+7)*(n+9)*(n+11)*(n+13)*(n+15)*(n+17)*(n+19)*(n+21)*sp.factorial(12)) +
-    #             ((z**13) * (n-1)**25)/(n**13*(n+1)*(n+3)*(n+5)*(n+7)*(n+9)*(n+11)*(n+13)*(n+15)*(n+17)*(n+19)*(n+21)*(n+23)*sp.factorial(13)) +
-    #             ((z**14) * (n-1)**27)/(n**14*(n+1)*(n+3)*(n+5)*(n+7)*(n+9)*(n+11)*(n+13)*(n+15)*(n+17)*(n+19)*(n+21)*(n+23)*(n+25)*sp.factorial(14)) +
-    #             ((z**15) * (n-1)**29)/(n**15*(n+1)*(n+3)*(n+5)*(n+7)*(n+9)*(n+11)*(n+13)*(n+15)*(n+17)*(n+19)*(n+21)*(n+23)*(n+25)*(n+27)*sp.factorial(15)))
-    #    return sf_15
+        # 4. Calculate confidence interval for the median
+        alpha = 1 - confidence_level
+        # Degrees of freedom
+        dof = n - 1
+        # Critical t-value for two-tailed test
+        t_critical = stats.t.ppf(1 - alpha / 2, dof)
+        # Standard error of the mean of log-transformed data
+        se_mu_hat = sigma_hat / np.sqrt(n)
+
+        # Confidence interval for mu (mean of log-data)
+        lower_bound_mu = mu_hat - t_critical * se_mu_hat
+        upper_bound_mu = mu_hat + t_critical * se_mu_hat
+
+        # Confidence interval for the median (exponentiate the bounds for mu)
+        lower_ci_median = np.exp(lower_bound_mu)
+        upper_ci_median = np.exp(upper_bound_mu)
+
+        return  median_estimate, ower_ci_median, upper_ci_median
 
     @staticmethod
-    def sichel_function_log(sigma_sq, n, max_terms=20, tol=1e-10):
+    def bootstrap_mean_ci(data, n_bootstraps=1000, confidence_level=0.95):
         """
-        Compute Sichel's function ψ_n using logarithmic space for stability.
+        Estimates the mean and confidence interval for a log-normal distribution
+        using the bootstrapping method.
 
-        Parameters:
-        sigma_sq (float): The variance of the log-transformed data.
-        n (int): The sample size.
-        max_terms (int): Maximum number of terms to include in the series. Default is 20.
-        tol (float): Tolerance for convergence. Default is 1e-10.
+        Args:
+            data (array-like): A 1D array or list containing the log-normally
+                               distributed data.
+            n_bootstraps (int): The number of bootstrap samples to generate.
+                               Defaults to 1000.
+            confidence_level (float): The desired confidence level for the interval.
+                                     Must be between 0 and 1. Defaults to 0.95.
 
         Returns:
-        psi_n (float): The value of Sichel's function.
+            tuple: A tuple containing:
+                   - estimated_mean (float): The estimated mean of the log-normal
+                                             distribution (mean of bootstrap means).
+                   - ci_lower (float): The lower bound of the confidence interval.
+                   - ci_upper (float): The upper bound of the confidence interval.
         """
-        psi_n = 1 + (n - 1) / n * sigma_sq  # Start with the first two terms
-        for j in range(2, max_terms + 1):
-            log_numerator = (2 * j - 1) * np.log(n - 1)
-            log_denominator = j * np.log(n) + np.sum(np.log(np.arange(n + 1, n + 2 * j, 2)))
-            log_term = log_numerator - log_denominator + j * np.log(sigma_sq) - sp.gammaln(j + 1)
-            term = np.exp(log_term)
-            psi_n += term
-            if term < tol:
-                break
-        return psi_n
+        if not 0 < confidence_level < 1:
+            raise ValueError("confidence_level must be between 0 and 1")
 
-    @staticmethod
-    def mvue_lnorm_dist(data, confidence=0.95, transformed=False, sighel="log", M = 15):
-        """
-        Calculate the Minimum Variances Unbiased Estimator mean and confidence interval for log-normally distributed data using Sichel's function.
-        
-        Parameters:
-        data (array-like): Log-normally distributed data.
-        confidence (float): Confidence level for the interval. Default is 0.95.
-        transformed (bool): if True, it assumes that data are ln transformed. Default is False.
+        n_samples = len(data)
+        if n_samples == 0:
+            return np.nan, np.nan, np.nan
 
-        Returns:
-        dict: A dictionary containing the MVUE mean and confidence interval.
-        """
-        # Step 1: Transform the data using the natural log if not already transformed
-        if not transformed:
-            log_data = np.log(data)
-        else:
-            log_data = data
+        bootstrap_means = []
+        for _ in range(n_bootstraps):
+            # Resample with replacement
+            bootstrap_sample = np.random.choice(data, size=n_samples, replace=True)
+            # Calculate the mean of the resample
+            bootstrap_means.append(np.mean(bootstrap_sample))
 
-        # Step 2: Calculate the sample mean and variance of the log-transformed data
-        n = len(log_data)
-        sample_mean_log = np.mean(log_data)
-        sample_variance_log = np.var(log_data, ddof=1)  # Using unbiased estimator with ddof=1
+        # Calculate the estimated mean as the mean of the bootstrap means
+        estimated_mean = np.mean(bootstrap_means)
 
-        # Step 3: Calculate Sichel's function ψ_n
-        if sighel == "log":
-            psi_n = Stats.sichel_function_log(0.5 * sample_variance_log, n)
-        else:
-            psi_n = Stats.sichel_function(0.5 * sample_variance_log, n, M)
+        # Calculate the confidence interval using the percentile method
+        alpha = 1.0 - confidence_level
+        lower_percentile = alpha / 2.0 * 100
+        upper_percentile = (1.0 - alpha / 2.0) * 100
+        ci_lower, ci_upper = np.percentile(bootstrap_means, [lower_percentile, upper_percentile])
 
-        # Step 4: Estimate the mean of the log-normal distribution using MVUE
-        mvue_mean = np.exp(sample_mean_log) * psi_n
-
-        # Step 5: Calculate the confidence interval for the mean of the log-normal distribution
-        t_alpha_2 = stats.t.ppf(1 - (1 - confidence) / 2, df=n-1)
-        ci_lower_log = sample_mean_log - t_alpha_2 * np.sqrt(sample_variance_log / n)
-        ci_upper_log = sample_mean_log + t_alpha_2 * np.sqrt(sample_variance_log / n)
-
-        mvue_ci_lower = np.exp(ci_lower_log) * psi_n
-        mvue_ci_upper = np.exp(ci_upper_log) * psi_n
-
-        return mvue_mean, mvue_ci_lower, mvue_ci_upper
+        return estimated_mean, ci_lower, ci_upper
 
     @staticmethod
     def median(a, axis=None, out=None, overwrite_input=False, keepdims=False):
@@ -225,7 +257,7 @@ class Stats:
         return np.median(a, axis, out, overwrite_input, keepdims)
 
     @staticmethod
-    def median_absolute_deviation(data, axis=None, func=None, ignore_nan=False):
+    def mad(data, axis=None, func=None, ignore_nan=False):
         """
         Calculate the median absolute deviation (MAD) mutuated from astropy.
 

@@ -9,70 +9,111 @@ import warnings
 
 class GMM:
     @staticmethod
-    def gaussian_mixture_em(data, n_components, max_iter=100, tol=1e-6):
+    def gaussian_mixture_em(data, n_components, max_iter=100, tol=1e-6, random_state=None):
         """
         Fit a Gaussian Mixture Model (GMM) to the given data using the Expectation-Maximization (EM) algorithm.
-        
+
         From 10.1016/j.ijggc.2016.02.012
 
         Parameters:
-
         -----------------
-        
         data (array-like): The input data to fit the GMM to.
         n_components (int): The number of Gaussian components in the mixture.
         max_iter (int): The maximum number of iterations for the EM algorithm. Default is 100.
         tol (float): The tolerance for convergence. Default is 1e-6.
+        random_state (int, Generator, or None): Controls the randomness for initialization.
+                                                If int, uses it as a seed. If Generator, uses it directly.
+                                                If None, uses the global random state (non-deterministic).
 
         Returns:
-
         -----------------
-        
         means (ndarray): The means of the Gaussian components.
         std_devs (ndarray): The standard deviations of the Gaussian components.
         weights (ndarray): The weights (mixing proportions) of the Gaussian components.
         log_likelihoods (list): The log-likelihood values over the iterations.
         """
-        
+
+        # Explicitly ensure data is a numpy array at the start
+        data = np.asarray(data)
+
         n = len(data)  # Number of data points
 
+        # Create a Generator instance based on random_state
+        # This is the recommended way to handle randomness
+        rng = np.random.default_rng(random_state)
+
+
         # Randomly initialize the parameters for the Gaussian components
-        np.random.seed(42)  # Seed for reproducibility
-        means = np.random.choice(data, n_components)  # Randomly pick initial means from the data
-        std_devs = np.random.random(n_components)  # Initialize standard deviations with random values
+        # Use the generator instance `rng` for all random operations within this function
+
+        # Initialize means by sampling from the data using the generator
+        # Added check for n >= n_components for replace=False
+        means = rng.choice(data.flatten() if data.ndim > 1 else data, n_components, replace=False) if n >= n_components else rng.choice(data.flatten() if data.ndim > 1 else data, n_components, replace=True)
+
+        # Initialize standard deviations using the generator
+        std_devs = rng.random(n_components) * np.std(data) * 0.1 + 1e-6 # Small random positive stds
+
         weights = np.ones(n_components) / n_components  # Initialize weights uniformly
 
-        log_likelihoods = []  # List to store the log-likelihood values over the iterations
-        
+        log_likelihoods = []
+
+        # --- EM Algorithm Loop ---
+        # Ensure data is 1D for norm.pdf if needed, or handle reshaping inside loop if necessary
+        # The original code seems to assume 1D data for norm.pdf, keep this consistent.
+        # If data needs to be 2D for matrix operations later, reshape as needed *after* initialization.
+        # Based on the provided snippet, data seems to remain 1D and relies on broadcasting or ufuncs.
+
         for iteration in range(max_iter):
             # E-step: Compute the responsibilities (posterior probabilities) for each data point and component
-            responsibilities = np.zeros((n, n_components))  # Initialize the responsibilities matrix
+            responsibilities = np.zeros((n, n_components))
             for k in range(n_components):
-                # Calculate the responsibility of component k for each data point
-                responsibilities[:, k] = weights[k] * norm.pdf(data, means[k], std_devs[k])
-            
-            # Normalize responsibilities so that they sum to 1 for each data point
+                # Ensure std_devs[k] is positive for norm.pdf
+                std = std_devs[k] if std_devs[k] > 0 else 1e-9
+                # Assuming norm.pdf handles 1D data correctly
+                responsibilities[:, k] = weights[k] * norm.pdf(data, means[k], std)
+
+
+            # Normalize responsibilities
             sum_responsibilities = responsibilities.sum(axis=1, keepdims=True)
+            sum_responsibilities = np.where(sum_responsibilities == 0, 1e-9, sum_responsibilities)
             responsibilities /= sum_responsibilities
-            
-            # M-step: Update the parameters (means, standard deviations, and weights) based on the responsibilities
-            N_k = responsibilities.sum(axis=0)  # Effective number of points assigned to each component
-            weights = N_k / n  # Update weights as the fraction of total points assigned to each component
-            
-            # Update means as the weighted average of the data points
-            means = (responsibilities.T @ data) / N_k
-            
-            # Update standard deviations as the weighted standard deviation of the data points
-            std_devs = np.sqrt(np.sum(responsibilities * (data[:, np.newaxis] - means)**2, axis=0) / N_k)
-            
-            # Compute the log-likelihood of the current parameter estimates
-            log_likelihood = np.sum(np.log(sum_responsibilities))
+
+
+            # M-step: Update parameters
+            N_k = responsibilities.sum(axis=0)
+            N_k_safe = np.where(N_k == 0, 1e-9, N_k)
+
+            weights = N_k / n
+            weights /= np.sum(weights) # Re-normalize
+
+
+            # Update means
+            # Assuming data is 1D and responsibilities is (n, n_components)
+            means = (responsibilities.T @ data) / N_k_safe
+
+            # Update standard deviations
+            variance = np.sum(responsibilities * (data[:, np.newaxis] - means)**2, axis=0) / N_k_safe
+            std_devs = np.sqrt(np.maximum(variance, 0)) # Ensure argument to sqrt is non-negative
+
+
+            # Compute log-likelihood
+            weighted_pdfs = np.zeros((n, n_components))
+            for k in range(n_components):
+                 std = std_devs[k] if std_devs[k] > 0 else 1e-9
+                 weighted_pdfs[:, k] = weights[k] * norm.pdf(data, means[k], std)
+
+            total_pdf = np.sum(weighted_pdfs, axis=1)
+            log_likelihood = np.sum(np.log(total_pdf + 1e-9)) # Add epsilon before log
+
             log_likelihoods.append(log_likelihood)
-            
-            # Check for convergence: if the log-likelihood improvement is below the tolerance, stop the algorithm
+
+            # Check for convergence
             if iteration > 0 and np.abs(log_likelihoods[-1] - log_likelihoods[-2]) < tol:
                 break
-        
+
+        # --- End of EM Algorithm Loop ---
+
+
         # Return the optimized parameters and the log-likelihood history
         return means, std_devs, weights, log_likelihoods
 
@@ -108,13 +149,13 @@ class GMM:
                 warnings.filterwarnings('ignore', category=ConvergenceWarning)
               
                 # Fit GMM with the parameters
-                gmm = GaussianMixture(n_components=n_components, covariance_type=covariance_type, random_state=42, 
-                                      max_iter=max_iter, tol=tol, n_init=n_init, init_params='kmeans')
+                gmm = GaussianMixture(n_components=n_components, covariance_type=covariance_type,  
+                                      max_iter=max_iter, tol=tol, n_init=n_init, random_state=42, init_params='kmeans')
                 gmm.fit(X_scaled)
         else:
             # Fit GMM with the parameters
-                gmm = GaussianMixture(n_components=n_components, covariance_type=covariance_type, random_state=42, 
-                                      max_iter=max_iter, tol=tol, n_init=n_init, init_params='kmeans')
+                gmm = GaussianMixture(n_components=n_components, covariance_type=covariance_type,  
+                                      max_iter=max_iter, tol=tol, n_init=n_init, random_state=42, init_params='kmeans')
                 gmm.fit(X_scaled)
 
 
@@ -134,111 +175,142 @@ class GMM:
             if suppress_warnings == True:
                 with warnings.catch_warnings():
                     warnings.filterwarnings('ignore', category=ConvergenceWarning)
-                    gmm_iter = GaussianMixture(n_components=n_components, covariance_type=covariance_type, random_state=42, 
+                    gmm_iter = GaussianMixture(n_components=n_components, covariance_type=covariance_type,  
                                                max_iter=i, tol=tol, n_init=n_init, init_params='kmeans')
                     gmm_iter.fit(X_scaled)
                     log_likelihoods.append(gmm_iter.lower_bound_)
             else:
-                gmm_iter = GaussianMixture(n_components=n_components, covariance_type=covariance_type, random_state=42, 
+                gmm_iter = GaussianMixture(n_components=n_components, covariance_type=covariance_type,  
                                                max_iter=i, tol=tol, n_init=n_init, init_params='kmeans')
                 gmm_iter.fit(X_scaled)
                 log_likelihoods.append(gmm_iter.lower_bound_)
 
         return original_means, original_std_devs, weights, max_iter, log_likelihoods
 
+
+
     @staticmethod
-    def constrained_gaussian_mixture(X, mean_constraints, std_constraints, n_components, n_epochs=5000, lr=0.001, verbose=True):
+    def constrained_gaussian_mixture(X, mean_constraints, std_constraints, n_components, n_epochs=5000,
+                                              lr=0.001, verbose=True):
         """
         Optimize a Gaussian Mixture Model (GMM) using PyTorch with specified constraints on means and standard deviations.
-        
+        Uses Softmax for stable weight optimization and LogSumExp for numerical stability.
+
         Parameters:
-        - X (array-like): Input data to fit the GMM.
+        - X (array-like): Input data to fit the GMM. Should be 1D for this implementation (univariate GMM).
         - mean_constraints (list of tuples): List of tuples specifying (min, max) constraints for each component's mean.
+                                              Length must equal n_components.
         - std_constraints (list of tuples): List of tuples specifying (min, max) constraints for each component's standard deviation.
+                                            Lower bound should be > 0 for numerical stability. Length must equal n_components.
         - n_components (int): Number of Gaussian components in the mixture.
         - n_epochs (int): Number of iterations for optimization. Default is 5000.
         - lr (float): Learning rate for the optimizer. Default is 0.001.
         - verbose (bool): If True, prints progress every 200 epochs. Default is True.
-        
+
         Returns:
         - optimized_means (ndarray): Optimized means of the Gaussian components.
         - optimized_stds (ndarray): Optimized standard deviations of the Gaussian components.
         - optimized_weights (ndarray): Optimized weights (mixing proportions) of the Gaussian components.
         """
+        if len(mean_constraints) != n_components or len(std_constraints) != n_components:
+            raise ValueError("Length of constraints lists must match n_components.")
 
-        if isinstance(X, torch.Tensor):
-            # If input is already a tensor, create a detached clone
-            # Use .to(torch.float32) to ensure correct dtype if needed
-            X = X.clone().detach().to(torch.float32)
-        else:
-            # If input is not a tensor (e.g., numpy array, list), convert normally
-            X = torch.tensor(X, dtype=torch.float32)
+        # Convert input data to a PyTorch tensor
+        X = torch.tensor(X, dtype=torch.float32)
 
-        # Initialize the means, standard deviations, and weights with initial values
-        # Initialize the means by sampling within the mean constraints
+        # Initialize the parameters
+        # Initialize means by sampling within the mean constraints
         initial_means = torch.tensor([np.random.uniform(low=mean_constraints[i][0], high=mean_constraints[i][1])
                                       for i in range(n_components)], requires_grad=True)
 
-        # Initialize the standard deviations by sampling within the std constraints
-        initial_stds = torch.tensor([np.random.uniform(low=std_constraints[i][0], high=std_constraints[i][1])
-                                     for i in range(n_components)], requires_grad=True)
+        # Initialize standard deviations by sampling within the std constraints
+        # Ensure initial stds are within valid positive range
+        initial_stds = torch.tensor(
+            [np.random.uniform(low=max(std_constraints[i][0], 1e-6), high=std_constraints[i][1])  # Ensure positive init
+             for i in range(n_components)], requires_grad=True)
 
-        # Initialize weights uniformly
-        initial_weights = torch.tensor([1 / n_components for _ in range(n_components)], requires_grad=True)
+        # Initialize logits for weights (softmax will be applied)
+        # Initializing logits to zeros results in uniform initial weights
+        initial_logits = torch.zeros(n_components, requires_grad=True)
 
-        # Define the optimizer
-        optimizer = torch.optim.Adam([initial_means, initial_stds, initial_weights], lr=lr)
+        # Define the optimizer - optimizing means, stds, and logits
+        optimizer = torch.optim.Adam([initial_means, initial_stds, initial_logits], lr=lr)
 
-        def apply_constraints(means, stds, weights):
+        def apply_constraints_stds_means(means, stds):
             """
-            Apply constraints to ensure that the means and standard deviations stay within specified bounds,
-            and that weights are positive and normalized.
+            Apply constraints to ensure means and standard deviations stay within specified bounds.
+            This is done outside the gradient flow using torch.no_grad().
             """
             with torch.no_grad():
                 for i in range(n_components):
-                    # Clamp means and standard deviations to their respective constraints
+                    # Clamp means
                     means[i].clamp_(mean_constraints[i][0], mean_constraints[i][1])
-                    stds[i].clamp_(std_constraints[i][0], std_constraints[i][1])
-                # Ensure weights are positive and normalize them to sum to 1
-                weights.clamp_(min=0)
-                weights /= weights.sum()
+                    # Clamp standard deviations - ensure lower bound is positive
+                    stds[i].clamp_(max(std_constraints[i][0], 1e-6), std_constraints[i][1])
 
         # Training loop
         for epoch in range(n_epochs):
             optimizer.zero_grad()
 
-            # Compute the negative log-likelihood
-            log_likelihood = 0
-            for x in X:
-                mixture_prob = 0
-                for j in range(n_components):
-                    weight = initial_weights[j]
-                    mean = initial_means[j]
-                    std = initial_stds[j]
-                    # Compute the probability density function (PDF) for the Gaussian component
-                    mixture_prob += weight * torch.exp(-0.5 * ((x - mean) / std) ** 2) / (std * np.sqrt(2 * np.pi))
-                log_likelihood += torch.log(mixture_prob + 1e-10)  # Add a small value to prevent log(0)
+            # Get current weights by applying softmax to logits
+            weights = torch.softmax(initial_logits, dim=0)
 
-            # Normalize the negative log-likelihood
-            loss = -log_likelihood.mean()
+            # Calculate the log-likelihood of the data given the current GMM parameters
+            # Use vectorized operations and log-sum-exp for stability
+
+            # Calculate log probabilities for each data point under each Gaussian component
+            log_probs_components = torch.zeros(len(X), n_components)
+            for j in range(n_components):
+                # Use torch.distributions for more numerical stability in log_prob
+                # Ensure std is positive, add a small epsilon if it could become zero (though clamping should help)
+                std_j = initial_stds[j]  # + 1e-6 # Add epsilon if lower bound constraint is 0 or could be reached
+                try:
+                    dist = torch.distributions.Normal(initial_means[j], std_j)
+                    log_probs_components[:, j] = dist.log_prob(X)
+                except ValueError as e:
+                    print(
+                        f"Epoch {epoch}, Component {j}: Error with parameters mean={initial_means[j].item()}, std={std_j.item()}")
+                    raise e
+
+            # Calculate the log of the weighted probabilities: log(weight) + log(prob)
+            # Add a small epsilon to weights before taking log if weights could become zero
+            # (softmax ensures positivity, but very small values are possible)
+            log_weighted_probs = log_probs_components + torch.log(weights + 1e-10)
+
+            # Use log-sum-exp to get the log-likelihood for each data point: log(sum(weight * prob))
+            log_likelihood_per_sample = torch.logsumexp(log_weighted_probs, dim=1)
+
+            # The total log-likelihood is the sum of log-likelihoods for each data point
+            # The loss is the negative mean log-likelihood
+            loss = -log_likelihood_per_sample.mean()
 
             # Backpropagation and optimization step
             loss.backward()
             optimizer.step()
 
-            # Apply constraints to the parameters
-            apply_constraints(initial_means, initial_stds, initial_weights)
+            # Apply constraints to means and standard deviations (weights are handled by softmax)
+            apply_constraints_stds_means(initial_means, initial_stds)
 
             # Print progress every 200 epochs if verbose is True
             if verbose and epoch % 200 == 0:
-                print(f'Epoch {epoch}, Loss: {loss.item()}')
+                # Calculate current weights for printing
+                current_weights = torch.softmax(initial_logits, dim=0).detach().numpy()
+                current_means = initial_means.detach().numpy()
+                current_stds = initial_stds.detach().numpy()
+                print(f'Epoch {epoch}, Loss: {loss.item():.4f}')
+                # Optionally print current parameters to see how they evolve
+                # print(f'  Weights: {current_weights}')
+                # print(f'  Means: {current_means}')
+                # print(f'  Stds: {current_stds}')
 
         # Extract the optimized parameters
         optimized_means = initial_means.detach().numpy()
         optimized_stds = initial_stds.detach().numpy()
-        optimized_weights = initial_weights.detach().numpy()
+        # Apply softmax to final logits to get the final weights
+        optimized_weights = torch.softmax(initial_logits, dim=0).detach().numpy()
 
         return optimized_means, optimized_stds, optimized_weights
+
 
     @staticmethod
     def gaussian_mixture_pdf(x, meds, stds, weights):
