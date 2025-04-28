@@ -1,6 +1,6 @@
 Metadata-Version: 2.4
 Name: pyco2stats
-Version: 0.1.4
+Version: 0.1.6
 Summary: A package for statistical analysis and plotting in the context of CO2 data
 Author-email: Maurizio Petrelli <maurizio.petrelli@unipg.it>, Marco Baroni <mbaroni96@gmail.com>, Alessandra Ariano <alessandra.ariano@dottorandi.unipg.it>
 License: MIT License

@@ -7,5 +7,6 @@ from .sinclair import Sinclair
 from .stats import Stats
 from .visualize import Visualize
 from .propagate_errors import Propagate_Errors
+from .env_stats_py import EnvStatsPy
 
-__all__ = ["DataHandler", "GMM", "Visualize", "Sinclair", "Stats", "Propagate_Errors"]
+__all__ = ["DataHandler", "GMM", "Visualize", "Sinclair", "Stats", "Propagate_Errors", "EnvStatsPy"]

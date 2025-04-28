@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "pyco2stats"
-version = "0.1.4"
+version = "0.1.6"
 description="A package for statistical analysis and plotting in the context of CO2 data"
 license = { file = "License.txt" }
 readme = "README.md"

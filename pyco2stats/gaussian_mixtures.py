@@ -139,6 +139,8 @@ class GMM:
         - log_likelihoods (list): The log-likelihood values over the iterations.
         """
         
+        X = X.reshape(-1, 1)
+
         # Standardize data to avoid numerical issues
         scaler = StandardScaler()
         X_scaled =  scaler.fit_transform(X)
@@ -185,7 +187,7 @@ class GMM:
                 gmm_iter.fit(X_scaled)
                 log_likelihoods.append(gmm_iter.lower_bound_)
 
-        return original_means, original_std_devs, weights, max_iter, log_likelihoods
+        return original_means, original_std_devs, weights,  log_likelihoods
 
 
 
@@ -312,28 +314,97 @@ class GMM:
         return optimized_means, optimized_stds, optimized_weights
 
 
+
     @staticmethod
     def gaussian_mixture_pdf(x, meds, stds, weights):
         """
         Compute the PDF of a Gaussian Mixture Model.
-        
+
         Parameters:
         - x (array-like): x values at which to compute the PDF.
-        - means (list or array): means for each Gaussian component.
+        - meds (list or array): means for each Gaussian component.
         - stds (list or array): standard deviations for each Gaussian component.
         - weights (list or array): weights (relative importance that must sum to 1) for each Gaussian component.
-        
+
         Returns:
         - pdf (array): The computed PDF values for the Gaussian Mixture Model at each x.
         """
-        
-        
-        # Initialize the PDF to zero
+        # Ensure inputs are numpy arrays for consistent operations
+        x = np.asarray(x)
+        meds = np.asarray(meds)
+        stds = np.asarray(stds)
+        weights = np.asarray(weights)
+
+        # Initialize the PDF to zero with the same shape as x
         pdf = np.zeros_like(x, dtype=float)
-        
+
         # Compute the PDF for each Gaussian component and sum them up
         for med, std, weight in zip(meds, stds, weights):
+            # Ensure std is positive to avoid issues with norm.pdf
+            std = std if std > 0 else 1e-9
+            # Compute the PDF of the individual component and add to the total, scaled by weight
             pdf += weight * norm.pdf(x, med, std)
-        
+
         return pdf
+    
+    @staticmethod
+    def sample_from_gmm(n_samples, means, stds, weights, random_state=None):
+        """
+        Samples a finite number of observations from a Gaussian Mixture Model (GMM).
+
+        Parameters:
+        - n_samples (int): The number of observations to sample.
+        - means (array-like): The means for each Gaussian component.
+        - stds (array-like): The standard deviations for each Gaussian component.
+        - weights (array-like): The weights (mixing proportions) for each Gaussian component.
+                                 Weights should sum to 1.
+        - random_state (int, Generator, or None): Controls the randomness for sampling.
+                                                    If int, uses it as a seed. If Generator, uses it directly.
+                                                    If None, uses the global random state (non-deterministic).
+
+        Returns:
+        - samples (np.ndarray): An array of sampled observations from the GMM.
+        """
+        # Ensure inputs are numpy arrays
+        means = np.asarray(means)
+        stds = np.asarray(stds)
+        weights = np.asarray(weights)
+
+        # Ensure weights sum to 1 (or normalize them)
+        # Add a small epsilon to avoid division by zero if sum is very close to zero
+        sum_weights = np.sum(weights)
+        if sum_weights <= 1e-9:
+            warnings.warn("GMM weights sum to zero or very close to zero. Cannot sample.", RuntimeWarning)
+            return np.array([]) # Return empty array if weights are all zero
+        elif not np.isclose(sum_weights, 1.0):
+            warnings.warn("GMM weights do not sum to 1. Normalizing weights.", RuntimeWarning)
+            weights = weights / sum_weights
+
+
+        n_components = len(means)
+        if not (len(stds) == n_components and len(weights) == n_components):
+            raise ValueError("Number of means, standard deviations, and weights must be the same.")
+
+        # Create a Generator instance based on random_state
+        rng = np.random.default_rng(random_state)
+
+        samples = np.zeros(n_samples)
+
+        # For each sample, choose a component based on weights and draw from that component
+        for i in range(n_samples):
+            # Choose a component index based on weights
+            # rng.choice supports weighted sampling
+            component_index = rng.choice(n_components, p=weights)
+
+            # Get parameters for the chosen component
+            chosen_mean = means[component_index]
+            chosen_std = stds[component_index]
+
+            # Ensure standard deviation is positive for sampling
+            chosen_std = chosen_std if chosen_std > 0 else 1e-9
+
+            # Sample from the chosen normal distribution
+            samples[i] = rng.normal(loc=chosen_mean, scale=chosen_std)
+
+        return samples
 
