@@ -9,7 +9,7 @@ import warnings
 
 class GMM:
     @staticmethod
-    def gaussian_mixture_em(data, n_components, max_iter=100, tol=1e-6, random_state=None):
+    def gaussian_mixture_em(data, n_components, max_iter=1000, tol=1e-6, random_state=None):
         """
         Fit a Gaussian Mixture Model (GMM) to the given data using the Expectation-Maximization (EM) algorithm.
 
@@ -152,12 +152,12 @@ class GMM:
               
                 # Fit GMM with the parameters
                 gmm = GaussianMixture(n_components=n_components, covariance_type=covariance_type,  
-                                      max_iter=max_iter, tol=tol, n_init=n_init, random_state=42, init_params='kmeans')
+                                      max_iter=max_iter, tol=tol, n_init=n_init, random_state=42, init_params='random_from_data')
                 gmm.fit(X_scaled)
         else:
             # Fit GMM with the parameters
                 gmm = GaussianMixture(n_components=n_components, covariance_type=covariance_type,  
-                                      max_iter=max_iter, tol=tol, n_init=n_init, random_state=42, init_params='kmeans')
+                                      max_iter=max_iter, tol=tol, n_init=n_init, random_state=42, init_params='random_from_data')
                 gmm.fit(X_scaled)
 
 
@@ -178,12 +178,12 @@ class GMM:
                 with warnings.catch_warnings():
                     warnings.filterwarnings('ignore', category=ConvergenceWarning)
                     gmm_iter = GaussianMixture(n_components=n_components, covariance_type=covariance_type,  
-                                               max_iter=i, tol=tol, n_init=n_init, init_params='kmeans')
+                                               max_iter=i, tol=tol, n_init=n_init, init_params='random_from_data')
                     gmm_iter.fit(X_scaled)
                     log_likelihoods.append(gmm_iter.lower_bound_)
             else:
                 gmm_iter = GaussianMixture(n_components=n_components, covariance_type=covariance_type,  
-                                               max_iter=i, tol=tol, n_init=n_init, init_params='kmeans')
+                                               max_iter=i, tol=tol, n_init=n_init, init_params='random_from_data')
                 gmm_iter.fit(X_scaled)
                 log_likelihoods.append(gmm_iter.lower_bound_)
 
