@@ -5,6 +5,9 @@ from scipy.optimize import minimize
 from scipy.special import hyp0f1
 from scipy.stats import t, norm, chi2, nct
 
+
+
+
 class EnvStatsPy:
     """
     Python implementation of R's elnormAlt for lognormal mean estimation 
@@ -16,7 +19,7 @@ class EnvStatsPy:
         X_lognorm_data,
         method="umvue_finney",
         ci=False,
-        ci_method="land",
+        ci_method="zou",
         ci_type="two-sided",
         conf_level=0.95,
         parkin_list=None
@@ -24,7 +27,7 @@ class EnvStatsPy:
         X_lognorm_data = np.asarray(X_lognorm_data, dtype=float)
         if X_lognorm_data.size < 2 or np.any(X_lognorm_data <= 0):
             raise ValueError("`data` must contain at least two positive values.")
-        
+
         n = X_lognorm_data.size
         Y_norm_data = np.log(X_lognorm_data)
         Y_mu_hat = float(np.mean(Y_norm_data))
@@ -53,32 +56,40 @@ class EnvStatsPy:
         else:
             raise ValueError(f"Unknown method '{method}'")
 
-
-        # Compute standard deviation of the mean estimate (standard error)
+        # Always compute SE
         if np.isnan(X_var_hat) or X_var_hat < 0:
             X_sd_hat = float("nan")
             warnings.warn(f"Standard deviation estimate not available for method='{method}'.", UserWarning)
         else:
             X_sd_hat = math.sqrt(X_var_hat)
 
-
         result = {
             "sample_size": n,
             "method": method,
             "mean_estimate": X_theta_hat,
-            "mean_sd_estimate": X_sd_hat  
+            "sd_estimate": X_sd_hat
         }
 
         # Confidence intervals
         if ci:
             if ci_method == "land":
-                ci_limits = EnvStatsPy.ci_lnorm_land(
-                    mu_hat=Y_mu_hat + 0.5 * Y_sigma2_hat,
-                    sigma2_hat=Y_sigma2_hat,
-                    n=n,
-                    ci_type=ci_type,
-                    conf_level=conf_level
-                )
+                try:
+                    ci_limits = EnvStatsPy.ci_lnorm_land(
+                        mu_hat=Y_mu_hat + 0.5 * Y_sigma2_hat,
+                        sigma2_hat=Y_sigma2_hat,
+                        n=n,
+                        ci_type=ci_type,
+                        conf_level=conf_level
+                    )
+                except RuntimeError as e:
+                    warnings.warn(f"Land CI failed due to optimization error: {e}. Falling back to Zou method.", UserWarning)
+                    ci_limits = EnvStatsPy.ci_lnorm_zou(
+                        mu_hat=Y_mu_hat,  
+                        sigma2_hat=Y_sigma2_hat,
+                        n=n,
+                        ci_type=ci_type,
+                        conf_level=conf_level
+                    )
             elif ci_method == "normal_approx":
                 if method in ["mme", "mmue"]:
                     ci_limits = EnvStatsPy.ci_standard_approx(
@@ -89,8 +100,6 @@ class EnvStatsPy:
                         ci_type=ci_type,
                         conf_level=conf_level
                     )
-                    # Exponentiate only if the mean estimate was log-transformed (not needed here)
-                    # These are already on the original scale, so do nothing
                 else:
                     warnings.warn(
                         f"'normal_approx' CI is not recommended with method='{method}'. "
@@ -107,6 +116,11 @@ class EnvStatsPy:
                     conf_level=conf_level
                 )
             elif ci_method == "cox":
+                if method in ["umvue_finney", "umvue_sichel"]:
+                    warnings.warn(
+                        "Using Cox CI with a UMVUE estimator: SE estimate returned is the UMVUE-based SE, not Cox-specific.",
+                        UserWarning
+                    )
                 ci_limits = EnvStatsPy.ci_cox(
                     mu_hat=Y_mu_hat,
                     sigma2_hat=Y_sigma2_hat,
@@ -114,60 +128,74 @@ class EnvStatsPy:
                     ci_type=ci_type,
                     conf_level=conf_level
                 )
-                cox_se = math.sqrt(Y_sigma2_hat / n + (Y_sigma2_hat ** 2) / (2 * (n + 1)))
-                result["sd_estimate"] = cox_se
             elif ci_method == "parkin":
                 ci_limits = EnvStatsPy.ci_parkin(X_lognorm_data, ci_type, conf_level, parkin_list)
             elif ci_method == "sichel":
                 ci_limits = EnvStatsPy.ci_sichel(
                     mu_hat=Y_mu_hat,
-                    sigma2_hat=sigma2_hat,
+                    sigma2_hat=Y_sigma2_hat,
                     n=n,
                     ci_type=ci_type,
                     conf_level=conf_level
                 )
             else:
                 raise ValueError(f"Unknown ci_method '{ci_method}'")
-            
+
             result.update(ci_limits)
 
         return result
 
+
     @staticmethod
-    def umvue_finney_lognormal_estimator(X_lognorm_data):
-        X_lognorm_data = np.asarray(X_lognorm_data)
-        n = X_lognorm_data.size
+    def umvue_finney_lognormal_estimator(data):
+        """
+        UMVUE of the log‑normal mean & variance (Finney’s formula).
+        Returns (mean_estimate, variance_estimate).  If data has fewer
+        than two points, variance_estimate is NaN.  If data contains
+        non‐positive values, returns (NaN, NaN) with a warning.
+        """
+        data = np.asarray(data)
+        n = data.size
+
         if n == 0:
             return np.nan, np.nan
-        if np.any(X_lognorm_data <= 0):
-            warnings.warn("Non-positive values not allowed", UserWarning)
+        if np.any(data <= 0):
+            warnings.warn(
+                "Data contains non‐positive values; lognormal requires positive data.",
+                UserWarning
+            )
             return np.nan, np.nan
         if n == 1:
             return float(data[0]), np.nan
 
-        log_data = np.log(X_lognorm_data)
+        # Log-space moments
+        log_data = np.log(data)
         y_bar = log_data.mean()
-        s_sq = log_data.var(ddof=1)
+        s_sq  = log_data.var(ddof=1)
 
-        phi = EnvStatsPy.finneys_g(n - 1, s_sq / 2)
-        umvu_mean = math.exp(y_bar) * phi
-
+        # Finney’s UMVUE for the mean
+        alpha = (n - 1.0) / 2.0
+        z     = (n - 1.0)**2 / (4.0 * n) * s_sq
+        
+        phi = EnvStatsPy.finneys_g(n - 1, s_sq/2)
+        umvu_mean = np.exp(y_bar) * phi
+    
+        # Finney’s UMVUE for the variance (only defined for n>2)
         if n > 2:
-            var_term = (
-                EnvStatsPy.finneys_g(n - 1, 2 * s_sq)
-                - EnvStatsPy.finneys_g(n - 1, s_sq * (n - 2) / (n - 1))
-            )
-            umvu_variance = math.exp(2 * y_bar) * var_term
+            umvu_variance = np.exp(2 * y_bar) * (EnvStatsPy.finneys_g(n - 1, 2 * s_sq) - EnvStatsPy.finneys_g(n - 1, (s_sq * (n - 2))/(n - 1)))
         else:
             umvu_variance = np.nan
 
         return umvu_mean, umvu_variance
+
+
 
     @staticmethod
     def umvue_sichel_lognormal_estimator(X_lognorm_data):
         X_lognorm_data = np.asarray(X_lognorm_data, dtype=float)
         if np.any(X_lognorm_data <= 0):
             raise ValueError("All observations must be positive.")
+
         log_data = np.log(X_lognorm_data)
         n = len(log_data)
         hat_mu = np.mean(log_data)
@@ -175,18 +203,24 @@ class EnvStatsPy:
 
         z1 = (n - 1) / 2
         z2 = hat_sigma2 * (n - 1) / 4
-        gamma_n = hyp0f1(z1, z2)
-        mean_est = math.exp(hat_mu) * gamma_n
+        try:
+            gamma_n = hyp0f1(z1, z2)
+        except Exception as e:
+            warnings.warn(f"Sichel estimator hyp0f1 failed: {e}", RuntimeWarning)
+            return np.nan, np.nan
 
+        mean_est = math.exp(hat_mu) * gamma_n
         variance_est = (math.exp(hat_sigma2) - 1) * math.exp(2 * hat_mu + hat_sigma2)
+
         return mean_est, variance_est
+
 
     @staticmethod
     def finneys_g(m, z, n_terms_inc=10, max_iter=100, tol=None):
         tol = tol if tol is not None else np.finfo(float).eps
         m_arr = np.atleast_1d(m).astype(int)
         z_arr = np.atleast_1d(z).astype(float)
-        result = np.empty_like(z_arr, dtype=float)
+        result = np.full_like(z_arr, np.nan, dtype=float)
 
         def _terms(m_i, z_i, n_terms):
             p = np.arange(2, n_terms)
@@ -203,14 +237,24 @@ class EnvStatsPy:
             return terms
 
         for idx, (m_i, z_i) in enumerate(zip(m_arr, z_arr)):
+            converged = False
             for block in range(1, max_iter+1):
                 n_terms = n_terms_inc * block
-                terms = _terms(m_i, z_i, n_terms)
-                if abs(terms[-1]) <= tol:
-                    result[idx] = terms.sum()
+                try:
+                    terms = _terms(m_i, z_i, n_terms)
+                    if not np.isfinite(terms).all():
+                        raise ValueError("Non-finite terms in series.")
+                    if abs(terms[-1]) <= tol:
+                        result[idx] = terms.sum()
+                        converged = True
+                        break
+                except Exception as e:
+                    msg = f"finneys_g failed at index {idx}: m={m_i}, z={z_i}, reason: {e}"
+                    warnings.warn(msg, RuntimeWarning)
                     break
-            else:
-                raise ValueError(f"Series failed for m={m_i}, z={z_i}")
+            if not converged:
+                msg = f"finneys_g did not converge at index {idx}: m={m_i}, z={z_i}"
+                warnings.warn(msg, RuntimeWarning)
 
         return float(result) if result.size == 1 else result
 
@@ -318,7 +362,7 @@ class EnvStatsPy:
                 x0=[m0],
                 method='L-BFGS-B',
                 bounds=bounds,
-                options={'ftol': 1e-13, 'gtol': 1e-13, 'maxiter': 20000}
+                options={'ftol': 1e-12, 'gtol': 1e-12, 'maxiter': 20000}
             )
 
             if not res.success:
