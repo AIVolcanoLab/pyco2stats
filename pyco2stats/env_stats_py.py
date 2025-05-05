@@ -1,593 +1,463 @@
+import warnings
 import numpy as np
 import math
-import warnings
+from scipy.optimize import minimize
 from scipy.special import hyp0f1
-from scipy.stats import t, norm, chi2
+from scipy.stats import t, norm, chi2, nct
 
 class EnvStatsPy:
     """
-    Python class exposing the R function elnormAlt with full support
-    for different estimation methods and confidence interval (CI) types.
+    Python implementation of R's elnormAlt for lognormal mean estimation 
+    with various estimators and confidence intervals.
     """
 
     @staticmethod
     def lognormal_estimator(
-            data,
-            method="umvue_finney",
-            ci=False,
-            ci_method="land",
-            ci_type="two-sided",
-            conf_level=0.95,
-            parkin_list=None
-        ):
-            """
-            Estimate the mean and (optionally) confidence interval of a log‐normal distribution.
-            
-            Parameters
-            ----------
-            data : array_like
-                Positive sample from a log‐normal distribution.
-            method : str
-                One of "umvue_finney", "sichel", "qmle", "mle", "mme", "mmue".
-            ci : bool
-                Whether to compute a confidence interval.
-            ci_method : str
-                One of "land", "normal.approx", "zou", "cox", "parkin", "sichel".
-            ci_type : str
-                "two-sided", "lower", or "upper".
-            conf_level : float
-                Confidence level for the interval (e.g. 0.95).
-            parkin_list : any
-                Optional custom quantiles for Parkin’s method.
-            
-            Returns
-            -------
-            dict
-            """
-            data = np.asarray(data, dtype=float)
-            if data.size < 2 or np.any(data <= 0):
-                raise ValueError("`data` must contain at least two positive values.")
-            
-            n = data.size
-            log_data = np.log(data)
-            mu_hat = float(np.mean(log_data))
-            sigma2_hat = float(np.var(log_data, ddof=1))
-            sigma2_mle = sigma2_hat * (n-1)/n
-            
-            # Point and variance estimation
-            if method == "finney":
-                theta_hat, varhat = EnvStatsPy.umvue_finney_lognormal_estimator(data)
-            elif method == "sichel":
-                theta_hat, varhat = EnvStatsPy.umvue_sichel_lognormal_estimator(data)
-            elif method == "qmle":
-                theta_hat = math.exp(mu_hat + 0.5*sigma2_hat)
-                varhat = theta_hat**2 * (math.exp(sigma2_hat) - 1)
-            elif method == "mle":
-                theta_hat = math.exp(mu_hat + 0.5*sigma2_mle)
-                varhat = theta_hat**2 * (math.exp(sigma2_mle) - 1)
-            elif method == "mme":
-                theta_hat = float(np.mean(data))
-                varhat = float(np.var(data, ddof=1) / n)
-            elif method == "mmue":
-                theta_hat = float(np.mean(data))
-                varhat = float(np.var(data, ddof=0) / n)
-            else:
-                raise ValueError(f"Unknown method '{method}'")
-            
-            # Safe sd calculation
-            try:
-                sd_hat = math.sqrt(float(varhat))
-            except Exception:
-                sd_hat = float("nan")
-            
-            result = {
-                "distribution": "Lognormal",
-                "sample_size": n,
-                "method": method,
-                "mean_estimate": theta_hat,
-                "sd_estimate": sd_hat
-            }
-            
-            # Confidence interval dispatch
-            if ci:
-                alpha = 1 - conf_level
-                
-                if ci_method == "land":
-                    ci_limits = EnvStatsPy.ci_lnorm_land(
-                        meanlog=mu_hat,
-                        sdlog=np.sqrt(sigma2_hat),
+        X_lognorm_data,
+        method="umvue_finney",
+        ci=False,
+        ci_method="land",
+        ci_type="two-sided",
+        conf_level=0.95,
+        parkin_list=None
+    ):
+        X_lognorm_data = np.asarray(X_lognorm_data, dtype=float)
+        if X_lognorm_data.size < 2 or np.any(X_lognorm_data <= 0):
+            raise ValueError("`data` must contain at least two positive values.")
+        
+        n = X_lognorm_data.size
+        Y_norm_data = np.log(X_lognorm_data)
+        Y_mu_hat = float(np.mean(Y_norm_data))
+        Y_sigma2_hat = float(np.var(Y_norm_data, ddof=1))
+        Y_sigma2_mle = Y_sigma2_hat * (n - 1) / n
+
+        # Point estimation
+        if method == "umvue_finney":
+            X_theta_hat, X_var_hat = EnvStatsPy.umvue_finney_lognormal_estimator(X_lognorm_data)
+        elif method == "umvue_sichel":
+            X_theta_hat, X_var_hat = EnvStatsPy.umvue_sichel_lognormal_estimator(X_lognorm_data)
+        elif method == "qmle":
+            X_theta_hat = math.exp(Y_mu_hat + 0.5 * Y_sigma2_hat)
+            se2 = (np.exp(Y_sigma2_hat) - 1) * np.exp(2 * Y_mu_hat + Y_sigma2_hat)
+            X_var_hat = se2 / n
+        elif method == "mle":
+            X_theta_hat = math.exp(Y_mu_hat + 0.5 * Y_sigma2_mle)
+            se2 = (np.exp(Y_sigma2_mle) - 1) * np.exp(2 * Y_mu_hat + Y_sigma2_mle)
+            X_var_hat = se2 / n
+        elif method == "mme":
+            X_theta_hat = float(np.mean(X_lognorm_data))
+            X_var_hat = float(np.var(X_lognorm_data, ddof=1) / n)
+        elif method == "mmue":
+            X_theta_hat = float(np.mean(X_lognorm_data))
+            X_var_hat = float(np.var(X_lognorm_data, ddof=0) / n)
+        else:
+            raise ValueError(f"Unknown method '{method}'")
+
+
+        # Compute standard deviation of the mean estimate (standard error)
+        if np.isnan(X_var_hat) or X_var_hat < 0:
+            X_sd_hat = float("nan")
+            warnings.warn(f"Standard deviation estimate not available for method='{method}'.", UserWarning)
+        else:
+            X_sd_hat = math.sqrt(X_var_hat)
+
+
+        result = {
+            "sample_size": n,
+            "method": method,
+            "mean_estimate": X_theta_hat,
+            "mean_sd_estimate": X_sd_hat  
+        }
+
+        # Confidence intervals
+        if ci:
+            if ci_method == "land":
+                ci_limits = EnvStatsPy.ci_lnorm_land(
+                    mu_hat=Y_mu_hat + 0.5 * Y_sigma2_hat,
+                    sigma2_hat=Y_sigma2_hat,
+                    n=n,
+                    ci_type=ci_type,
+                    conf_level=conf_level
+                )
+            elif ci_method == "normal_approx":
+                if method in ["mme", "mmue"]:
+                    ci_limits = EnvStatsPy.ci_standard_approx(
+                        mu_hat=X_theta_hat,
+                        sigma2_hat=X_sd_hat**2,
                         n=n,
+                        test_statistic="z",
                         ci_type=ci_type,
                         conf_level=conf_level
                     )
-                
-                elif ci_method in ("normal.approx", "normal.approximation"):
-                    # Normal or t-based CI
-                    df = n - 1
-                    if ci_type in ("two-sided", "two.sided"):
-                        q = alpha/2
-                    else:
-                        q = alpha
-                    quantile = t.ppf(1 - q, df)
-                    hw = quantile * sd_hat
-                    if ci_type in ("two-sided", "two.sided"):
-                        lcl, ucl = theta_hat - hw, theta_hat + hw
-                    elif ci_type == "lower":
-                        lcl, ucl = theta_hat - hw, np.inf
-                    else:
-                        lcl, ucl = -np.inf, theta_hat + hw
-                    ci_limits = {"LCL": lcl, "UCL": ucl}
-                
-                elif ci_method == "zou":
-                    ci_limits = EnvStatsPy.ci_lnorm_zou(
-                        meanlog=mu_hat,
-                        sdlog=np.sqrt(sigma2_hat),
-                        n=n,
-                        ci_type=ci_type,
-                        conf_level=conf_level
-                    )
-                
-                elif ci_method == "cox":
-                    ci_limits = EnvStatsPy.ci_cox(
-                        meanlog=mu_hat,
-                        s2=sigma2_hat,
-                        n=n,
-                        ci_type=ci_type,
-                        conf_level=conf_level
-                    )
-                
-                elif ci_method == "parkin":
-                    ci_limits = EnvStatsPy.ci_parkin(
-                        data, ci_type, conf_level, parkin_list
-                    )
-                
-                elif ci_method == "sichel":
-                    ci_limits = EnvStatsPy.ci_sichel(
-                        mu_hat=mu_hat,
-                        sigma2_hat=sigma2_hat,
-                        n=n,
-                        ci_type=ci_type,
-                        conf_level=conf_level
-                    )
-                
+                    # Exponentiate only if the mean estimate was log-transformed (not needed here)
+                    # These are already on the original scale, so do nothing
                 else:
-                    raise ValueError(f"Unknown ci_method '{ci_method}'")
-                
-                result["confidence_interval"] = ci_limits
+                    warnings.warn(
+                        f"'normal_approx' CI is not recommended with method='{method}'. "
+                        "It assumes normality of the arithmetic mean, which may not hold for lognormal-transformed estimates.",
+                        UserWarning
+                    )
+                    ci_limits = {"LCL": float("nan"), "UCL": float("nan")}
+            elif ci_method == "zou":
+                ci_limits = EnvStatsPy.ci_lnorm_zou(
+                    mu_hat=Y_mu_hat,  
+                    sigma2_hat=Y_sigma2_hat,
+                    n=n,
+                    ci_type=ci_type,
+                    conf_level=conf_level
+                )
+            elif ci_method == "cox":
+                ci_limits = EnvStatsPy.ci_cox(
+                    mu_hat=Y_mu_hat,
+                    sigma2_hat=Y_sigma2_hat,
+                    n=n,
+                    ci_type=ci_type,
+                    conf_level=conf_level
+                )
+                cox_se = math.sqrt(Y_sigma2_hat / n + (Y_sigma2_hat ** 2) / (2 * (n + 1)))
+                result["sd_estimate"] = cox_se
+            elif ci_method == "parkin":
+                ci_limits = EnvStatsPy.ci_parkin(X_lognorm_data, ci_type, conf_level, parkin_list)
+            elif ci_method == "sichel":
+                ci_limits = EnvStatsPy.ci_sichel(
+                    mu_hat=Y_mu_hat,
+                    sigma2_hat=sigma2_hat,
+                    n=n,
+                    ci_type=ci_type,
+                    conf_level=conf_level
+                )
+            else:
+                raise ValueError(f"Unknown ci_method '{ci_method}'")
             
-            return result
+            result.update(ci_limits)
+
+        return result
 
     @staticmethod
-    def umvue_finney_lognormal_estimator(data):
-        """
-        UMVUE of the log‑normal mean & variance (Finney’s formula).
-        Returns (mean_estimate, variance_estimate).  If data has fewer
-        than two points, variance_estimate is NaN.  If data contains
-        non‐positive values, returns (NaN, NaN) with a warning.
-        """
-        data = np.asarray(data)
-        n = data.size
-
+    def umvue_finney_lognormal_estimator(X_lognorm_data):
+        X_lognorm_data = np.asarray(X_lognorm_data)
+        n = X_lognorm_data.size
         if n == 0:
             return np.nan, np.nan
-        if np.any(data <= 0):
-            warnings.warn(
-                "Data contains non‐positive values; lognormal requires positive data.",
-                UserWarning
-            )
+        if np.any(X_lognorm_data <= 0):
+            warnings.warn("Non-positive values not allowed", UserWarning)
             return np.nan, np.nan
         if n == 1:
             return float(data[0]), np.nan
 
-        # Log-space moments
-        log_data = np.log(data)
+        log_data = np.log(X_lognorm_data)
         y_bar = log_data.mean()
-        s_sq  = log_data.var(ddof=1)
+        s_sq = log_data.var(ddof=1)
 
-        # Finney’s UMVUE for the mean
-        alpha = (n - 1.0) / 2.0
-        z     = (n - 1.0)**2 / (4.0 * n) * s_sq
-        
-        phi = EnvStatsPy.finneys_g(n - 1, s_sq/2)
-        umvu_mean = np.exp(y_bar) * phi
-    
-        # Finney’s UMVUE for the variance (only defined for n>2)
+        phi = EnvStatsPy.finneys_g(n - 1, s_sq / 2)
+        umvu_mean = math.exp(y_bar) * phi
+
         if n > 2:
-            umvu_variance = np.exp(2 * y_bar) * (EnvStatsPy.finneys_g(n - 1, 2 * s_sq) - EnvStatsPy.finneys_g(n - 1, (s_sq * (n - 2))/(n - 1)))
+            var_term = (
+                EnvStatsPy.finneys_g(n - 1, 2 * s_sq)
+                - EnvStatsPy.finneys_g(n - 1, s_sq * (n - 2) / (n - 1))
+            )
+            umvu_variance = math.exp(2 * y_bar) * var_term
         else:
             umvu_variance = np.nan
 
         return umvu_mean, umvu_variance
 
+    @staticmethod
+    def umvue_sichel_lognormal_estimator(X_lognorm_data):
+        X_lognorm_data = np.asarray(X_lognorm_data, dtype=float)
+        if np.any(X_lognorm_data <= 0):
+            raise ValueError("All observations must be positive.")
+        log_data = np.log(X_lognorm_data)
+        n = len(log_data)
+        hat_mu = np.mean(log_data)
+        hat_sigma2 = np.var(log_data, ddof=1)
 
+        z1 = (n - 1) / 2
+        z2 = hat_sigma2 * (n - 1) / 4
+        gamma_n = hyp0f1(z1, z2)
+        mean_est = math.exp(hat_mu) * gamma_n
 
+        variance_est = (math.exp(hat_sigma2) - 1) * math.exp(2 * hat_mu + hat_sigma2)
+        return mean_est, variance_est
+
+    @staticmethod
     def finneys_g(m, z, n_terms_inc=10, max_iter=100, tol=None):
-        """
-        Compute Finney's g_m(z) via iterative summation of series terms.
-
-        Parameters
-        ----------
-        m : int or array_like of int
-            Must be integer(s) >= 1.
-        z : float or array_like of float
-            Series argument(s).
-        n_terms_inc : int, optional
-            Initial block size for terms (>= 3).
-        max_iter : int, optional
-            Maximum number of blocks to sum (>= 1).
-        tol : float, optional
-            Tolerance for the magnitude of the last term; default is machine epsilon.
-
-        Returns
-        -------
-        g_values : float or ndarray
-            The summed series value(s) of g_m(z).
-
-        Raises
-        ------
-        ValueError
-            If inputs are invalid or series fails to converge.
-        """
-        # Validate inputs
         tol = tol if tol is not None else np.finfo(float).eps
         m_arr = np.atleast_1d(m).astype(int)
         z_arr = np.atleast_1d(z).astype(float)
-        if np.any(m_arr < 1):
-            raise ValueError("All values of 'm' must be integers >= 1")
-        if n_terms_inc < 3 or int(n_terms_inc) != n_terms_inc:
-            raise ValueError("'n_terms_inc' must be an integer >= 3")
-        if max_iter < 1 or int(max_iter) != max_iter:
-            raise ValueError("'max_iter' must be an integer >= 1")
-        if tol < np.finfo(float).eps:
-            raise ValueError(f"'tol' must be >= {np.finfo(float).eps}")
-
-        # Broadcast shapes
-        m_arr, z_arr = np.broadcast_arrays(m_arr, z_arr)
         result = np.empty_like(z_arr, dtype=float)
 
-        # Helper: compute series terms up to n_terms
-        def _series_terms(m_i, z_i, n_terms):
+        def _terms(m_i, z_i, n_terms):
             p = np.arange(2, n_terms)
-            num = np.concatenate(([0],  # log(1) = 0
-                                  [np.log(m_i) + np.log(abs(z_i))],
-                                  2*p*np.log(m_i) + np.log(m_i + 2*p) + p*np.log(abs(z_i))))
+            num = np.concatenate(([0], [math.log(m_i) + math.log(abs(z_i))],
+                                   2*p*math.log(m_i) + np.log(m_i + 2*p) + p*math.log(abs(z_i))))
             cumsum_m2p = np.cumsum(np.log(m_i + 2*p))
-            cumsum_p   = np.cumsum(np.log(p))
-            denom = np.concatenate(([0],  # log(1) = 0
-                                    [np.log(m_i + 1)],
-                                    np.log(m_i) + np.log(m_i + 2) + cumsum_m2p + p*np.log(m_i + 1) + cumsum_p))
+            cumsum_p = np.cumsum(np.log(p))
+            denom = np.concatenate(([0], [math.log(m_i + 1)],
+                                     math.log(m_i) + math.log(m_i + 2) + cumsum_m2p
+                                     + p*math.log(m_i + 1) + cumsum_p))
             terms = np.exp(num - denom)
             if z_i < 0:
-                signs = (-1)**np.arange(len(terms))
-                terms *= signs
+                terms *= (-1)**np.arange(len(terms))
             return terms
 
-        # Main loop: iterate blocks until convergence
         for idx, (m_i, z_i) in enumerate(zip(m_arr, z_arr)):
-            converged = False
             for block in range(1, max_iter+1):
                 n_terms = n_terms_inc * block
-                terms = _series_terms(m_i, z_i, n_terms)
+                terms = _terms(m_i, z_i, n_terms)
                 if abs(terms[-1]) <= tol:
                     result[idx] = terms.sum()
-                    converged = True
                     break
-            if not converged:
-                raise ValueError(f"Series failed to converge for m={m_i}, z={z_i}")
-        return result if result.shape != () else float(result)
+            else:
+                raise ValueError(f"Series failed for m={m_i}, z={z_i}")
 
+        return float(result) if result.size == 1 else result
 
-
-    #------------------------------------------------------------------------------  
-    # Example Sichel Psi-factor table: extend with full data as needed  
-    # Stored as list of tuples: (n, V, psi_lower, psi_upper)  
-    psi_table = [  
-        (3,  0.20, 0.58, 1.87),  
-        (3,  0.40, 0.49, 2.29),  
-        (5,  0.20, 0.67, 1.73),  
-        (5,  0.40, 0.55, 2.08),  
-        (10, 0.20, 0.75, 1.59),  
-        (10, 0.40, 0.64, 1.82),  
-        # ... add the full table here ...  
+    # Example Psi-factor table; extend as needed
+    psi_table = [
+        (3, 0.20, 0.58, 1.87),
+        (3, 0.40, 0.49, 2.29),
+        (5, 0.20, 0.67, 1.73),
+        (5, 0.40, 0.55, 2.08),
+        (10,0.20, 0.75, 1.59),
+        (10,0.40, 0.64, 1.82),
     ]
 
+    @staticmethod
     def lookup_psi(p, V, n, psi_table=psi_table):
-        """
-        Lookup (or nearest‐neighbor) Sichel Psi‐factor for tail probability p, statistic V, and sample size n.
-        p: tail probability (e.g., alpha/2 or 1-alpha/2)
-        V: Sichel V statistic = sqrt(sigma^2 / n)
-        n: sample size
-        """
-        # Filter entries for given n
-        entries = [entry for entry in psi_table if entry[0] == n]
+        entries = [e for e in psi_table if e[0] == n]
         if not entries:
-            raise ValueError(f"No Psi-factors available for n={n}")
-        # Try exact match on V
+            raise ValueError(f"No Psi-factors for n={n}")
         for _, v_val, psi_l, psi_u in entries:
-            if np.isclose(v_val, V):
+            if math.isclose(v_val, V):
                 return psi_l if p < 0.5 else psi_u
-        # Nearest V fallback
         _, _, psi_l, psi_u = min(entries, key=lambda e: abs(e[1] - V))
         return psi_l if p < 0.5 else psi_u
 
-    def umvue_sichel_lognormal_estimator(data):
+    import math
+
+
+    def ci_lnorm_land(mu_hat, sigma2_hat, n, ci_type="two-sided", conf_level=0.95):
         """
-        Compute Sichel's unbiased estimator of the lognormal mean and the fitted lognormal variance.
-
-        Parameters
-        ----------
-        data : array_like
-            Positive-valued sample from a lognormal distribution.
-
-        Returns
-        -------
-        dict
-            {
-              "mean_estimate": float,
-              "variance_estimate": float,
-            }
+        Land's CI for lognormal mean matching R implementations ci.lnorm.land, lands.C, ci.land.
         """
-        data = np.asarray(data, dtype=float)
-        if np.any(data <= 0):
-            raise ValueError("All observations must be positive for lognormal fitting.")
-        
-        log_data = np.log(data)
-        n = len(log_data)
-        
-        # Sample log-space estimates
-        hat_mu     = np.mean(log_data)
-        hat_sigma2 = np.var(log_data, ddof=1)
-        
-        # Sichel point estimate
-        z1 = (n-1)/2
-        z2 = hat_sigma2*(n-1)/4
-        gamma_n = hyp0f1(z1, z2)
-        mean_est  = np.exp(hat_mu) * gamma_n
-        
-        # Fitted distribution variance (plug-in formula)
-        variance_est = (np.exp(hat_sigma2) - 1) * np.exp(2*hat_mu + hat_sigma2)
+        # Input validation 
+        if sigma2_hat <= 0:
+            raise ValueError("sigma2_hat must be positive")
+        if n < 2 or int(n) != n:
+            raise ValueError("n must be integer >= 2")
+        if not (0.5 <= conf_level < 1):
+            raise ValueError("conf_level must be in [0.5, 1)")
+        ci_type = ci_type.lower()
+        if ci_type not in ("two-sided", "lower", "upper"):
+            raise ValueError("ci_type must be 'two-sided', 'lower', or 'upper'")
 
-        
-        return mean_est, variance_est
+        # Land method parameters
+        lam = 0.5
+        nu = n - 1
+        gamma_sq = n
+        k = (nu + 1) / (2 * lam * gamma_sq)
+        S = math.sqrt((2 * lam * sigma2_hat) / k)
 
-    def umvue_sichel_lognormal_estimator_old(data):
+        # Helper function: non-central t quantile
+        def qlands_t(p, nu, zeta):
+            return nct.ppf(p, df=nu, nc=zeta)
+
+        # lands.C equivalent in Python
+        def lands_C(S, nu, alpha):
             """
-            Compute Sichel's unbiased estimator of the lognormal mean and the fitted lognormal variance.
-
-            Parameters
-            ----------
-            data : array_like
-                Positive-valued sample from a lognormal distribution.
-
-            Returns
-            -------
-            dict
-                {
-                  "mean_estimate": float,
-                  "variance_estimate": float,
-                }
+            Improved Land's C function with stabilized optimization and quantile logic.
             """
-            data = np.asarray(data, dtype=float)
-            if np.any(data <= 0):
-                raise ValueError("All observations must be positive for lognormal fitting.")
-            
-            log_data = np.log(data)
-            n = len(log_data)
-            
-            # Sample log-space estimates
-            hat_mu     = np.mean(log_data)
-            hat_sigma2 = np.var(log_data, ddof=1)
-            
-            # Sichel point estimate
-            z = (n - 1) * hat_sigma2 / 2
-            gamma_num = hyp0f1(n/2,     z)
-            gamma_den = hyp0f1((n+1)/2, z)
-            gamma_n   = gamma_num / gamma_den
-            mean_est  = np.exp(hat_mu) * gamma_n
-            
-            # Fitted distribution variance (plug-in formula)
-            variance_est = (np.exp(hat_sigma2) - 1) * np.exp(2*hat_mu + hat_sigma2)
 
-            
-            return mean_est, variance_est
-        
+            if S <= 0:
+                raise ValueError("'S' must be positive.")
+            if nu < 2:
+                raise ValueError("'nu' must be at least 2.")
+            if not (0 < alpha < 1):
+                raise ValueError("'alpha' must be between 0 and 1.")
 
-    @staticmethod
-    def ci_lnorm_land(meanlog, sdlog, n, ci_type, conf_level):
-        ci = EnvStatsPy.ci_land(0.5, meanlog, sdlog**2, n, n - 1, n, ci_type, conf_level)
-        return {"LCL": np.exp(ci["LCL"]), "UCL": np.exp(ci["UCL"]) }
+            def qlands_t(p, nu, zeta):
+                """Stable non-central t-quantile"""
+                try:
+                    # Clip large zeta values to avoid nct.ppf instability
+                    if abs(zeta) > 100:
+                        zeta = 100 * math.copysign(1, zeta)
+                    qt = nct.ppf(p, df=nu, nc=zeta)
+                    if not np.isfinite(qt):
+                        raise ValueError("Non-finite result")
+                    return qt
+                except Exception:
+                    # Fallback to standard t approximation
+                    warnings.warn("Falling back to central t-distribution for quantile")
+                    return nct.ppf(p, df=nu, nc=0)
 
-    @staticmethod
-    def ci_land(lambda_, mu_hat, sig_sq_hat, n, nu, gamma_sq, ci_type, conf_level):
-        k = (nu + 1) / (2 * lambda_ * gamma_sq)
-        S = np.sqrt((2 * lambda_ * sig_sq_hat) / k)
+            def objective(m):
+                T_m = (math.sqrt(nu + 1) * ((-S**2) / 2 - m)) / S
+                zeta_m = (-S * math.sqrt(nu + T_m**2)) / (2 * math.sqrt(nu + 1))
+                try:
+                    quantile = qlands_t(alpha, nu, zeta_m)
+                except Exception:
+                    quantile = float('inf')
+                return (T_m - quantile) ** 2
+
+            # Initial guess (same as R)
+            T0 = (-math.sqrt(nu + 1) * S) / 2
+            zeta0 = (-S * math.sqrt(nu + T0**2)) / (2 * math.sqrt(nu + 1))
+            try:
+                T0 = qlands_t(alpha, nu, zeta0)
+            except Exception:
+                T0 = -T0
+            m0 = (-S**2) / 2 - (S * T0) / math.sqrt(nu + 1)
+
+            # Use bounded optimization like R
+            bounds = [(-10 * abs(m0), 10 * abs(m0))]
+
+            res = minimize(
+                objective,
+                x0=[m0],
+                method='L-BFGS-B',
+                bounds=bounds,
+                options={'ftol': 1e-13, 'gtol': 1e-13, 'maxiter': 20000}
+            )
+
+            if not res.success:
+                raise RuntimeError(f"Optimization failed: {res.message}")
+
+            m_opt = res.x.item()
+            return (m_opt * math.sqrt(nu)) / S
+
+        # CI calculations matching R logic exactly
         alpha = 1 - conf_level
-
         if ci_type == "two-sided":
-            lcl = mu_hat + lambda_ * sig_sq_hat + (k * S / np.sqrt(nu)) * t.ppf(alpha/2, nu)
-            ucl = mu_hat + lambda_ * sig_sq_hat + (k * S / np.sqrt(nu)) * t.ppf(1 - alpha/2, nu)
+            psi_low = lands_C(S, nu, alpha / 2)
+            psi_high = lands_C(S, nu, 1 - alpha / 2)
+            lcl = mu_hat + lam * sigma2_hat + (k * S / math.sqrt(nu)) * psi_low
+            ucl = mu_hat + lam * sigma2_hat + (k * S / math.sqrt(nu)) * psi_high
         elif ci_type == "lower":
-            lcl = mu_hat + lambda_ * sig_sq_hat + (k * S / np.sqrt(nu)) * t.ppf(alpha, nu)
-            ucl = np.inf
-        else:
-            lcl = -np.inf
-            ucl = mu_hat + lambda_ * sig_sq_hat + (k * S / np.sqrt(nu)) * t.ppf(1 - alpha, nu)
+            psi_low = lands_C(S, nu, alpha)
+            lcl = mu_hat + lam * sigma2_hat + (k * S / math.sqrt(nu)) * psi_low
+            ucl = math.inf
+        else:  # upper
+            psi_high = lands_C(S, nu, conf_level)
+            lcl = -math.inf
+            ucl = mu_hat + lam * sigma2_hat + (k * S / math.sqrt(nu)) * psi_high
 
-        return {"LCL": lcl, "UCL": ucl}
+        # Exponentiate to original-scale mean CI
+        lcl_exp, ucl_exp = sorted([math.exp(lcl), math.exp(ucl)])
+        return {"LCL": lcl_exp, "UCL": ucl_exp}
 
-    def ci_sichel(mu_hat, sigma2_hat, n, ci_type="two-sided", conf_level=0.95):
-        """
-        Compute Sichel's confidence interval for the lognormal mean.
 
-        Parameters
-        ----------
-        mu_hat : float
-            Sample mean of log-data, Ȳ.
-        sigma2_hat : float
-            Unbiased sample variance of log-data, S_Y^2.
-        n : int
-            Sample size.
-        ci_type : str
-            "two-sided", "lower", or "upper".
-        conf_level : float
-            Confidence level between 0 and 1.
 
-        Returns
-        -------
-        dict
-            {"LCL": lower_conf_limit, "UCL": upper_conf_limit}.
-        """
-        # Compute point estimate
-        V = np.sqrt(sigma2_hat / n)
-        z = (n - 1) * sigma2_hat / 2
-        gamma_n = hyp0f1(n/2, z) / hyp0f1((n+1)/2, z)
-        mean_est = np.exp(mu_hat) * gamma_n
 
+    @staticmethod
+    def ci_standard_approx(
+        mu_hat, sigma2_hat, n,
+        df=None, ci_type="two-sided", conf_level=0.95,
+        lb=-math.inf, ub=math.inf, test_statistic="z"
+    ):
+        sd_hat = np.sqrt(sigma2_hat)
         alpha = 1 - conf_level
-        # Determine tail probabilities
-        if ci_type == "two-sided":
-            p_lower, p_upper = alpha/2, 1 - alpha/2
-        elif ci_type == "lower":
-            p_lower, p_upper = alpha, None
-        else:  # upper only
-            p_lower, p_upper = None, 1 - alpha
-
-        # Lookup psi-factors and compute limits
-        lcl = mean_est * EnvStatsPy.lookup_psi(p_lower, V, n) if p_lower is not None else -np.inf
-        ucl = mean_est * EnvStatsPy.lookup_psi(p_upper, V, n) if p_upper is not None else np.inf
-
-        return {"LCL": lcl, "UCL": ucl}
-
-
-        @staticmethod
-        def ci_normal_approx_old(mean, sd, n, ci_type, conf_level):
-            alpha = 1 - conf_level
-            se = sd / np.sqrt(n)
-
-            if ci_type == "two-sided":
-                z_val = norm.ppf(1 - alpha/2)
-                return {"LCL": mean - z_val*se, "UCL": mean + z_val*se}
-            elif ci_type == "lower":
-                z_val = norm.ppf(1 - alpha)
-                return {"LCL": mean - z_val*se, "UCL": np.inf}
-            else:
-                z_val = norm.ppf(1 - alpha)
-                return {"LCL": -np.inf, "UCL": mean + z_val*se}
-
-        @staticmethod
-        def ci_normal_approx(
-            theta_hat,
-            sd_theta_hat,
-            n,
-            df=None,
-            ci_type="two-sided",
-            alpha=0.05,
-            lb=-np.inf,
-            ub=np.inf,
-            test_statistic="z"
-        ):
-            """
-            Compute a confidence interval for theta using normal approximation.
-
-            Parameters
-            ----------
-            theta_hat : float
-                Point estimate of the parameter theta.
-            sd_theta_hat : float
-                Estimated standard deviation of theta_hat.
-            n : int
-                Sample size.
-            df : int or None, optional
-                Degrees of freedom for the t distribution; required if test_statistic='t'.
-            ci_type : {'two-sided', 'lower', 'upper'}, optional
-                Type of interval.
-            alpha : float, optional
-                Significance level (1 - confidence level).
-            lb : float, optional
-                Lower bound for truncation (default -inf).
-            ub : float, optional
-                Upper bound for truncation (default +inf).
-            test_statistic : {'t', 'z'}, optional
-                Use Student's t ('t') or normal ('z') quantiles.
-
-            Returns
-            -------
-            dict
-                {'LCL': lower_confidence_limit, 'UCL': upper_confidence_limit}
-            """
-            test_statistic = test_statistic.lower()
-            if test_statistic == "t" and df is None:
-                raise ValueError("When test_statistic='t', you must supply df")
-            # Determine half-width
-            if ci_type in ("two-sided", "two.sided"):
-                q = alpha / 2
-            else:
-                q = alpha
-            if test_statistic == "t":
-                quantile = t.ppf(1 - q, df)
-            else:
-                quantile = norm.ppf(1 - q)
-            hw = quantile * sd_theta_hat
-
-            if ci_type in ("two-sided", "two.sided"):
-                lcl = max(lb, theta_hat - hw)
-                ucl = min(ub, theta_hat + hw)
-            elif ci_type == "lower":
-                lcl = max(lb, theta_hat - hw)
-                ucl = ub
-            elif ci_type == "upper":
-                lcl = lb
-                ucl = min(ub, theta_hat + hw)
-            else:
-                raise ValueError("ci_type must be 'two-sided', 'lower', or 'upper'")
-
-            return {"LCL": lcl, "UCL": ucl}
+        test_statistic = test_statistic.lower()
+        df = df if df is not None else (n-1 if test_statistic=="t" else None)
+        if test_statistic == "t" and df is None:
+            raise ValueError("df required for t-interval")
+        q_lower, q_upper = {
+            "two-sided": (alpha/2, 1-alpha/2),
+            "lower": (alpha, 1.0),
+            "upper": (0.0, 1-alpha)
+        }.get(ci_type, (None,None))
+        quant = (lambda p: t.ppf(p, df)) if test_statistic=="t" else (lambda p: norm.ppf(p))
+        lcl = mu_hat - quant(1-q_lower)*sd_hat if q_lower>0 else -math.inf
+        ucl = mu_hat + quant(q_upper)*sd_hat if q_upper<1 else math.inf
+        return {"LCL": max(lb, lcl), "UCL": min(ub, ucl)}
 
     @staticmethod
-    def ci_lnorm_zou(meanlog, sdlog, n, ci_type, conf_level):
+    def ci_lnorm_zou(mu_hat, sigma2_hat, n, ci_type, conf_level):
+        """
+        Exact port of R's ci.lnorm.zou() for confidence intervals on the lognormal mean.
+        """
         alpha = 1 - conf_level
-        pivot = meanlog + sdlog**2 / 2
-        se_mean = sdlog / np.sqrt(n)
+        sdlog = np.sqrt(sigma2_hat)
+        theta2_hat = sigma2_hat / 2
+        pivot = mu_hat + theta2_hat
+
+        # Mean CI component (z-distribution)
+        z = norm.ppf(1 - alpha / 2) if ci_type == "two-sided" else norm.ppf(1 - alpha)
+        se_meanlog = sdlog / np.sqrt(n)
+        mean_LCL = mu_hat - z * se_meanlog
+        mean_UCL = mu_hat + z * se_meanlog
+
+        # Variance CI component (chi-squared)
+        df = n - 1
+        chi2_L = chi2.ppf(alpha / 2, df) if ci_type == "two-sided" else chi2.ppf(alpha, df)
+        chi2_U = chi2.ppf(1 - alpha / 2, df) if ci_type == "two-sided" else chi2.ppf(1 - alpha, df)
+
+        var_LCL = (sdlog**2 * df / chi2_U) / 2
+        var_UCL = (sdlog**2 * df / chi2_L) / 2
 
         if ci_type == "two-sided":
-            z = norm.ppf(1 - alpha/2)
-        else:
-            z = norm.ppf(1 - alpha)
-
-        chi2_l, chi2_u = chi2.ppf(alpha/2, n-1), chi2.ppf(1-alpha/2, n-1)
-        theta2_l = (n-1) * sdlog**2 / chi2_u
-        theta2_u = (n-1) * sdlog**2 / chi2_l
-
-        if ci_type == "two-sided":
-            lcl = np.exp(pivot - np.sqrt((se_mean*z)**2 + (sdlog**2/2 - theta2_l/2)**2))
-            ucl = np.exp(pivot + np.sqrt((se_mean*z)**2 + (theta2_u/2 - sdlog**2/2)**2))
+            dL = (mu_hat - mean_LCL)**2 + (theta2_hat - var_LCL)**2
+            dU = (mean_UCL - mu_hat)**2 + (var_UCL - theta2_hat)**2
+            LCL = math.exp(pivot - math.sqrt(dL))
+            UCL = math.exp(pivot + math.sqrt(dU))
         elif ci_type == "lower":
-            lcl = np.exp(pivot - np.sqrt((se_mean*z)**2 + (sdlog**2/2 - theta2_l/2)**2))
-            ucl = np.inf
+            dL = (mu_hat - mean_LCL)**2 + (theta2_hat - var_LCL)**2
+            LCL = math.exp(pivot - math.sqrt(dL))
+            UCL = math.inf
+        else:  # upper
+            dU = (mean_UCL - mu_hat)**2 + (var_UCL - theta2_hat)**2
+            LCL = -math.inf
+            UCL = math.exp(pivot + math.sqrt(dU))
+
+        return {"LCL": LCL, "UCL": UCL}
+
+
+    @staticmethod
+    def ci_cox(mu_hat, sigma2_hat, n, ci_type="two-sided", conf_level=0.95):
+        """
+        Cox method for confidence intervals on the lognormal mean.
+        Matches the logic of EnvStats::elnormAlt(ci.method="cox") in R.
+        """
+        alpha = 1 - conf_level
+        df = n - 1
+        ci_type = ci_type.lower()
+
+        # Point estimate of mean on log scale plus half variance
+        beta_hat = mu_hat + (sigma2_hat / 2)
+
+        # Cox standard error formula
+        se_beta_hat = math.sqrt(sigma2_hat / n + (sigma2_hat ** 2) / (2 * (n + 1)))
+
+        # z critical value
+        z = norm.ppf(1 - alpha / 2) if ci_type == "two-sided" else norm.ppf(1 - alpha)
+
+        if ci_type == "two-sided":
+            lcl = beta_hat - z * se_beta_hat
+            ucl = beta_hat + z * se_beta_hat
+        elif ci_type == "lower":
+            lcl = beta_hat - z * se_beta_hat
+            ucl = math.inf
+        elif ci_type == "upper":
+            lcl = -math.inf
+            ucl = beta_hat + z * se_beta_hat
         else:
-            lcl = -np.inf
-            ucl = np.exp(pivot + np.sqrt((se_mean*z)**2 + (theta2_u/2 - sdlog**2/2)**2))
+            raise ValueError("ci_type must be 'two-sided', 'lower', or 'upper'")
 
-        return {"LCL": lcl, "UCL": ucl}
-
-    @staticmethod
-    def ci_cox(meanlog, s2, n, ci_type, conf_level):
-        beta_hat = meanlog + s2 / 2
-        sd_beta_hat = np.sqrt(s2/n + (s2**2)/(2*(n - 1))) # sd_beta_hat = np.sqrt(s2/n + (s2**2)/(2*(n + 1))) Original
-        ci = EnvStatsPy.ci_normal_approx(beta_hat, sd_beta_hat, n, ci_type, conf_level, test_statistic="t")
-        return {"LCL": np.exp(ci["LCL"]), "UCL": np.exp(ci["UCL"]) }
+        # Transform back to original scale
+        lcl_exp, ucl_exp = sorted([math.exp(lcl), math.exp(ucl)])
+        return {"LCL": lcl_exp, "UCL": ucl_exp}
 
     @staticmethod
-    def ci_parkin(data, ci_type, conf_level):
-        data = np.sort(data)
+    def ci_parkin(data, ci_type, conf_level, parkin_list=None):
+        data = np.sort(np.asarray(data))
         n = len(data)
-        p = 0.5
-        rank = int(np.ceil(p*n)) - 1
-        lcl, ucl = data[max(0,rank)], data[min(n-1,rank)]
-
+        rank = int(np.ceil(0.5*n)) - 1
+        lcl, ucl = data[max(0, rank)], data[min(n-1, rank)]
         if ci_type == "two-sided":
             return {"LCL": lcl, "UCL": ucl}
         elif ci_type == "lower":
-            return {"LCL": lcl, "UCL": np.inf}
+            return {"LCL": lcl, "UCL": math.inf}
         else:
-            return {"LCL": -np.inf, "UCL": ucl}
+            return {"LCL": -math.inf, "UCL": ucl}
+
