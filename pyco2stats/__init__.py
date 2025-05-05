@@ -5,8 +5,9 @@ __author__ = 'Maurizio Petrelli, Alessandra Ariano'
 from .gaussian_mixtures import GMM
 from .sinclair import Sinclair
 from .stats import Stats
-from .visualize import Visualize
+from .visualize_mpl import Visualize_Mpl
 from .propagate_errors import Propagate_Errors
 from .env_stats_py import EnvStatsPy
+from .visualize_plotly import Visualize_Plotly
 
-__all__ = ["DataHandler", "GMM", "Visualize", "Sinclair", "Stats", "Propagate_Errors", "EnvStatsPy"]
+__all__ = ["DataHandler", "GMM", "Visualize_Mpl", "Sinclair", "Stats", "Propagate_Errors", "EnvStatsPy", "Visualize_Plotly"]

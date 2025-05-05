@@ -3,7 +3,7 @@ import warnings
 import torch # Constrained GMM uses PyTorch
 from sklearn.exceptions import ConvergenceWarning # sklearn GMM might raise this
 from pyco2stats.gaussian_mixtures import GMM
-
+from tqdm import tqdm
 
 class Propagate_Errors:
     """
@@ -53,7 +53,8 @@ class Propagate_Errors:
         n_components: int,
         random_state: None,
         max_iter: int = 100,
-        tol: float = 1e-6
+        tol: float = 1e-6,
+        show_progress: bool = False
     ) -> dict:
         """
         Propagates error through the EM-based GMM fitting by simulating
@@ -91,7 +92,9 @@ class Propagate_Errors:
         # original_log_data_std and original_log_data_mean are not needed for perturbation std dev calculation now
 
 
-        for i in range(n_simulations):
+       
+        iterator = tqdm(range(n_simulations), desc="gaussian_mixture_em Monte Carlo") if show_progress else range(n_simulations)
+        for i in iterator:
             # Generate perturbed log-transformed data using additive noise
             # Pass original_log_data and percentage_relative_error directly
             perturbed_log_data = Propagate_Errors._generate_perturbed_sample(
@@ -149,7 +152,8 @@ class Propagate_Errors:
         tol: float = 1e-10,
         n_init: int = 20,
         suppress_warnings: bool = True,
-        covariance_type: str = 'spherical'
+        covariance_type: str = 'spherical',
+        show_progress: bool = False
     ) -> dict:
         """
         Propagates error through the sklearn-based GMM fitting by simulating
@@ -185,7 +189,8 @@ class Propagate_Errors:
         # original_log_data_std is not needed for perturbation std dev calculation now
 
 
-        for i in range(n_simulations):
+        iterator = tqdm(range(n_simulations), desc="gaussian_mixture_sklearn Monte Carlo") if show_progress else range(n_simulations)
+        for i in iterator:
             # Generate perturbed log-transformed data using additive noise
             # Pass original_log_data and percentage_relative_error directly
             perturbed_log_data = Propagate_Errors._generate_perturbed_sample(
@@ -197,7 +202,7 @@ class Propagate_Errors:
 
             # Call the sklearn-based GMM fitting function
             try:
-                means, std_devs, weights, _, _ = GMM.gaussian_mixture_sklearn(
+                means, std_devs, weights, _ = GMM.gaussian_mixture_sklearn(
                     perturbed_data_2d, n_components=n_components, max_iter=max_iter,
                     tol=tol, n_init=n_init, suppress_warnings=suppress_warnings,
                     covariance_type=covariance_type
@@ -225,7 +230,7 @@ class Propagate_Errors:
 
         return {
             'means': simulated_means,
-            'std_devs': simulated_devs, # Typo here, should be std_devs
+            'std_devs': simulated_std_devs, 
             'weights': simulated_weights
         }
 
@@ -240,7 +245,8 @@ class Propagate_Errors:
         n_components: int,
         n_epochs: int = 5000,
         lr: float = 0.001,
-        verbose: bool = False # Suppress verbose output during MC simulations
+        verbose: bool = False, # Suppress verbose output during MC simulations
+        show_progress: bool = False
     ) -> dict:
         """
         Propagates error through the constrained PyTorch-based GMM fitting by simulating
@@ -278,7 +284,8 @@ class Propagate_Errors:
         # original_log_data_std is not needed for perturbation std dev calculation now
 
 
-        for i in range(n_simulations):
+        iterator = tqdm(range(n_simulations), desc="constrained_gaussian_mixture Monte Carlo") if show_progress else range(n_simulations)
+        for i in iterator:
             # Generate perturbed log-transformed data using additive noise
             # Pass original_log_data and percentage_relative_error directly
             perturbed_log_data = Propagate_Errors._generate_perturbed_sample(
