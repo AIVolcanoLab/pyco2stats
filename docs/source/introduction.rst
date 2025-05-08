@@ -7,16 +7,8 @@ PyCO2stats is a free open source Python library desinged to perform
 classic and robust statistical methods for CO2 flux and geochemical data
 analysis.
 
-Orange-Volcanoes bridges the gap between advanced data science techniques and the specific requirements
-of geochemical datasets. It uses Orange's powerful interactive environment to apply machine learning,
-statistical modelling, and explainable AI methods to petrological datasets. Users can easily build
-customized workflows by linking widgets, facilitating rapid iteration and discovery in magmatic and
-volcanic research.
-
-Whether you are conducting large-scale geochemical studies, refining glass and mineral chemical datasets,
-or testing magmatic equilibria, Orange-Volcanoes offers an intuitive and flexible tool to enhance your
-analytical capabilities. This documentation will guide you through each widget and its applications,
-providing the basis for an in-depth study of volcanic and petrological processes.
+PyCO2stats bridges the gap between advanced data science techniques and the specific requirements
+of geochemical datasets regarding CO2 fluxes. PyCO2stats is designed to grant the maximum flexibility possible, enabling the user to perform a vast range of analyses, from classical statistical methods (such as mean, standard deviation etc...) to more complete and complex analyses, such as Gaussian Mixture Models (GMM) or lognormal statistics for reduced population sizes. Moreover PyCO2stats meets the requirements in term for transparency and reproducibility, meeting so the FAIR (Findability, Accessibility, Interoperability and Reusability) and OpenScience standards. Laslty, PyCO2stats is suited for used either by Python expert users or by more novice users.
 
 PyCO2stats is published in XXX:
 
