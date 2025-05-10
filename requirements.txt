@@ -44,4 +44,3 @@ zipp==3.19.2
 sphinx
 sphinx_rtd_theme
 sphinx-autodoc-typehints
--e .
