@@ -14,30 +14,25 @@ installing
 introduction
 modules
 
-Welcome to the documentation for MyLibrary!
+Welcome to the documentation for pyco2stats!
 
 Introduction
 ============
 
-Introduction and Citation
-=========================
-
-
 Welcome to pyco2stats.
-PyCO2stats is a free open source Python library desinged to perform
-classic and robust statistical methods for CO2 flux and geochemical data
-analysis.
+PyCO2stats is a free open source Python library desinged to perform both classic and robust statistical methods for CO2 flux and geochemical data analysis.
 
 PyCO2stats bridges the gap between advanced data science techniques and the specific requirements
 of geochemical datasets regarding CO2 fluxes. PyCO2stats is designed to grant the maximum flexibility possible, enabling the user to perform a vast range of analyses, from classical statistical methods (such as mean, standard deviation etc...) to more complete and complex analyses, such as Gaussian Mixture Models (GMM) or lognormal statistics for reduced population sizes. Moreover PyCO2stats meets the requirements in term for transparency and reproducibility, meeting so the FAIR (Findability, Accessibility, Interoperability and Reusability) and OpenScience standards. Laslty, PyCO2stats is suited for used either by Python expert users or by more novice users.
 
-PyCO2stats is published in XXX:
+In detail pyco2stats is composed of 6 main classes:
+.. _GMM: this class enables working with Gaussian Mixture Models (GMM). It permits the generation of synthetic datasets and the application of different approaches for the analysis of data with GMM;
+.._Sinclair: this class enables the possiblity to perform the graphical procedure known as Sinclair to partition datasets of polymodal values into two (or more) lognormal subpopulations;
+.._Propagate_Errors: class that permits the computation of error propagation to quantify the uncertainety of fitted GMM by Monte Carlo error propagation;
+.._Stats: collection of several statistical methods to analyze the data uncer investigation, with particular focus on lognormal distribution related statistics;
+.._Viualize_MPL & _Visualize_Plotly: classes to perform statistical visualization either by matplotlib (Visualize_MPL) or by plotly (Visaulize_Plotly).
 
-**Link to the paper here**
-
-Please cite the paper (DOI: XXX) if you are applying pyCO2stats for your study.
-
-pyCO2stats is actively maintained and improved. We value user input for feature requests and bug
+PyCO2stats is actively maintained and improved. We value user input for feature requests and bug
 reports. To contribute, you can either submit a request or report an issue directly on the GitHub Issues
 page, or reach out via email at XXX.
 
@@ -50,11 +45,6 @@ by using the dedicated `pull request`_ and `issues`_ spaces.
 .. _pull request: https://github.com/AIVolcanoLab/pyco2stats/pulls
 .. _issues: https://github.com/AIVolcanoLab/pyco2stats/issues
 .. _GitHub: https://github.com/AIVolcanoLab/pyco2stats
-
-**References:**
-
-Petrelli, M., Ariano, A., Baroni, M., Frondini, F., Ágreda-López, M. and Chiodini, G. : "PyCO2stats: A Python Library for Statistical Modeling of CO2 Fluxes and
-Geochemical Population Analysis in Volcanic and Environmental Systems"
 
 
 Installation
@@ -80,3 +70,16 @@ Indices and tables
 * :ref:`genindex`
 * :ref:`modindex`
 * :ref:`search`
+
+Citation
+========
+PyCO2stats is published in XXX:
+
+**Link to the paper here**
+
+Please cite the paper (DOI: XXX) if you are applying pyCO2stats for your study.
+
+**References:**
+
+Petrelli, M., Ariano, A., Baroni, M., Frondini, F., Ágreda-López, M. and Chiodini, G. : "PyCO2stats: A Python Library for Statistical Modeling of CO2 Fluxes and
+Geochemical Population Analysis in Volcanic and Environmental Systems"
