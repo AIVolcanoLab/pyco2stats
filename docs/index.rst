@@ -11,7 +11,9 @@ Welcome to pyco2stats's documentation!
    :caption: Contents:
 
 installing
+
 introduction
+
 modules
 
 Welcome to the documentation for pyco2stats!
