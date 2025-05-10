@@ -26,11 +26,11 @@ PyCO2stats bridges the gap between advanced data science techniques and the spec
 of geochemical datasets regarding CO2 fluxes. PyCO2stats is designed to grant the maximum flexibility possible, enabling the user to perform a vast range of analyses, from classical statistical methods (such as mean, standard deviation etc...) to more complete and complex analyses, such as Gaussian Mixture Models (GMM) or lognormal statistics for reduced population sizes. Moreover PyCO2stats meets the requirements in term for transparency and reproducibility, meeting so the FAIR (Findability, Accessibility, Interoperability and Reusability) and OpenScience standards. Laslty, PyCO2stats is suited for used either by Python expert users or by more novice users.
 
 In detail pyco2stats is composed of 6 main classes:
-.. _GMM: this class enables working with Gaussian Mixture Models (GMM). It permits the generation of synthetic datasets and the application of different approaches for the analysis of data with GMM;
-.._Sinclair: this class enables the possiblity to perform the graphical procedure known as Sinclair to partition datasets of polymodal values into two (or more) lognormal subpopulations;
-.._Propagate_Errors: class that permits the computation of error propagation to quantify the uncertainety of fitted GMM by Monte Carlo error propagation;
-.._Stats: collection of several statistical methods to analyze the data uncer investigation, with particular focus on lognormal distribution related statistics;
-.._Viualize_MPL & _Visualize_Plotly: classes to perform statistical visualization either by matplotlib (Visualize_MPL) or by plotly (Visaulize_Plotly).
+   * GMM: this class enables working with Gaussian Mixture Models (GMM). It permits the generation of synthetic datasets and the application of different approaches for the analysis of data with GMM;
+   * Sinclair: this class enables the possiblity to perform the graphical procedure known as Sinclair to partition datasets of polymodal values into two (or more) lognormal subpopulations;
+   * Propagate_Errors: class that permits the computation of error propagation to quantify the uncertainety of fitted GMM by Monte Carlo error propagation;
+   * Stats: collection of several statistical methods to analyze the data uncer investigation, with particular focus on lognormal distribution related statistics;
+   * Viualize_MPL and Visualize_Plotly: classes to perform statistical visualization either by matplotlib (Visualize_MPL) or by plotly (Visualize_Plotly).
 
 PyCO2stats is actively maintained and improved. We value user input for feature requests and bug
 reports. To contribute, you can either submit a request or report an issue directly on the GitHub Issues
