@@ -70,7 +70,7 @@ Or from source:
 
 .. code-block:: bash
 
-   git clone https://github.com/yourname/mylibrary.git
+   git clone https://github.com/AIVolcanoLab/pyco2stats.git
    cd mylibrary
    pip install .
 
