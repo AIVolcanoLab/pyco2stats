@@ -10,7 +10,33 @@ Welcome to pyco2stats's documentation!
    :maxdepth: 2
    :caption: Contents:
 
+installing
+introduction
 modules
+
+Welcome to the documentation for MyLibrary!
+
+Introduction
+============
+
+This library helps with ...
+
+Installation
+============
+
+You can install it via pip:
+
+.. code-block:: bash
+
+   pip install mylibrary
+
+Or from source:
+
+.. code-block:: bash
+
+   git clone https://github.com/yourname/mylibrary.git
+   cd mylibrary
+   pip install .
 
 Indices and tables
 ==================
