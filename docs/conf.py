@@ -9,11 +9,12 @@ release = '0.1.0'
 
 # Add any Sphinx extension module names here, as strings.
 extensions = [
-    'sphinx.ext.autodoc',
-    'sphinx.ext.napoleon',
-    'sphinx.ext.viewcode',
-    'sphinx.ext.autosummary',
-'sphinx.ext.mathjax',
+    'sphinx.ext.autodoc',        # Auto-document docstrings
+    'sphinx.ext.napoleon',       # Support for Google/NumPy-style docstrings
+    'sphinx.ext.intersphinx',    # Link to other project's documentation
+    'sphinx.ext.viewcode',       # Add links to highlighted source code
+    'sphinx.ext.mathjax',        # LaTeX math rendering
+    'sphinx.ext.autosummary',    # Generate function/class summary tables
 ]
 
 # Add any paths that contain templates here, relative to this directory.
