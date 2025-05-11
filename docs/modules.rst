@@ -23,7 +23,17 @@ pyco2stats Modules
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: pyco2stats.visualize
+.. automodule:: pyco2stats.propagate_errors
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+.. automodule:: pyco2stats.visualize_mpl
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+.. automodule:: pyco2stats.visualize_plotly
    :members:
    :undoc-members:
    :show-inheritance:
