@@ -1,11 +1,4 @@
-pyco2stats
-==========
-
-.. toctree::
-   :maxdepth: 2
-   :caption: Contents:
-
-pyco2stats Modules
+Pyco2stats Modules
 ==================
 
 .. automodule:: pyco2stats.gaussian_mixtures
