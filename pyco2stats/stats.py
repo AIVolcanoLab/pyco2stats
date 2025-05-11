@@ -44,7 +44,7 @@ class Stats:
             normally distributed. Supplement to the Journal of the Royal Statistical Society,
             7(2), 155-161.
 
-        Parameters:
+        Parameters
         ----------
         data : array-like
             A 1D array or list containing the log-normally distributed data (on the original scale).
@@ -58,9 +58,9 @@ class Stats:
             Note: This is primarily for reference if using a custom implementation.
             Defaults to 1000.
 
-        Returns:
+        Returns
         -------
-        tuple
+        result : tuple
             A tuple containing:
                    - umvu_mean (float): The UMVU estimator of the log-normal mean.
                                         Returns NaN if data is not positive or sample size < 1.
@@ -150,7 +150,7 @@ class Stats:
             Zhou, X-H., & Gao, S. (1997). Confidence intervals for the log-normal mean.
             Statistics in Medicine, 16(7), 783-790. (Formula 1)
 
-        Parameters:
+        Parameters
         ----------
         data : array-like
             A 1D array or list containing the log-normally distributed data (on the original scale).
@@ -159,9 +159,9 @@ class Stats:
             The desired confidence level (e.g., 0.95 for 95%). Must be between 0 and 1.
             Default is 0.95.
 
-        Returns:
+        Returns
         -------
-        tuple
+        result : tuple
             A tuple containing:
                    - umvu_mean (float): The UMVU estimator of the log-normal mean.
                                         Returns NaN if data is not positive or sample size < 1,
@@ -228,7 +228,7 @@ class Stats:
             Zhou, X-H., & Gao, S. (1997). Confidence intervals for the log-normal mean.
             Statistics in Medicine, 16(7), 783-790. (Formula 2)
 
-        Parameters:
+        Parameters
         ----------
         data : array-like
             A 1D array or list containing the log-normally distributed data (on the original scale).
@@ -237,9 +237,9 @@ class Stats:
             The desired confidence level (e.g., 0.95 for 95%). Must be between 0 and 1.
             Default is 0.95.
 
-        Returns:
+        Returns
         -------
-        tuple
+        result : tuple
             A tuple containing:
                    - umvu_mean (float): The UMVU estimator of the log-normal mean.
                                         Returns NaN if data is not positive or sample size < 1,
@@ -321,17 +321,18 @@ class Stats:
       Calculates the confidence interval for the mean of a lognormal distribution
       using Angus's conservative method based on Zhou & Gao (1997).
 
-      Args:
-        data: A list, numpy array, or similar iterable of positive numerical data
+      Parameters
+      ----------
+      data : array or list
+              A list, numpy array, or similar iterable of positive numerical data
               assumed to follow a lognormal distribution.
-        confidence_level: The desired confidence level (e.g., 0.95 for 95%).
+      confidence_level : float 
+          The desired confidence level (e.g., 0.95 for 95%).
 
-      Returns:
-        A tuple containing the lower and upper bounds of the confidence interval
-        for the mean (theta) of the lognormal distribution.
-
-      Raises:
-        ValueError: If data contains non-positive values or if sample size is < 2.
+      Returns
+      -------
+      result : tuple
+          A tuple containing the lower and upper bounds of the confidence interval for the mean (theta) of the lognormal distribution.
       """
 
       if not all(x > 0 for x in data):
@@ -391,19 +392,19 @@ class Stats:
         Estimates the median and its confidence interval for data assumed
         to be log-normally distributed.
 
-        Args:
-            data (array-like): A list, numpy array, or pandas Series of
-                               positive numerical data points.
-            confidence_level (float): The desired confidence level (e.g., 0.95 for 95%).
-                                     Must be between 0 and 1.
+        Parameters
+        ----------
+        data : array, list or pandas series
+            A list, numpy array, or pandas Series of positive numerical data points.
+        confidence_level : float
+            The desired confidence level (e.g., 0.95 for 95%). Must be between 0 and 1.
 
-        Returns:
-            dict: A dictionary containing:
-                  'median_estimate': The point estimate of the median.
-                  'confidence_interval': A tuple (lower_bound, upper_bound)
-                                         for the median.
-                  Returns None if input data is invalid (e.g., non-positive values,
-                  not enough data points).
+        Returns
+        -------
+        result : dict
+            A dictionary containing:
+             - 'median_estimate': The point estimate of the median.
+             - 'confidence_interval': A tuple (lower_bound, upper_bound) for the median.
         """
         # --- Input Validation ---
         try:
@@ -467,16 +468,19 @@ class Stats:
         Estimates the mean and confidence interval for a log-normal distribution
         using the bootstrapping method.
 
-        Args:
-            data (array-like): A 1D array or list containing the log-normally
-                               distributed data.
-            n_bootstraps (int): The number of bootstrap samples to generate.
-                               Defaults to 1000.
-            confidence_level (float): The desired confidence level for the interval.
-                                     Must be between 0 and 1. Defaults to 0.95.
+        Parameters
+        ----------
+        data : array
+            A 1D array or list containing the log-normally distributed data.
+        n_bootstraps : int
+            The number of bootstrap samples to generate. Defaults to 1000.
+        confidence_level : float
+            The desired confidence level for the interval. Must be between 0 and 1. Defaults to 0.95.
 
-        Returns:
-            tuple: A tuple containing:
+        Returns
+        -------
+        result : tuple
+            A tuple containing:
                    - estimated_mean (float): The estimated mean of the log-normal
                                              distribution (mean of bootstrap means).
                    - ci_lower (float): The lower bound of the confidence interval.
@@ -1126,6 +1130,11 @@ class Stats:
         axis : {None, int}, optional
             Axis along which to trim. If None, the whole array is trimmed, but its
             shape is maintained.
+
+        Returns
+        -------
+        trimmed array : array
+            Trimmed array.
         """
         return scipy_trim(a, limits, inclusive, axis)
 
@@ -1139,7 +1148,7 @@ class Stats:
 
         Parameters
         ----------
-        a : array_like
+        a : array
             Array of values.
         limits : None or (lower limit, upper limit), optional
             Values in the input array less than the lower limit or greater than the
@@ -1155,7 +1164,7 @@ class Stats:
 
         Returns
         -------
-        tmean : ndarray
+        tmean : array
             Trimmed mean.
         """
         return scipy_tmean(a, limits, inclusive, axis)
@@ -1167,7 +1176,7 @@ class Stats:
 
         Parameters
         ----------
-        a : array_like
+        a : array
             Input array.
         limits : tuple of float, optional
             The lower and upper fraction of elements to trim. These fractions
@@ -1187,7 +1196,8 @@ class Stats:
 
     @staticmethod
     def trimboth(a, proportiontocut=0.2, axis=0):
-        """Slice off a proportion of items from both ends of an array.
+        """
+        Slice off a proportion of items from both ends of an array.
 
         Slice off the passed proportion of items from both ends of the passed
         array (i.e., with `proportiontocut` = 0.1, slices leftmost 10% **and**
@@ -1198,7 +1208,7 @@ class Stats:
 
         Parameters
         ----------
-        a : array_like
+        a : array
             Data to trim.
         proportiontocut : float
             Proportion (in range 0-1) of total data set to trim of each end.
@@ -1208,47 +1218,9 @@ class Stats:
 
         Returns
         -------
-        out : ndarray
+        out : array
             Trimmed version of array `a`. The order of the trimmed content
             is undefined.
-
-        See Also
-        --------
-        trim_mean
-
-        Examples
-        --------
-        Create an array of 10 values and trim 10% of those values from each end:
-
-        >>> import numpy as np
-        >>> from scipy import stats
-        >>> a = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
-        >>> stats.trimboth(a, 0.1)
-        array([1, 3, 2, 4, 5, 6, 7, 8])
-
-        Note that the elements of the input array are trimmed by value, but the
-        output array is not necessarily sorted.
-
-        The proportion to trim is rounded down to the nearest integer. For
-        instance, trimming 25% of the values from each end of an array of 10
-        values will return an array of 6 values:
-
-        >>> b = np.arange(10)
-        >>> stats.trimboth(b, 1/4).shape
-        (6,)
-
-        Multidimensional arrays can be trimmed along any axis or across the entire
-        array:
-
-        >>> c = [2, 4, 6, 8, 0, 1, 3, 5, 7, 9]
-        >>> d = np.array([a, b, c])
-        >>> stats.trimboth(d, 0.4, axis=0).shape
-        (1, 10)
-        >>> stats.trimboth(d, 0.4, axis=1).shape
-        (3, 2)
-        >>> stats.trimboth(d, 0.4, axis=None).shape
-        (6,)
-
         """
         return scipy_trimboth(a, proportiontocut, axis)
 
@@ -1259,7 +1231,7 @@ class Stats:
 
         Parameters
         ----------
-        data : array_like
+        data : array
             Data to trim.
         proportiontocut : float, optional
             Percentage of trimming. If n is the number of unmasked values
@@ -1279,7 +1251,7 @@ class Stats:
 
         Returns
         -------
-        trimtail : ndarray
+        trimtail : array
             Returned array of same shape as `data` with masked tail values.
         """
         return scipy_trimtail(data, proportiontocut, tail, inclusive, axis)
@@ -1329,7 +1301,7 @@ class Stats:
 
         Returns
         -------
-        winsorized : ndarray
+        winsorized : array
             Winsorized array.
         """
         return scipy_winsorize(a, limits, inclusive, inplace, axis, nan_policy)
@@ -1346,7 +1318,7 @@ class Stats:
 
         Parameters
         ----------
-        a : sequence
+        a : array
             Input array.
         limits : {None, tuple of float}, optional
             Tuple of the percentages to cut on each side of the array, with respect
@@ -1396,7 +1368,7 @@ class Stats:
 
         Parameters
         ----------
-        a : sequence
+        a : array
             Input array.
         ddof : int, optional
             Delta Degrees of Freedom. The denominator used in calculations is `N - ddof`, 
