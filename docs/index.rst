@@ -65,13 +65,6 @@ Or from source:
    cd mylibrary
    pip install .
 
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
-
 Citation
 ========
 PyCO2stats is published in XXX:
@@ -84,3 +77,10 @@ Please cite the paper (DOI: XXX) if you are applying pyCO2stats for your study.
 
 Petrelli, M., Ariano, A., Baroni, M., Frondini, F., Ágreda-López, M. and Chiodini, G. : "PyCO2stats: A Python Library for Statistical Modeling of CO2 Fluxes and
 Geochemical Population Analysis in Volcanic and Environmental Systems"
+
+Indices and tables
+==================
+
+* :ref:`genindex`
+* :ref:`modindex`
+* :ref:`search`
