@@ -55,7 +55,7 @@ You can install it via pip:
 
 .. code-block:: bash
 
-   pip install mylibrary
+   pip install pyco2stats
 
 Or from source:
 
