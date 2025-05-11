@@ -57,9 +57,7 @@ Or from source:
 
 .. code-block:: bash
 
-   git clone https://github.com/AIVolcanoLab/pyco2stats.git
-   cd mylibrary
-   pip install .
+   pip install git+https://github.com/MarcoBaroni/pyco2stats.git
 
 Citation
 ========
