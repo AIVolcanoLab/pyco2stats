@@ -10,11 +10,10 @@ Welcome to pyco2stats's documentation!
    :maxdepth: 2
    :caption: Contents:
 
-installing
-
-introduction
-
-modules
+   installing
+   introduction
+   modules
+   citation
 
 Welcome to the documentation for pyco2stats!
 
