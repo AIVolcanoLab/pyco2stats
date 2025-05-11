@@ -20,15 +20,18 @@ class Propagate_Errors:
         log-transformed data, where the noise standard deviation is a fixed
         value determined by the percentage relative error on the original scale.
 
-        Args:
-            data_log_scale (array-like): The original 1D log-transformed input data.
-                               Will be converted to a NumPy array.
-            percentage_relative_error (float): The relative uncertainty in percent (e.g., 5 for 5%).
-                                             This directly determines the standard deviation
-                                             of the additive noise on the log scale.
+        Parameters
+        ----------
+        data_log_scale : array or list
+            The original 1D log-transformed input data. Will be converted to a NumPy array.
+        percentage_relative_error : float
+            The relative uncertainty in percent (e.g., 5 for 5%).
+            This directly determines the standard deviation of the additive noise on the log scale.
 
-        Returns:
-            np.ndarray: A new array with perturbed data points on the log scale.
+        Returns
+        -------
+        Result : array
+            A new array with perturbed data points on the log scale.
         """
         # Ensure data is a numpy array
         data_log_scale = np.asarray(data_log_scale)
@@ -63,21 +66,29 @@ class Propagate_Errors:
         Aligns components by sorting means before storing results.
         Returns perturbed data statistics for diagnostics.
 
-        Args:
-            original_log_data (array-like): The original 1D log-transformed data.
-            percentage_relative_error (float): The relative uncertainty in percent (e.g., 5 for 5%).
-                                             This sets the std dev of additive noise on log scale.
-            n_simulations (int): The number of Monte Carlo simulations to run.
-            n_components (int): The number of Gaussian components in the mixture.
-            max_iter (int): Max iterations for the EM algorithm.
-            tol (float): Tolerance for EM convergence.
+        Parameters
+        ----------
+        original_log_data : array
+            The original 1D log-transformed data.
+        percentage_relative_error : float
+            The relative uncertainty in percent (e.g., 5 for 5%). This sets the std dev of additive noise on log scale.
+        n_simulations : int
+            The number of Monte Carlo simulations to run.
+        n_components : int
+            The number of Gaussian components in the mixture.
+        max_iter : int
+            Max iterations for the EM algorithm.
+        tol : float
+            Tolerance for EM convergence.
 
-        Returns:
-            dict: A dictionary containing lists of results from each simulation:
-                  {'means': list[np.ndarray], 'std_devs': list[np.ndarray], 'weights': list[np.ndarray],
-                   'perturbed_data_means': list[float], 'perturbed_data_stds': list[float]}
-                  Lists of GMM parameters have shape (n_components,).
-                  Lists of data statistics have shape (n_simulations,).
+        Returns
+        -------
+        Result : dist
+            A dictionary containing lists of results from each simulation:
+            {'means': list[np.ndarray], 'std_devs': list[np.ndarray], 'weights': list[np.ndarray],
+            'perturbed_data_means': list[float], 'perturbed_data_stds': list[float]}
+            Lists of GMM parameters have shape (n_components,).
+            Lists of data statistics have shape (n_simulations,).
         """
         # Ensure input data is a numpy array
         original_log_data = np.asarray(original_log_data)
@@ -161,22 +172,33 @@ class Propagate_Errors:
         Noise std dev on log scale is fixed, equal to percentage_relative_error / 100.
         Aligns components by sorting means before storing results.
 
-        Args:
-            original_log_data (array-like): The original 1D log-transformed data.
-            percentage_relative_error (float): The relative uncertainty in percent (e.g., 5 for 5%).
-                                             This sets the std dev of additive noise on log scale.
-            n_simulations (int): The number of Monte Carlo simulations to run.
-            n_components (int): The number of Gaussian components in the mixture.
-            max_iter (int): Max iterations for the sklearn EM algorithm.
-            tol (float): Tolerance for sklearn EM convergence.
-            n_init (int): Number of initializations for sklearn GMM.
-            suppress_warnings (bool): Whether to suppress sklearn warnings.
-            covariance_type (str): The type of covariance ('spherical', 'diag', 'full', 'tied').
+        Parameters
+        ----------
+        original_log_data : array
+            The original 1D log-transformed data.
+        percentage_relative_error : float
+            The relative uncertainty in percent (e.g., 5 for 5%). This sets the std dev of additive noise on log scale.
+        n_simulations : int
+            The number of Monte Carlo simulations to run.
+        n_components : int
+            The number of Gaussian components in the mixture.
+        max_iter : int
+            Max iterations for the sklearn EM algorithm.
+        tol : float
+            Tolerance for sklearn EM convergence.
+        n_init : int
+            Number of initializations for sklearn GMM.
+        suppress_warnings : bool
+            Whether to suppress sklearn warnings.
+        covariance_type : string
+            The type of covariance ('spherical', 'diag', 'full', 'tied').
 
-        Returns:
-            dict: A dictionary containing lists of results from each simulation:
-                  {'means': list[np.ndarray], 'std_devs': list[np.ndarray], 'weights': list[np.ndarray]}
-                  Each np.ndarray in the lists has shape (n_components,).
+        Returns
+        -------
+        result : dict
+            A dictionary containing lists of results from each simulation:
+            {'means': list[np.ndarray], 'std_devs': list[np.ndarray], 'weights': list[np.ndarray]}
+            Each np.ndarray in the lists has shape (n_components,).
         """
         # Ensure input data is a numpy array
         original_log_data = np.asarray(original_log_data)
@@ -254,24 +276,33 @@ class Propagate_Errors:
         Noise std dev on log scale is fixed, equal to percentage_relative_error / 100.
         Aligns components by sorting means before storing results.
 
-        Args:
-            original_log_data (array-like): The original 1D log-transformed data.
-            percentage_relative_error (float): The relative uncertainty in percent (e.g., 5 for 5%).
-                                             This sets the std dev of additive noise on log scale.
-            n_simulations (int): The number of Monte Carlo simulations to run.
-            mean_constraints (list): List of tuples specifying (min, max) constraints for each component's mean
-                                     on the log scale.
-            std_constraints (list): List of tuples specifying (min, max) constraints for each component's std dev
-                                    on the log scale.
-            n_components (int): Number of Gaussian components.
-            n_epochs (int): Number of optimization epochs for constrained GMM.
-            lr (float): Learning rate for optimization.
-            verbose (bool): Whether to print progress during constrained GMM fitting (False recommended for MC).
+        Parameters
+        ----------
+        original_log_data : array
+            The original 1D log-transformed data.
+        percentage_relative_error : float
+            The relative uncertainty in percent (e.g., 5 for 5%). This sets the std dev of additive noise on log scale.
+        n_simulations : int
+            The number of Monte Carlo simulations to run.
+        mean_constraints : list
+            List of tuples specifying (min, max) constraints for each component's mean on the log scale.
+        std_constraints : list
+            List of tuples specifying (min, max) constraints for each component's std dev on the log scale.
+        n_components : int
+            Number of Gaussian components.
+        n_epochs : int
+            Number of optimization epochs for constrained GMM.
+        lr : float
+            Learning rate for optimization.
+        verbose : bool
+            Whether to print progress during constrained GMM fitting (False recommended for MC).
 
-        Returns:
-            dict: A dictionary containing lists of results from each simulation:
-                  {'means': list[np.ndarray], 'std_devs': list[np.ndarray], 'weights': list[np.ndarray]}
-                  Each np.ndarray in the lists has shape (n_components,).
+        Returns
+        -------
+        result: dict
+            A dictionary containing lists of results from each simulation:
+            {'means': list[np.ndarray], 'std_devs': list[np.ndarray], 'weights': list[np.ndarray]}
+            Each np.ndarray in the lists has shape (n_components,).
         """
         # Ensure input data is a numpy array
         original_log_data = np.asarray(original_log_data)
@@ -342,17 +373,27 @@ class Propagate_Errors:
         """
         Elaborates and prints the results from a Monte Carlo error propagation run.
 
-        Args:
-            propagation_results (dict): The dictionary returned by a propagate_*_error method.
-                                         Expected keys: 'means', 'std_devs', 'weights'.
-                                         May also contain 'perturbed_data_means', 'perturbed_data_stds'
-                                         for certain methods (e.g., EM).
-            single_fit_means (np.ndarray, optional): Means from a single fit on original data.
-            single_fit_std_devs (np.ndarray, optional): Std devs from a single fit on original data.
-            single_fit_weights (np.ndarray, optional): Weights from a single fit on original data.
-            original_data_mean (float, optional): Mean of the original log-transformed data.
-            original_data_std (float, optional): Std dev of the original log-transformed data.
-            method_name (str): The name of the GMM method used for reporting.
+        Parameters
+        ----------
+        propagation_results : dict
+            The dictionary returned by a propagate_*_error method. Expected keys: 'means', 'std_devs', 'weights'.
+            May also contain 'perturbed_data_means', 'perturbed_data_stds' for certain methods (e.g., EM).
+        single_fit_means : array, optional
+            Means from a single fit on original data.
+        single_fit_std_devs : array, optional
+            Std devs from a single fit on original data.
+        single_fit_weights : array, optional
+            Weights from a single fit on original data.
+        original_data_mean : float, optional
+            Mean of the original log-transformed data.
+        original_data_std : float, optional
+            Std dev of the original log-transformed data.
+        method_name : string
+            The name of the GMM method used for reporting.
+
+        Returns
+        -------
+        None
         """
         print(f"\n--- {method_name} Propagation Results (Elaborated) ---")
 
