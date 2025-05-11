@@ -6,21 +6,9 @@
 Welcome to pyco2stats's documentation!
 ======================================
 
-.. toctree::
-   :maxdepth: 2
-   :caption: Contents:
-
-   introduction
-   modules
-   installation
-   citation
-
-Welcome to the documentation for pyco2stats!
-
 Introduction
 ============
 
-Welcome to pyco2stats.
 PyCO2stats is a free open source Python library desinged to perform both classic and robust statistical methods for CO2 flux and geochemical data analysis.
 
 PyCO2stats bridges the gap between advanced data science techniques and the specific requirements
@@ -47,6 +35,14 @@ by using the dedicated `pull request`_ and `issues`_ spaces.
 .. _issues: https://github.com/AIVolcanoLab/pyco2stats/issues
 .. _GitHub: https://github.com/AIVolcanoLab/pyco2stats
 
+.. toctree::
+   :maxdepth: 2
+   :caption: Contents:
+
+   introduction
+   modules
+   installation
+   citation
 
 Installation
 ============
