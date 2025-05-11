@@ -9,7 +9,11 @@ Welcome to pyco2stats's documentation!
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
+
+   introduction
    modules
+   installation
+   citation
 
 Welcome to the documentation for pyco2stats!
 
@@ -20,7 +24,7 @@ Welcome to pyco2stats.
 PyCO2stats is a free open source Python library desinged to perform both classic and robust statistical methods for CO2 flux and geochemical data analysis.
 
 PyCO2stats bridges the gap between advanced data science techniques and the specific requirements
-of geochemical datasets regarding CO2 fluxes. PyCO2stats is designed to grant the maximum flexibility possible, enabling the user to perform a vast range of analyses, from classical statistical methods (such as mean, standard deviation etc...) to more complete and complex analyses, such as Gaussian Mixture Models (GMM) or lognormal statistics for reduced population sizes. Moreover PyCO2stats meets the requirements in term for transparency and reproducibility, meeting so the FAIR (Findability, Accessibility, Interoperability and Reusability) and OpenScience standards. Laslty, PyCO2stats is suited for used either by Python expert users or by more novice users.
+of geochemical datasets regarding CO2 fluxes. PyCO2stats is designed to grant the maximum flexibility possible, enabling the user to perform a vast range of analyses, from classical statistical methods (such as mean, standard deviation etc...) to more complete and complex analyses, such as Gaussian Mixture Models (GMM) or lognormal statistics for reduced population sizes. Moreover PyCO2stats meets the requirements in term for transparency and reproducibility. Lastly, PyCO2stats is suited for used either by Python expert users or by more novice users.
 
 In detail pyco2stats is composed of 6 main classes:
    * **GMM**: this class enables working with Gaussian Mixture Models (GMM). It permits the generation of synthetic datasets and the application of different approaches for the analysis of data with GMM;
