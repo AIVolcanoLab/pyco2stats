@@ -146,9 +146,7 @@ class Stats:
         constructing confidence intervals for the log-normal mean, especially for small
         sample sizes, as it tends to undercover the true mean.
 
-        Reference:
-            Zhou, X-H., & Gao, S. (1997). Confidence intervals for the log-normal mean.
-            Statistics in Medicine, 16(7), 783-790. (Formula 1)
+        Reference: Zhou, X-H., & Gao, S. (1997). Confidence intervals for the log-normal mean. Statistics in Medicine, 16(7), 783-790. (Formula 1)
 
         Parameters
         ----------
@@ -958,28 +956,25 @@ class Stats:
     def biweight_location(data, c=6.0, M=None, axis=None, ignore_nan=False):
         """
         Compute the biweight location.
-
+        
         The biweight location is a robust statistic for determining the
-        central location of a distribution.  It is given by:
-
+        central location of a distribution. It is given by:
+        
         .. math::
-
-            \zeta_{biloc}= M + \frac{\sum_{|u_i|<1}(x_i - M) (1 - u_i^2)^2}{\sum_{|u_i|<1}(1 - u_i^2)^2}
-
+        
+            \zeta_{{biloc}} = M + \frac{\sum_{{|u_i|<1}} (x_i - M)(1 - u_i^2)^2}{\sum_{{|u_i|<1}} (1 - u_i^2)^2}
+        
         where :math:`x` is the input data, :math:`M` is the sample median
-        (or the input initial location guess) and :math:`u_i` is given by:
-
+        (or an initial guess), and :math:`u_i` is:
+        
         .. math::
-
-            u_{i} = \frac{(x_i - M)}{c \cdot MAD}
-
-        where :math:`c` is the tuning constant and :math:`MAD` is the
-        `median absolute deviation
-        <https://en.wikipedia.org/wiki/Median_absolute_deviation>`_.  The
-        biweight location tuning constant ``c`` is typically 6.0 (the
-        default).
-
-        If :math:`MAD` is zero, then the median will be returned.
+        
+            u_i = \frac{(x_i - M)}{c \cdot \textrm{MAD}}
+        
+        where :math:`c` is a tuning constant and :math:`\textrm{MAD}` is the
+        `median absolute deviation <https://en.wikipedia.org/wiki/Median_absolute_deviation>`_.
+        
+        If :math:`\textrm{MAD}` is zero, the function returns the median instead.
 
         Parameters
         ----------
@@ -1019,46 +1014,35 @@ class Stats:
         """
         Compute the biweight scale.
 
-        The biweight scale is a robust statistic for determining the
-        standard deviation of a distribution.  It is the square root of the
-        `biweight midvariance.
-
+        The biweight scale is a robust statistic for estimating the spread (standard deviation)
+        of a distribution. It is the square root of the biweight midvariance.
+        
         It is given by:
 
         .. math::
-
-            \zeta_{biscl} = \sqrt{n}\frac{\sqrt{\sum_{|u_i| < 1}(x_i - M)^2 (1 - u_i^2)^4}} {|(\sum_{|u_i| < 1}(1 - u_i^2) (1 - 5u_i^2))|}
-
+        
+            \zeta_{{biscl}} = \sqrt{n} \cdot \frac{\sqrt{\sum_{{|u_i| < 1}} (x_i - M)^2 (1 - u_i^2)^4}}{\left| \sum_{{|u_i| < 1}} (1 - u_i^2)(1 - 5u_i^2) \right|}
+        
         where :math:`x` is the input data, :math:`M` is the sample median
-        (or the input location) and :math:`u_i` is given by:
-
+        (or a provided location), and :math:`u_i` is:
+        
         .. math::
-
-            u_{i} = \frac{x_i - M}{c * MAD}
-
-        where :math:`c` is the tuning constant and :math:`MAD` is the
-        `median absolute deviation
-        <https://en.wikipedia.org/wiki/Median_absolute_deviation>`_.  The
-        biweight midvariance tuning constant ``c`` is typically 9.0 (the
-        default).
-
-        If :math:`MAD` is zero, then zero will be returned.
-
-        For the standard definition of biweight scale, :math:`n` is the
-        total number of points in the array (or along the input ``axis``, if
-        specified).  That definition is used if ``modify_sample_size`` is
-        `False`, which is the default.
-
-        However, if ``modify_sample_size = True``, then :math:`n` is the
-        number of points for which :math:`|u_i| < 1` (i.e. the total number
-        of non-rejected values), i.e.
-
+        
+            u_i = \frac{x_i - M}{c \cdot \textrm{MAD}}
+        
+        where :math:`c` is the tuning constant, and :math:`\textrm{MAD}` is the
+        `median absolute deviation <https://en.wikipedia.org/wiki/Median_absolute_deviation>`_.
+        
+        If :math:`\textrm{MAD}` is zero, the function returns zero.
+        
+        By default, :math:`n` is the total number of elements in the array (or along the specified axis).
+        If ``modify_sample_size=True``, then :math:`n` is the number of non-rejected values:
+        
         .. math::
-
-            n = \sum_{|u_i| < 1} 1
-
-        which results in a value closer to the true standard deviation for
-        small sample sizes or for a large number of rejected values.
+        
+            n = \sum_{{|u_i| < 1}} 1
+        
+        This modification often improves estimates for small samples or heavily clipped data.
 
         Parameters
         ----------
