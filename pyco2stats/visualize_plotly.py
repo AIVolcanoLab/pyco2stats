@@ -13,12 +13,21 @@ class Visualize_Plotly:
     @staticmethod
     def pp_raw_data(raw_data, fig=None, marker_kwargs=None):
         """
-        Plot raw data on log-normal probability paper:
-          x = sigma-values (z), y = sorted data.
-
-        You may pass marker_kwargs as either:
-          - top-level: size, color, opacity, symbol
-          - or a nested dict under "marker"
+        Plot raw data on log-normal probability paper.
+        
+        Parameters
+        ----------
+        raw_data : array-like
+            The raw data values to plot.
+        fig : plotly.graph_objects.Figure, optional
+            Existing figure to add the trace to. If None, the trace is returned without adding to any figure.
+        marker_kwargs : dict, optional
+            Marker style options, either as top-level keys (size, color, etc.) or nested under 'marker'.
+        
+        Returns
+        -------
+        trace : plotly.graph_objects.Scatter
+            The Scatter trace representing the raw data.
         """
         # 1) compute the sigma‐quantiles and sort
         sigma_vals, sorted_data = Sinclair.raw_data_to_sigma(raw_data)
@@ -56,8 +65,25 @@ class Visualize_Plotly:
     @staticmethod
     def qq_plot(raw_data, fig=None, scatter_kwargs=None, line_kwargs=None):
         """
-        Generate a QQ-plot: theoretical sigma quantiles vs sorted data.
-        Returns: (scatter trace, line trace).
+        Generate a QQ-plot with sigma quantiles versus sorted data.
+        
+        Parameters
+        ----------
+        raw_data : array-like
+            The raw data values to plot.
+        fig : plotly.graph_objects.Figure, optional
+            Existing figure to add traces to. If None, traces are returned only.
+        scatter_kwargs : dict, optional
+            Style kwargs for the scatter plot.
+        line_kwargs : dict, optional
+            Style kwargs for the reference line.
+        
+        Returns
+        -------
+        scatter : plotly.graph_objects.Scatter
+            Scatter trace for the QQ plot data.
+        line : plotly.graph_objects.Scatter
+            Line trace representing the fitted reference line.
         """
         sigma_vals, sorted_data = Sinclair.raw_data_to_sigma(raw_data)
         skw = scatter_kwargs or {}
@@ -88,8 +114,25 @@ class Visualize_Plotly:
     @staticmethod
     def pp_one_population(mean, std, fig=None, z_range=(-3.5,3.5), line_kwargs=None):
         """
-        Plot a single Gaussian population on probability paper.
-        Returns: the line trace.
+        Plot a single Gaussian population line on probability paper.
+        
+        Parameters
+        ----------
+        mean : float
+            Mean of the Gaussian.
+        std : float
+            Standard deviation of the Gaussian.
+        fig : plotly.graph_objects.Figure, optional
+            Existing figure to add the trace to.
+        z_range : tuple, optional
+            Z-score range over which to compute the line.
+        line_kwargs : dict, optional
+            Line styling arguments.
+        
+        Returns
+        -------
+        trace : plotly.graph_objects.Scatter
+            Line trace of the Gaussian population.
         """
         z_vals = np.linspace(z_range[0], z_range[1], 600)
         x_vals = mean + z_vals * std
@@ -108,8 +151,25 @@ class Visualize_Plotly:
     @staticmethod
     def pp_single_populations(means, stds, fig=None, z_range=(-3.5,3.5), line_kwargs=None):
         """
-        Plot each Gaussian component as separate line.
-        Returns: list of line traces.
+        Plot each Gaussian component as a separate line.
+        
+        Parameters
+        ----------
+        means : array-like
+            Means of the Gaussian components.
+        stds : array-like
+            Standard deviations of the components.
+        fig : plotly.graph_objects.Figure, optional
+            Existing figure to add the traces to.
+        z_range : tuple, optional
+            Z-score range over which to plot.
+        line_kwargs : dict, optional
+            Line styling options.
+        
+        Returns
+        -------
+        traces : list of plotly.graph_objects.Scatter
+            List of traces, one per component.
         """
         means = np.atleast_1d(means)
         stds  = np.atleast_1d(stds)
@@ -122,8 +182,27 @@ class Visualize_Plotly:
     @staticmethod
     def pp_combined_population(means, stds, weights, fig=None, z_range=(-3.5,3.5), line_kwargs=None):
         """
-        Plot the combined mixture CDF, transformed to sigma-values.
-        Returns: the line trace.
+        Plot the combined Gaussian mixture CDF as a line on probability paper.
+        
+        Parameters
+        ----------
+        means : array-like
+            Means of the Gaussian components.
+        stds : array-like
+            Standard deviations of the components.
+        weights : array-like
+            Mixture weights of the components.
+        fig : plotly.graph_objects.Figure, optional
+            Existing figure to add the trace to.
+        z_range : tuple, optional
+            Z-value range for evaluation.
+        line_kwargs : dict, optional
+            Line styling options.
+        
+        Returns
+        -------
+        trace : plotly.graph_objects.Scatter
+            Trace representing the combined population CDF.
         """
         x = np.linspace(z_range[0], z_range[1], 600)
         cdf = Sinclair.combine_gaussians(x, np.array(means), np.array(stds), np.array(weights))
@@ -150,15 +229,26 @@ class Visualize_Plotly:
         y_max: float = None
     ):
         """
-        Add vertical percentile lines and labels at the top.
-
+        Add vertical percentile lines and labels to a Plotly figure.
+        
         Parameters
         ----------
         fig : plotly.graph_objects.Figure
-        percentiles : 'full' or iterable of ints
-        line_kwargs : dict for fig.add_shape(line=...)
-        label_kwargs: dict for fig.add_annotation(...)
-        y_min, y_max : if provided, override y-axis span
+            The figure to which the percentiles are added.
+        percentiles : str or list of float
+            Either 'full' for default percentiles or custom list.
+        line_kwargs : dict, optional
+            Styling for vertical percentile lines.
+        label_kwargs : dict, optional
+            Styling for percentile text annotations.
+        y_min : float, optional
+            Minimum y-coordinate for the vertical lines.
+        y_max : float, optional
+            Maximum y-coordinate for the vertical lines.
+        
+        Returns
+        -------
+        None
         """
         # 1) choose levels
         levels = [1,5,10,25,50,75,90,95,99] if percentiles=="full" else list(percentiles)
@@ -205,20 +295,33 @@ class Visualize_Plotly:
           2) Individual component PDFs
           3) Total mixture PDF
 
-        Parameters:
-        - x_values: 1D numpy array of x points for evaluating the PDFs.
-        - meds, stds, weights: lists/arrays of means, stds, and mixture weights.
-        - data: raw data array for histogram (optional).
-        - pdf_plot_kwargs: dict of kwargs for the mixture PDF line.
-        - component_plot_kwargs: dict of kwargs for each component line.
-        - hist_plot_kwargs: dict of kwargs for the histogram; may include:
-            • 'bins' (int or 'auto') to control bin count/method,
-            • any other go.Histogram properties.
+        Parameters
+        ----------
+        x_values : np.ndarray
+            Points at which to evaluate the PDFs.
+        meds : array-like
+            Means of the Gaussian components.
+        stds : array-like
+            Standard deviations of the components.
+        weights : array-like
+            Mixture weights for each component.
+        data : array-like, optional
+            Raw data to include as a histogram.
+        pdf_plot_kwargs : dict, optional
+            Style arguments for the total PDF line.
+        component_plot_kwargs : dict, optional
+            Style arguments for the component lines.
+        hist_plot_kwargs : dict, optional
+            Style arguments for the histogram, including 'bins'.
 
-        Returns:
-        - hist_trace: Histogram trace or None.
-        - comp_traces: List of component line traces.
-        - pdf_trace: Total mixture PDF line trace.
+        Returns
+        -------
+        hist_trace : plotly.graph_objects.Histogram or None
+            Histogram trace if data is provided.
+        comp_traces : list of plotly.graph_objects.Scatter
+            List of individual component PDF traces.
+        pdf_trace : plotly.graph_objects.Scatter
+            Trace for the full GMM PDF.
         """
         import numpy as _np
         from scipy.stats import norm
@@ -295,11 +398,25 @@ class Visualize_Plotly:
                     marker_kwargs=None, line_kwargs=None):
             """
             Draw a Q–Q plot comparing two samples:
-            - raw_data: 1D array of empirical observations
-            - model_data: 1D array of simulated/fitted data
-            marker_kwargs: dict passed to go.Scatter for the sample points
-            line_kwargs:   dict passed to go.Scatter for the y=x reference line
-            Returns the two traces.
+            Parameters
+            ----------
+            raw_data : array-like
+                Observed dataset.
+            model_data : array-like
+                Simulated or modeled dataset.
+            fig : plotly.graph_objects.Figure, optional
+                Figure to which the traces will be added.
+            marker_kwargs : dict, optional
+                Styling options for the Q–Q points.
+            line_kwargs : dict, optional
+                Styling options for the y = x reference line.
+            
+            Returns
+            -------
+            pts : plotly.graph_objects.Scatter
+                Q–Q scatter trace.
+            line : plotly.graph_objects.Scatter
+                Identity line trace (y = x).
             """
             import numpy as np
             from scipy.stats import norm
