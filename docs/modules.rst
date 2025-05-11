@@ -26,7 +26,7 @@ Pyco2stats Modules
    :undoc-members:
    :show-inheritance:
 
-.. automodule:: pyco2stats.visualize_plotly
+.. autoclass:: pyco2stats.visualize_plotly.Visualize_Plotly
    :members:
    :undoc-members:
    :show-inheritance:
