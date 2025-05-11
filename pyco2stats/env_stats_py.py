@@ -5,9 +5,6 @@ from scipy.optimize import minimize
 from scipy.special import hyp0f1
 from scipy.stats import t, norm, chi2, nct
 
-
-
-
 class EnvStatsPy:
     """
     Python implementation of R's elnormAlt for lognormal mean estimation 
@@ -21,9 +18,32 @@ class EnvStatsPy:
         ci=False,
         ci_method="zou",
         ci_type="two-sided",
-        conf_level=0.95,
-        parkin_list=None
-    ):
+        conf_level=0.95):#,
+        #parkin_list=None
+    #):
+        """
+        Function to compute the estimation of the mean with appropriate confidence intervals.
+        
+        Parameters
+        ----------
+        X_lognorm_data : array
+            Input data lognormally distributed
+        method : string
+            Method to compute the mean estimator. Accepted values are "umvue_finney", "umvue_sichel", "qmle", "mle", "mme" and "mmue". Default is "umvue_finney".
+        ci : bool
+            Whether or not to compute the confidence interval for the estimation of the mean. Default is False.
+        ci_method : string
+            Method to use to compute the confidence interval for the estimation of the mean. Accepted values are "zou", "land", "cox" or "normal_approx". Default is "zou".
+        ci_type : string
+            Whether to compute the one-sided or two-sided confidence interval. Accpeted values are "two-sided" and "one-sided". Default is "two sided".
+        conf_level : float
+            Confidence level for the confidence intervals. Default is 0.95
+        
+        Returns
+        -------
+        result : array
+            resulting array containing the mean estimation with confidence intervals.
+        """
         X_lognorm_data = np.asarray(X_lognorm_data, dtype=float)
         if X_lognorm_data.size < 2 or np.any(X_lognorm_data <= 0):
             raise ValueError("`data` must contain at least two positive values.")
@@ -128,16 +148,16 @@ class EnvStatsPy:
                     ci_type=ci_type,
                     conf_level=conf_level
                 )
-            elif ci_method == "parkin":
-                ci_limits = EnvStatsPy.ci_parkin(X_lognorm_data, ci_type, conf_level, parkin_list)
-            elif ci_method == "sichel":
-                ci_limits = EnvStatsPy.ci_sichel(
-                    mu_hat=Y_mu_hat,
-                    sigma2_hat=Y_sigma2_hat,
-                    n=n,
-                    ci_type=ci_type,
-                    conf_level=conf_level
-                )
+            #elif ci_method == "parkin":
+            #    ci_limits = EnvStatsPy.ci_parkin(X_lognorm_data, ci_type, conf_level, parkin_list)
+            #elif ci_method == "sichel":
+            #    ci_limits = EnvStatsPy.ci_sichel(
+            #        mu_hat=Y_mu_hat,
+            #        sigma2_hat=Y_sigma2_hat,
+            #        n=n,
+            #        ci_type=ci_type,
+            #        conf_level=conf_level
+            #    )
             else:
                 raise ValueError(f"Unknown ci_method '{ci_method}'")
 
@@ -150,9 +170,21 @@ class EnvStatsPy:
     def umvue_finney_lognormal_estimator(data):
         """
         UMVUE of the log‑normal mean & variance (Finney’s formula).
-        Returns (mean_estimate, variance_estimate).  If data has fewer
+        If data has fewer
         than two points, variance_estimate is NaN.  If data contains
         non‐positive values, returns (NaN, NaN) with a warning.
+
+        Parameters
+        ----------
+        data : array
+            Input data lognormally distributed.
+            
+        Returns
+        -------
+        umvu_mean : float
+            Estimator of the mean.
+        umvu_variance : float
+            Estimator of the variance.
         """
         data = np.asarray(data)
         n = data.size
@@ -192,6 +224,24 @@ class EnvStatsPy:
 
     @staticmethod
     def umvue_sichel_lognormal_estimator(X_lognorm_data):
+        """
+        UMVUE of the log‑normal mean & variance (Sichel’s formula).
+        If data has fewer
+        than two points, variance_estimate is NaN.  If data contains
+        non‐positive values, returns (NaN, NaN) with a warning.
+
+        Parameters
+        ----------
+        data : array
+            Input data lognormally distributed.
+            
+        Returns
+        -------
+        umvu_mean : float
+            Estimator of the mean.
+        umvu_variance : float
+            Estimator of the variance.
+        """
         X_lognorm_data = np.asarray(X_lognorm_data, dtype=float)
         if np.any(X_lognorm_data <= 0):
             raise ValueError("All observations must be positive.")
@@ -217,6 +267,29 @@ class EnvStatsPy:
 
     @staticmethod
     def finneys_g(m, z, n_terms_inc=10, max_iter=100, tol=None):
+        """
+        Function for the computation of the formula for the g factor in Finney formula.
+
+        Parameters
+        ----------
+        m : int
+            Order of the g factor.
+        z : float
+            Input variance.
+        n : int
+            Number of samples.
+        n_terms_inc : int
+            ...
+        max_iter : int
+            Max number of iterations for the sum in the computation of the g factor.
+        tol : float or None
+            Tolerance value.
+            
+        Returns
+        -------
+        result : float
+            Resulting g value.
+        """
         tol = tol if tol is not None else np.finfo(float).eps
         m_arr = np.atleast_1d(m).astype(int)
         z_arr = np.atleast_1d(z).astype(float)
@@ -285,6 +358,23 @@ class EnvStatsPy:
     def ci_lnorm_land(mu_hat, sigma2_hat, n, ci_type="two-sided", conf_level=0.95):
         """
         Land's CI for lognormal mean matching R implementations ci.lnorm.land, lands.C, ci.land.
+
+        Parameters
+        ----------
+        mu_hat : float
+            Mean value of the lognormal dataset.
+        sigma2_hat : float
+            Unbiased variance value of the lognormal dataset.
+        n : int
+            Number of samples.
+        ci_type : string
+            Whether to compute the one sided or two sided onfidence interval. Accepted values are "two-sided" and "one-sided". Default is "two-sided".
+        conf_level : float
+            Confidence level for the computation of the confidence interval. Default is 0.95.
+        Returns
+        -------
+        Intervals : dictionary
+            Dictionary containing the LCL (Lower Confidence Limit) and UCL (Upper Confidence Limit) values.
         """
         # Input validation 
         if sigma2_hat <= 0:
@@ -400,6 +490,37 @@ class EnvStatsPy:
         df=None, ci_type="two-sided", conf_level=0.95,
         lb=-math.inf, ub=math.inf, test_statistic="z"
     ):
+        """
+        Exact port of R's ci.lnorm.normal_approx for confidence intervals on the lognormal mean.
+        
+        Parameters
+        ----------
+        mu_hat : float
+            Mean value of the lognormal dataset.
+        sigma2_hat : float
+            Unbiased variance value of the lognormal dataset.
+        n : int
+            Number of samples.
+        df : float or None
+            Variance of the distribution used in the computation of the confidence intervals. (?)
+        ci_type : string
+            Whether to compute the one sided or two sided onfidence interval. Accepted values are "two-sided" and "one-sided". Default is "two-sided".
+        conf_level : float
+            Confidence level for the computation of the confidence interval. Default is 0.95.
+        lb : float or +-math.inf
+            ...
+        ub : float or +-math.inf
+            ...
+        test_statistic : string
+            Whether to compute the confidence interval using the t-test distribution or the standard normal distribution. 
+            If value is "t" it uses the t-test distribution, if the value is anything else it will use the standard normal distribution. 
+            Default value is "z".
+            
+        Returns
+        -------
+        Intervals : dictionary
+            Dictionary containing the LCL (Lower Confidence Limit) and UCL (Upper Confidence Limit) values.
+        """
         sd_hat = np.sqrt(sigma2_hat)
         alpha = 1 - conf_level
         test_statistic = test_statistic.lower()
@@ -420,6 +541,23 @@ class EnvStatsPy:
     def ci_lnorm_zou(mu_hat, sigma2_hat, n, ci_type, conf_level):
         """
         Exact port of R's ci.lnorm.zou() for confidence intervals on the lognormal mean.
+
+        Parameters
+        ----------
+        mu_hat : float
+            Mean value of the lognormal dataset.
+        sigma2_hat : float
+            Unbiased variance value of the lognormal dataset.
+        n : int
+            Number of samples.
+        ci_type : string
+            Whether to compute the one sided or two sided onfidence interval. Accepted values are "two-sided" and "one-sided".
+        conf_level : float
+            Confidence level for the computation of the confidence interval.
+        Returns
+        -------
+        Intervals : dictionary
+            Dictionary containing the LCL (Lower Confidence Limit) and UCL (Upper Confidence Limit) values.
         """
         alpha = 1 - conf_level
         sdlog = np.sqrt(sigma2_hat)
@@ -462,6 +600,23 @@ class EnvStatsPy:
         """
         Cox method for confidence intervals on the lognormal mean.
         Matches the logic of EnvStats::elnormAlt(ci.method="cox") in R.
+
+        Parameters
+        ----------
+        mu_hat : float
+            Mean value of the lognormal dataset.
+        sigma2_hat : float
+            Unbiased variance value of the lognormal dataset.
+        n : int
+            Number of samples.
+        ci_type : string
+            Whether to compute the one sided or two sided onfidence interval. Accepted values are "two-sided" and "one-sided". Default is "two-sided".
+        conf_level : float
+            Confidence level for the computation of the confidence interval. Default is 0.95.
+        Returns
+        -------
+        Intervals : dictionary
+            Dictionary containing the LCL (Lower Confidence Limit) and UCL (Upper Confidence Limit) values.
         """
         alpha = 1 - conf_level
         df = n - 1
@@ -492,16 +647,16 @@ class EnvStatsPy:
         lcl_exp, ucl_exp = sorted([math.exp(lcl), math.exp(ucl)])
         return {"LCL": lcl_exp, "UCL": ucl_exp}
 
-    @staticmethod
-    def ci_parkin(data, ci_type, conf_level, parkin_list=None):
-        data = np.sort(np.asarray(data))
-        n = len(data)
-        rank = int(np.ceil(0.5*n)) - 1
-        lcl, ucl = data[max(0, rank)], data[min(n-1, rank)]
-        if ci_type == "two-sided":
-            return {"LCL": lcl, "UCL": ucl}
-        elif ci_type == "lower":
-            return {"LCL": lcl, "UCL": math.inf}
-        else:
-            return {"LCL": -math.inf, "UCL": ucl}
+    #@staticmethod
+    #def ci_parkin(data, ci_type, conf_level, parkin_list=None):
+    #    data = np.sort(np.asarray(data))
+    #    n = len(data)
+    #    rank = int(np.ceil(0.5*n)) - 1
+    #    lcl, ucl = data[max(0, rank)], data[min(n-1, rank)]
+    #    if ci_type == "two-sided":
+    #        return {"LCL": lcl, "UCL": ucl}
+    #    elif ci_type == "lower":
+    #        return {"LCL": lcl, "UCL": math.inf}
+    #    else:
+    #        return {"LCL": -math.inf, "UCL": ucl}
 
