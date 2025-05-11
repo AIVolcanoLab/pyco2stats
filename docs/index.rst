@@ -9,11 +9,7 @@ Welcome to pyco2stats's documentation!
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
-
-   installing
-   introduction
    modules
-   citation
 
 Welcome to the documentation for pyco2stats!
 
