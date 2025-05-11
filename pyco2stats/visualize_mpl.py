@@ -12,6 +12,23 @@ class Visualize_Mpl:
 
     @staticmethod
     def pp_raw_data(raw_data, ax=None, **scatter_kwargs):
+        """
+        Plot a probability plot of raw data using Sinclair transformation.
+
+        Parameters
+        ----------
+        raw_data : array-like
+            Array of raw data values.
+        ax : matplotlib.axes.Axes, optional
+            Matplotlib Axes object to plot on. Creates new one if None.
+        **scatter_kwargs : dict
+            Additional keyword arguments passed to ax.scatter().
+
+        Returns
+        -------
+        ax : matplotlib.axes.Axes
+            The Axes object with the plot.
+        """
         sigma_vals, sorted_data = Sinclair.raw_data_to_sigma(raw_data)
         if ax is None:
             fig, ax = plt.subplots()
@@ -19,7 +36,30 @@ class Visualize_Mpl:
         return ax
 
     @staticmethod
-    def pp_combined_population(means, stds, weights, x_range=(-3.5, 3.5), ax=None, **line_kwargs):
+    def pp_combined_population(means, stds, weights, x_range=(-3.5, 3.5), ax=None, **line_kwargs):        
+        """
+        Plot the cumulative distribution of a Gaussian mixture model on a probability plot.
+
+        Parameters
+        ----------
+        means : array-like
+            Means of Gaussian components.
+        stds : array-like
+            Standard deviations of Gaussian components.
+        weights : array-like
+            Weights of each Gaussian component.
+        x_range : tuple, optional
+            Range of sigma-values (x-axis) to display.
+        ax : matplotlib.axes.Axes, optional
+            Axes to plot on. Creates new one if None.
+        **line_kwargs : dict
+            Additional arguments passed to ax.plot().
+
+        Returns
+        -------
+        ax : matplotlib.axes.Axes
+            The Axes object with the plot.
+        """
         # Use extended x_vals to compute tails beyond the plot window
         x_vals = np.linspace(x_range[0] - 1.5, x_range[1] + 1.5, 600)
         y_cdf = Sinclair.combine_gaussians(x_vals, means, stds, weights)
@@ -36,7 +76,27 @@ class Visualize_Mpl:
 
     @staticmethod
     def pp_single_populations(means, stds, z_range=(-3.5, 3.5), ax=None, **line_kwargs):
+        """
+        Plot individual Gaussian distributions on a probability plot.
 
+        Parameters
+        ----------
+        means : array-like
+            Means of the Gaussian components.
+        stds : array-like
+            Standard deviations of the Gaussian components.
+        z_range : tuple, optional
+            Range of z-values to use for plotting.
+        ax : matplotlib.axes.Axes, optional
+            Axes to plot on. Creates new one if None.
+        **line_kwargs : dict
+            Additional arguments passed to ax.plot().
+
+        Returns
+        -------
+        ax : matplotlib.axes.Axes
+            The Axes object with the plots.
+        """
 
         means = np.atleast_1d(means)
         stds  = np.atleast_1d(stds)
@@ -48,6 +108,27 @@ class Visualize_Mpl:
 
 
     def pp_one_population(mean, std, z_range=(-3.5, 3.5), ax=None, **line_kwargs):
+        """
+        Plot a single Gaussian distribution on a probability plot.
+
+        Parameters
+        ----------
+        mean : float
+            Mean of the Gaussian distribution.
+        std : float
+            Standard deviation of the Gaussian distribution.
+        z_range : tuple, optional
+            Range of z-values to use for plotting.
+        ax : matplotlib.axes.Axes, optional
+            Axes to plot on. Creates new one if None.
+        **line_kwargs : dict
+            Additional arguments passed to ax.plot().
+
+        Returns
+        -------
+        ax : matplotlib.axes.Axes
+            The Axes object with the plot.
+        """
         z_vals = np.linspace(z_range[0], z_range[1], 600)
 
         if ax is None:
@@ -61,6 +142,21 @@ class Visualize_Mpl:
 
     @staticmethod
     def pp_add_sigma_grid(ax=None, sigma_ticks=np.arange(-3, 4, 1)):
+        """
+        Add vertical grid lines at specified sigma (z-score) positions.
+
+        Parameters
+        ----------
+        ax : matplotlib.axes.Axes, optional
+            Axes to add the grid to. Creates new one if None.
+        sigma_ticks : array-like
+            Positions (z-scores) where grid lines should be added.
+
+        Returns
+        -------
+        ax : matplotlib.axes.Axes
+            The Axes object with the updated grid.
+        """
         if ax is None:
             fig, ax = plt.subplots()
 
@@ -72,6 +168,31 @@ class Visualize_Mpl:
 
     @staticmethod
     def pp_add_percentiles(ax=None, percentiles='standard', linestyle='-.', linewidth=1, color='green', label_size=10, **plot_kwargs):
+        """
+        Add percentile reference lines and labels to the top axis.
+
+        Parameters
+        ----------
+        ax : matplotlib.axes.Axes, optional
+            Axes to annotate. Creates new one if None.
+        percentiles : str or list, optional
+            Which percentiles to use: 'standard', 'full', or custom list.
+        linestyle : str
+            Line style for vertical lines.
+        linewidth : float
+            Width of the percentile lines.
+        color : str
+            Color of percentile lines.
+        label_size : int
+            Font size of percentile labels.
+        **plot_kwargs : dict
+            Additional keyword arguments for ax.axvline().
+
+        Returns
+        -------
+        ax : matplotlib.axes.Axes
+            The Axes object with added percentile lines and labels.
+        """
         if ax is None:
             fig, ax = plt.subplots()
 
@@ -102,15 +223,24 @@ class Visualize_Mpl:
     def qq_plot(raw_data, model_data, ax, line_kwargs=None, marker_kwargs=None):
         
         """
-        INSERIRE DESCRIZIONE
+        Create a Q-Q plot comparing raw data to model-simulated data.
 
-        Parameters:
-        - ax (matplotlib.axes.Axes): The matplotlib Axes object where the quantiles will be plotted.
-        - observed_data (array-like): The observationally derived data.
-        - reference_population (array-like): The data referring to the reference population.
+        Parameters
+        ----------
+        raw_data : array-like
+            Observed dataset.
+        model_data : array-like
+            Simulated or reference dataset.
+        ax : matplotlib.axes.Axes
+            Axes object on which to draw the plot.
+        line_kwargs : dict, optional
+            Keyword arguments for the reference line.
+        marker_kwargs : dict, optional
+            Keyword arguments for the scatter points.
 
-        Returns:
-        - None: This function directly plots on the provided Axes object.
+        Returns
+        -------
+        None
         """
         
         # Sort both observed data and reference population
@@ -147,16 +277,30 @@ class Visualize_Mpl:
         """
         Plot the Gaussian Mixture Model PDF and its components.
 
-        Parameters:
-        - ax: Matplotlib axis object.
-        - x (array): x values.
-        - meds (list or array): Means of the Gaussian components.
-        - stds (list or array): Standard deviations of the Gaussian components.
-        - weights (list or array): Weights of the Gaussian components.
-        - data (list or array , optional): Raw data to plot as a histogram.
-        - pdf_plot_kwargs (list): Keyword arguments for the main GMM PDF plot.
-        - component_plot_kwargs (list): Keyword arguments for the individual component plots.
-        - hist_plot_kwargs (list): Keyword arguments for the histogram plot.
+        Parameters
+        ----------
+        ax : Matplotlib axis object
+            Axes object where to plot.
+        x : array
+            x values.
+        meds : list or array
+            Means of the Gaussian components.
+        stds : list or array
+            Standard deviations of the Gaussian components.
+        weights : list or array
+            Weights of the Gaussian components.
+        data : list or array, optional 
+            Raw data to plot as a histogram.
+        pdf_plot_kwargs : list
+            Keyword arguments for the main GMM PDF plot.
+        component_plot_kwargs : list 
+            Keyword arguments for the individual component plots.
+        hist_plot_kwargs : list
+             Keyword arguments for the histogram plot.
+
+        Returns
+        -------
+        None
         """
         if pdf_plot_kwargs is None:
             pdf_plot_kwargs = {}
