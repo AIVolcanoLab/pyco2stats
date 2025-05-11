@@ -672,17 +672,17 @@ class Stats:
     def mad_std(data, axis=None, func=None, ignore_nan=False):
         """
         Calculate a robust standard deviation using the median absolute
-        deviation (MAD), mutuated from astropy.
-
+        deviation (MAD), adapted from astropy.
+    
         The standard deviation estimator is given by:
-
+    
         .. math::
-
+    
             \sigma \approx \frac{\textrm{MAD}}{\Phi^{-1}(3/4)}
-                \approx 1.4826 \ \textrm{MAD}
-
-        where :math: \Phi^{-1}(P) is the normal inverse cumulative
-        distribution function evaluated at probability :math: P = 3/4.
+            \approx 1.4826 \ \textrm{MAD}
+    
+        where :math:`\Phi^{-1}(P)` is the normal inverse cumulative
+        distribution function evaluated at probability :math:`P = 3/4`.
 
         Parameters
         ----------
@@ -690,23 +690,19 @@ class Stats:
             Data array or object that can be converted to an array.
         axis : None, int, or tuple of int, optional
             The axis or axes along which the robust standard deviations are
-            computed.  The default (`None`) is to compute the robust
+            computed. The default (`None`) is to compute the robust
             standard deviation of the flattened array.
         func : callable, optional
-            The function used to compute the median. Defaults to `numpy.ma.median`
-            for masked arrays, otherwise to `numpy.median`.
+            The function used to compute the median. Defaults to
+            `numpy.ma.median` for masked arrays, otherwise to `numpy.median`.
         ignore_nan : bool
-            Ignore NaN values (treat them as if they are not in the array) when
-            computing the median.  This will use `numpy.ma.median` if ``axis`` is
-            specified, or `numpy.nanmedian` if ``axis=None`` and numpy's version is
-            >1.10 because nanmedian is slightly faster in this case.
-
+            If True, ignore NaN values in the input.
+    
         Returns
         -------
-        mad_std : float or `~numpy.ndarray`
-            The robust standard deviation of the input data.  If ``axis`` is
-            `None` then a scalar will be returned, otherwise a
-            `~numpy.ndarray` will be returned.
+        mad_std : float or numpy.ndarray
+            The robust standard deviation. A scalar is returned if axis is None;
+            otherwise, an array is returned.
         """
         return astropy_mad_std(data, axis, func, ignore_nan)
 
