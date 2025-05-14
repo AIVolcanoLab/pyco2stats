@@ -1,3 +1,8 @@
+from scipy.optimize import minimize
+from scipy.optimize import  brentq # brentq for uniroot
+from scipy.integrate import quad 
+from scipy.optimize import minimize_scalar, root_scalar
+
 import numpy as np
 import scipy.special as sp
 import scipy.stats as stats
@@ -5,8 +10,8 @@ import statsmodels.api as sm
 import warnings
 import math
 
-from scipy.optimize import minimize
 from scipy.interpolate import RegularGridInterpolator
+
 from scipy.stats.mstats import trim as scipy_trim
 from scipy.stats import trimboth as scipy_trimboth
 from scipy.stats.mstats import trimtail as scipy_trimtail
@@ -28,8 +33,24 @@ from typing import List, Union, Dict, Any, Optional, Sequence
 from scipy.stats import t as t_distribution # da mettere a posto t è richiamata due volte in modo diverso
 from scipy.stats import norm as norm_distribution # da mettere a posto norm è richiamata due volte in modo diverso
 
+import functools
+
+def deprecated(reason):
+    def decorator(func):
+        @functools.wraps(func)
+        def wrapper(*args, **kwargs):
+            warnings.warn(
+                f"{func.__name__}() is deprecated: {reason}",
+                category=DeprecationWarning,
+                stacklevel=2
+            )
+            return func(*args, **kwargs)
+        return wrapper
+    return decorator
+
+
 class Stats:
-    @staticmethod
+    @deprecated("Use lognormal_estimator() instead.")
     def umvu_lognormal_mean_variance(data, tol=1e-9, max_iter=1000):
         """
         Calculates the Uniformly Minimum Variance Unbiased (UMVU) estimators
@@ -44,7 +65,7 @@ class Stats:
             normally distributed. Supplement to the Journal of the Royal Statistical Society,
             7(2), 155-161.
 
-        Parameters
+        Parameters:
         ----------
         data : array-like
             A 1D array or list containing the log-normally distributed data (on the original scale).
@@ -58,9 +79,9 @@ class Stats:
             Note: This is primarily for reference if using a custom implementation.
             Defaults to 1000.
 
-        Returns
+        Returns:
         -------
-        result : tuple
+        tuple
             A tuple containing:
                    - umvu_mean (float): The UMVU estimator of the log-normal mean.
                                         Returns NaN if data is not positive or sample size < 1.
@@ -135,7 +156,7 @@ class Stats:
 
         return umvu_mean, umvu_variance
 
-    @staticmethod
+    @deprecated("Use lognormal_estimator() instead.")
     def lognormal_mean_naive_ci(data, confidence_level=0.95):
         """
         Computes the Uniformly Minimum Variance Unbiased (UMVU) estimate of the log-normal mean
@@ -146,9 +167,11 @@ class Stats:
         constructing confidence intervals for the log-normal mean, especially for small
         sample sizes, as it tends to undercover the true mean.
 
-        Reference: Zhou, X-H., & Gao, S. (1997). Confidence intervals for the log-normal mean. Statistics in Medicine, 16(7), 783-790. (Formula 1)
+        Reference:
+            Zhou, X-H., & Gao, S. (1997). Confidence intervals for the log-normal mean.
+            Statistics in Medicine, 16(7), 783-790. (Formula 1)
 
-        Parameters
+        Parameters:
         ----------
         data : array-like
             A 1D array or list containing the log-normally distributed data (on the original scale).
@@ -157,9 +180,9 @@ class Stats:
             The desired confidence level (e.g., 0.95 for 95%). Must be between 0 and 1.
             Default is 0.95.
 
-        Returns
+        Returns:
         -------
-        result : tuple
+        tuple
             A tuple containing:
                    - umvu_mean (float): The UMVU estimator of the log-normal mean.
                                         Returns NaN if data is not positive or sample size < 1,
@@ -212,7 +235,7 @@ class Stats:
 
         return umvu_mean, lower_bound, upper_bound
 
-    @staticmethod
+    @deprecated("Use lognormal_estimator() instead.")
     def lognormal_mean_cox_ci(data, confidence_level=0.95):
         """
         Computes the Uniformly Minimum Variance Unbiased (UMVU) estimate of the log-normal mean
@@ -226,7 +249,7 @@ class Stats:
             Zhou, X-H., & Gao, S. (1997). Confidence intervals for the log-normal mean.
             Statistics in Medicine, 16(7), 783-790. (Formula 2)
 
-        Parameters
+        Parameters:
         ----------
         data : array-like
             A 1D array or list containing the log-normally distributed data (on the original scale).
@@ -235,9 +258,9 @@ class Stats:
             The desired confidence level (e.g., 0.95 for 95%). Must be between 0 and 1.
             Default is 0.95.
 
-        Returns
+        Returns:
         -------
-        result : tuple
+        tuple
             A tuple containing:
                    - umvu_mean (float): The UMVU estimator of the log-normal mean.
                                         Returns NaN if data is not positive or sample size < 1,
@@ -313,24 +336,23 @@ class Stats:
         return umvu_mean, lower_bound, upper_bound
 
 
-    @staticmethod
+    @deprecated("Use lognormal_estimator() instead.")
     def angus_conservative_lognormal_ci(data, confidence_level=0.95):
       """
       Calculates the confidence interval for the mean of a lognormal distribution
       using Angus's conservative method based on Zhou & Gao (1997).
 
-      Parameters
-      ----------
-      data : array or list
-              A list, numpy array, or similar iterable of positive numerical data
+      Args:
+        data: A list, numpy array, or similar iterable of positive numerical data
               assumed to follow a lognormal distribution.
-      confidence_level : float 
-          The desired confidence level (e.g., 0.95 for 95%).
+        confidence_level: The desired confidence level (e.g., 0.95 for 95%).
 
-      Returns
-      -------
-      result : tuple
-          A tuple containing the lower and upper bounds of the confidence interval for the mean (theta) of the lognormal distribution.
+      Returns:
+        A tuple containing the lower and upper bounds of the confidence interval
+        for the mean (theta) of the lognormal distribution.
+
+      Raises:
+        ValueError: If data contains non-positive values or if sample size is < 2.
       """
 
       if not all(x > 0 for x in data):
@@ -383,6 +405,84 @@ class Stats:
       return (theta_lower, theta_upper)
 
 
+    @deprecated("Use lognormal_estimator() instead.")
+    def ucl_lands_method_accurate(data: Sequence[float]) -> float:
+            """
+            Calculate the 95% UCL for a log-normal population mean using Land’s H-statistic
+            (Land, 1972).
+
+            Parameters
+            ----------
+            data
+                Array‐like of positive observations.
+
+            Returns
+            -------
+            float
+                Upper 95% confidence limit on the arithmetic mean.
+            """
+            # --- H-table axes ---
+            n_values = np.array([3, 5, 7, 10, 12, 15, 21, 31, 51, 101])
+            s_values = np.array([
+                0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0,
+                1.25, 1.5, 1.75, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0,
+                6.0, 7.0, 8.0, 9.0, 10.0
+            ])
+
+            H_table = np.array([
+                [2.75, 2.035, 1.886, 1.802, 1.775, 1.749, 1.722, 1.701, 1.684, 1.67],
+                [3.295, 2.198, 1.992, 1.881, 1.843, 1.809, 1.771, 1.742, 1.718, 1.697],
+                [4.109, 2.402, 2.125, 1.977, 1.927, 1.882, 1.833, 1.793, 1.761, 1.733],
+                [5.22, 2.631, 2.282, 2.089, 2.026, 1.968, 1.905, 1.856, 1.813, 1.777],
+                [6.495, 2.947, 2.465, 2.22, 2.141, 2.068, 1.989, 1.928, 1.876, 1.83],
+                [7.807, 3.287, 2.673, 2.368, 2.271, 2.181, 2.085, 2.01, 1.946, 1.891],
+                [9.12, 3.662, 2.904, 2.532, 2.414, 2.306, 2.191, 2.102, 2.025, 1.96],
+                [10.43, 4.062, 3.155, 2.71, 2.57, 2.443, 2.307, 2.202, 2.112, 2.035],
+                [11.74, 4.478, 3.402, 2.902, 2.738, 2.589, 2.432, 2.31, 2.206, 2.117],
+                [13.05, 4.905, 3.698, 3.103, 2.915, 2.744, 2.564, 2.423, 2.306, 2.205],
+                [16.33, 6.001, 4.426, 3.639, 3.389, 3.163, 2.923, 2.737, 2.58, 2.447],
+                [19.6, 7.12, 5.184, 4.207, 3.896, 3.612, 3.311, 3.077, 2.881, 2.713],
+                [22.87, 8.25, 5.96, 4.795, 4.422, 4.081, 3.719, 3.437, 3.2, 2.997],
+                [26.14, 9.387, 6.747, 5.396, 4.962, 4.564, 4.141, 3.812, 3.533, 3.295],
+                [32.69, 11.67, 8.339, 6.621, 6.067, 5.557, 5.013, 4.588, 4.228, 3.92],
+                [39.23, 13.97, 9.945, 7.864, 7.191, 6.57, 5.907, 5.388, 4.947, 4.569],
+                [45.77, 16.27, 11.56, 9.118, 8.326, 7.596, 6.815, 6.201, 5.681, 5.233],
+                [52.31, 18.58, 13.18, 10.38, 9.469, 8.63, 7.731, 7.024, 6.424, 5.908],
+                [58.85, 20.88, 14.8, 11.64, 10.62, 9.669, 8.652, 7.854, 7.174, 6.59],
+                [65.39, 23.19, 16.43, 12.91, 11.77, 10.71, 9.579, 8.688, 7.929, 7.277],
+                [78.47, 27.81, 19.68, 15.45, 14.08, 12.81, 11.44, 10.36, 9.449, 8.661],
+                [91.55, 32.43, 22.94, 18.0, 16.39, 14.9, 13.31, 12.05, 10.98, 10.05],
+                [104.6, 37.06, 26.2, 20.55, 18.71, 17.01, 15.18, 13.74, 12.51, 11.45],
+                [117.7, 41.68, 29.46, 23.1, 21.03, 19.11, 17.05, 15.43, 14.05, 12.85],
+                [130.8, 46.31, 32.73, 25.66, 23.35, 21.22, 18.93, 17.13, 15.59, 14.26]
+            ])
+
+            # build interpolator (allows extrapolation)
+            H_interp = RegularGridInterpolator(
+                (s_values, n_values),
+                H_table,
+                bounds_error=False,
+                fill_value=None
+            )
+
+            # log-transform data
+            log_data = np.log(data)
+            n = log_data.size
+            mean_log = log_data.mean()
+            var_log = log_data.var(ddof=1)
+            s = np.sqrt(var_log)
+
+            # lookup H
+            H = float(H_interp((s, n)))
+
+            # compute UCL
+            ucl = np.exp(
+                mean_log
+                + 0.5 * var_log
+                + H * np.sqrt(var_log / n + var_log**2 / (2 * (n - 1)))
+            )
+            return ucl
+
 
     @staticmethod
     def lognormal_median_ci(data, confidence_level=0.95):
@@ -390,19 +490,19 @@ class Stats:
         Estimates the median and its confidence interval for data assumed
         to be log-normally distributed.
 
-        Parameters
-        ----------
-        data : array, list or pandas series
-            A list, numpy array, or pandas Series of positive numerical data points.
-        confidence_level : float
-            The desired confidence level (e.g., 0.95 for 95%). Must be between 0 and 1.
+        Args:
+            data (array-like): A list, numpy array, or pandas Series of
+                               positive numerical data points.
+            confidence_level (float): The desired confidence level (e.g., 0.95 for 95%).
+                                     Must be between 0 and 1.
 
-        Returns
-        -------
-        result : dict
-            A dictionary containing:
-             - 'median_estimate': The point estimate of the median.
-             - 'confidence_interval': A tuple (lower_bound, upper_bound) for the median.
+        Returns:
+            dict: A dictionary containing:
+                  'median_estimate': The point estimate of the median.
+                  'confidence_interval': A tuple (lower_bound, upper_bound)
+                                         for the median.
+                  Returns None if input data is invalid (e.g., non-positive values,
+                  not enough data points).
         """
         # --- Input Validation ---
         try:
@@ -466,19 +566,16 @@ class Stats:
         Estimates the mean and confidence interval for a log-normal distribution
         using the bootstrapping method.
 
-        Parameters
-        ----------
-        data : array
-            A 1D array or list containing the log-normally distributed data.
-        n_bootstraps : int
-            The number of bootstrap samples to generate. Defaults to 1000.
-        confidence_level : float
-            The desired confidence level for the interval. Must be between 0 and 1. Defaults to 0.95.
+        Args:
+            data (array-like): A 1D array or list containing the log-normally
+                               distributed data.
+            n_bootstraps (int): The number of bootstrap samples to generate.
+                               Defaults to 1000.
+            confidence_level (float): The desired confidence level for the interval.
+                                     Must be between 0 and 1. Defaults to 0.95.
 
-        Returns
-        -------
-        result : tuple
-            A tuple containing:
+        Returns:
+            tuple: A tuple containing:
                    - estimated_mean (float): The estimated mean of the log-normal
                                              distribution (mean of bootstrap means).
                    - ci_lower (float): The lower bound of the confidence interval.
@@ -509,86 +606,6 @@ class Stats:
 
         return estimated_mean, ci_lower, ci_upper
 
-    import numpy as np
-
-
-    @staticmethod
-    def ucl_lands_method_accurate(data: Sequence[float]) -> float:
-        """
-        Calculate the 95% UCL for a log-normal population mean using Land’s H-statistic
-        (Land, 1972).
-
-        Parameters
-        ----------
-        data
-            Array‐like of positive observations.
-
-        Returns
-        -------
-        float
-            Upper 95% confidence limit on the arithmetic mean.
-        """
-        # --- H-table axes ---
-        n_values = np.array([3, 5, 7, 10, 12, 15, 21, 31, 51, 101])
-        s_values = np.array([
-            0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0,
-            1.25, 1.5, 1.75, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5, 5.0,
-            6.0, 7.0, 8.0, 9.0, 10.0
-        ])
-
-        H_table = np.array([
-            [2.75, 2.035, 1.886, 1.802, 1.775, 1.749, 1.722, 1.701, 1.684, 1.67],
-            [3.295, 2.198, 1.992, 1.881, 1.843, 1.809, 1.771, 1.742, 1.718, 1.697],
-            [4.109, 2.402, 2.125, 1.977, 1.927, 1.882, 1.833, 1.793, 1.761, 1.733],
-            [5.22, 2.631, 2.282, 2.089, 2.026, 1.968, 1.905, 1.856, 1.813, 1.777],
-            [6.495, 2.947, 2.465, 2.22, 2.141, 2.068, 1.989, 1.928, 1.876, 1.83],
-            [7.807, 3.287, 2.673, 2.368, 2.271, 2.181, 2.085, 2.01, 1.946, 1.891],
-            [9.12, 3.662, 2.904, 2.532, 2.414, 2.306, 2.191, 2.102, 2.025, 1.96],
-            [10.43, 4.062, 3.155, 2.71, 2.57, 2.443, 2.307, 2.202, 2.112, 2.035],
-            [11.74, 4.478, 3.402, 2.902, 2.738, 2.589, 2.432, 2.31, 2.206, 2.117],
-            [13.05, 4.905, 3.698, 3.103, 2.915, 2.744, 2.564, 2.423, 2.306, 2.205],
-            [16.33, 6.001, 4.426, 3.639, 3.389, 3.163, 2.923, 2.737, 2.58, 2.447],
-            [19.6, 7.12, 5.184, 4.207, 3.896, 3.612, 3.311, 3.077, 2.881, 2.713],
-            [22.87, 8.25, 5.96, 4.795, 4.422, 4.081, 3.719, 3.437, 3.2, 2.997],
-            [26.14, 9.387, 6.747, 5.396, 4.962, 4.564, 4.141, 3.812, 3.533, 3.295],
-            [32.69, 11.67, 8.339, 6.621, 6.067, 5.557, 5.013, 4.588, 4.228, 3.92],
-            [39.23, 13.97, 9.945, 7.864, 7.191, 6.57, 5.907, 5.388, 4.947, 4.569],
-            [45.77, 16.27, 11.56, 9.118, 8.326, 7.596, 6.815, 6.201, 5.681, 5.233],
-            [52.31, 18.58, 13.18, 10.38, 9.469, 8.63, 7.731, 7.024, 6.424, 5.908],
-            [58.85, 20.88, 14.8, 11.64, 10.62, 9.669, 8.652, 7.854, 7.174, 6.59],
-            [65.39, 23.19, 16.43, 12.91, 11.77, 10.71, 9.579, 8.688, 7.929, 7.277],
-            [78.47, 27.81, 19.68, 15.45, 14.08, 12.81, 11.44, 10.36, 9.449, 8.661],
-            [91.55, 32.43, 22.94, 18.0, 16.39, 14.9, 13.31, 12.05, 10.98, 10.05],
-            [104.6, 37.06, 26.2, 20.55, 18.71, 17.01, 15.18, 13.74, 12.51, 11.45],
-            [117.7, 41.68, 29.46, 23.1, 21.03, 19.11, 17.05, 15.43, 14.05, 12.85],
-            [130.8, 46.31, 32.73, 25.66, 23.35, 21.22, 18.93, 17.13, 15.59, 14.26]
-        ])
-
-        # build interpolator (allows extrapolation)
-        H_interp = RegularGridInterpolator(
-            (s_values, n_values),
-            H_table,
-            bounds_error=False,
-            fill_value=None
-        )
-
-        # log-transform data
-        log_data = np.log(data)
-        n = log_data.size
-        mean_log = log_data.mean()
-        var_log = log_data.var(ddof=1)
-        s = np.sqrt(var_log)
-
-        # lookup H
-        H = float(H_interp((s, n)))
-
-        # compute UCL
-        ucl = np.exp(
-            mean_log
-            + 0.5 * var_log
-            + H * np.sqrt(var_log / n + var_log**2 / (2 * (n - 1)))
-        )
-        return ucl
 
 
     @staticmethod
@@ -670,17 +687,17 @@ class Stats:
     def mad_std(data, axis=None, func=None, ignore_nan=False):
         """
         Calculate a robust standard deviation using the median absolute
-        deviation (MAD), adapted from astropy.
-    
+        deviation (MAD), mutuated from astropy.
+
         The standard deviation estimator is given by:
-    
+
         .. math::
-    
+
             \sigma \approx \frac{\textrm{MAD}}{\Phi^{-1}(3/4)}
-            \approx 1.4826 \ \textrm{MAD}
-    
-        where :math:`\Phi^{-1}(P)` is the normal inverse cumulative
-        distribution function evaluated at probability :math:`P = 3/4`.
+                \approx 1.4826 \ \textrm{MAD}
+
+        where :math: \Phi^{-1}(P) is the normal inverse cumulative
+        distribution function evaluated at probability :math: P = 3/4.
 
         Parameters
         ----------
@@ -688,19 +705,23 @@ class Stats:
             Data array or object that can be converted to an array.
         axis : None, int, or tuple of int, optional
             The axis or axes along which the robust standard deviations are
-            computed. The default (`None`) is to compute the robust
+            computed.  The default (`None`) is to compute the robust
             standard deviation of the flattened array.
         func : callable, optional
-            The function used to compute the median. Defaults to
-            `numpy.ma.median` for masked arrays, otherwise to `numpy.median`.
+            The function used to compute the median. Defaults to `numpy.ma.median`
+            for masked arrays, otherwise to `numpy.median`.
         ignore_nan : bool
-            If True, ignore NaN values in the input.
-    
+            Ignore NaN values (treat them as if they are not in the array) when
+            computing the median.  This will use `numpy.ma.median` if ``axis`` is
+            specified, or `numpy.nanmedian` if ``axis=None`` and numpy's version is
+            >1.10 because nanmedian is slightly faster in this case.
+
         Returns
         -------
-        mad_std : float or numpy.ndarray
-            The robust standard deviation. A scalar is returned if axis is None;
-            otherwise, an array is returned.
+        mad_std : float or `~numpy.ndarray`
+            The robust standard deviation of the input data.  If ``axis`` is
+            `None` then a scalar will be returned, otherwise a
+            `~numpy.ndarray` will be returned.
         """
         return astropy_mad_std(data, axis, func, ignore_nan)
 
@@ -956,25 +977,28 @@ class Stats:
     def biweight_location(data, c=6.0, M=None, axis=None, ignore_nan=False):
         """
         Compute the biweight location.
-        
+
         The biweight location is a robust statistic for determining the
-        central location of a distribution. It is given by:
-        
+        central location of a distribution.  It is given by:
+
         .. math::
-        
-            \zeta_{{biloc}} = M + \frac{\sum_{{|u_i|<1}} (x_i - M)(1 - u_i^2)^2}{\sum_{{|u_i|<1}} (1 - u_i^2)^2}
-        
+
+            \zeta_{biloc}= M + \frac{\sum_{|u_i|<1}(x_i - M) (1 - u_i^2)^2}{\sum_{|u_i|<1}(1 - u_i^2)^2}
+
         where :math:`x` is the input data, :math:`M` is the sample median
-        (or an initial guess), and :math:`u_i` is:
-        
+        (or the input initial location guess) and :math:`u_i` is given by:
+
         .. math::
-        
-            u_i = \frac{(x_i - M)}{c \cdot \textrm{MAD}}
-        
-        where :math:`c` is a tuning constant and :math:`\textrm{MAD}` is the
-        `median absolute deviation <https://en.wikipedia.org/wiki/Median_absolute_deviation>`_.
-        
-        If :math:`\textrm{MAD}` is zero, the function returns the median instead.
+
+            u_{i} = \frac{(x_i - M)}{c \cdot MAD}
+
+        where :math:`c` is the tuning constant and :math:`MAD` is the
+        `median absolute deviation
+        <https://en.wikipedia.org/wiki/Median_absolute_deviation>`_.  The
+        biweight location tuning constant ``c`` is typically 6.0 (the
+        default).
+
+        If :math:`MAD` is zero, then the median will be returned.
 
         Parameters
         ----------
@@ -1014,35 +1038,46 @@ class Stats:
         """
         Compute the biweight scale.
 
-        The biweight scale is a robust statistic for estimating the spread (standard deviation)
-        of a distribution. It is the square root of the biweight midvariance.
-        
+        The biweight scale is a robust statistic for determining the
+        standard deviation of a distribution.  It is the square root of the
+        `biweight midvariance.
+
         It is given by:
 
         .. math::
-        
-            \zeta_{{biscl}} = \sqrt{n} \cdot \frac{\sqrt{\sum_{{|u_i| < 1}} (x_i - M)^2 (1 - u_i^2)^4}}{\left| \sum_{{|u_i| < 1}} (1 - u_i^2)(1 - 5u_i^2) \right|}
-        
+
+            \zeta_{biscl} = \sqrt{n}\frac{\sqrt{\sum_{|u_i| < 1}(x_i - M)^2 (1 - u_i^2)^4}} {|(\sum_{|u_i| < 1}(1 - u_i^2) (1 - 5u_i^2))|}
+
         where :math:`x` is the input data, :math:`M` is the sample median
-        (or a provided location), and :math:`u_i` is:
-        
+        (or the input location) and :math:`u_i` is given by:
+
         .. math::
-        
-            u_i = \frac{x_i - M}{c \cdot \textrm{MAD}}
-        
-        where :math:`c` is the tuning constant, and :math:`\textrm{MAD}` is the
-        `median absolute deviation <https://en.wikipedia.org/wiki/Median_absolute_deviation>`_.
-        
-        If :math:`\textrm{MAD}` is zero, the function returns zero.
-        
-        By default, :math:`n` is the total number of elements in the array (or along the specified axis).
-        If ``modify_sample_size=True``, then :math:`n` is the number of non-rejected values:
-        
+
+            u_{i} = \frac{x_i - M}{c * MAD}
+
+        where :math:`c` is the tuning constant and :math:`MAD` is the
+        `median absolute deviation
+        <https://en.wikipedia.org/wiki/Median_absolute_deviation>`_.  The
+        biweight midvariance tuning constant ``c`` is typically 9.0 (the
+        default).
+
+        If :math:`MAD` is zero, then zero will be returned.
+
+        For the standard definition of biweight scale, :math:`n` is the
+        total number of points in the array (or along the input ``axis``, if
+        specified).  That definition is used if ``modify_sample_size`` is
+        `False`, which is the default.
+
+        However, if ``modify_sample_size = True``, then :math:`n` is the
+        number of points for which :math:`|u_i| < 1` (i.e. the total number
+        of non-rejected values), i.e.
+
         .. math::
-        
-            n = \sum_{{|u_i| < 1}} 1
-        
-        This modification often improves estimates for small samples or heavily clipped data.
+
+            n = \sum_{|u_i| < 1} 1
+
+        which results in a value closer to the true standard deviation for
+        small sample sizes or for a large number of rejected values.
 
         Parameters
         ----------
@@ -1110,11 +1145,6 @@ class Stats:
         axis : {None, int}, optional
             Axis along which to trim. If None, the whole array is trimmed, but its
             shape is maintained.
-
-        Returns
-        -------
-        trimmed array : array
-            Trimmed array.
         """
         return scipy_trim(a, limits, inclusive, axis)
 
@@ -1128,7 +1158,7 @@ class Stats:
 
         Parameters
         ----------
-        a : array
+        a : array_like
             Array of values.
         limits : None or (lower limit, upper limit), optional
             Values in the input array less than the lower limit or greater than the
@@ -1144,7 +1174,7 @@ class Stats:
 
         Returns
         -------
-        tmean : array
+        tmean : ndarray
             Trimmed mean.
         """
         return scipy_tmean(a, limits, inclusive, axis)
@@ -1156,7 +1186,7 @@ class Stats:
 
         Parameters
         ----------
-        a : array
+        a : array_like
             Input array.
         limits : tuple of float, optional
             The lower and upper fraction of elements to trim. These fractions
@@ -1176,8 +1206,7 @@ class Stats:
 
     @staticmethod
     def trimboth(a, proportiontocut=0.2, axis=0):
-        """
-        Slice off a proportion of items from both ends of an array.
+        """Slice off a proportion of items from both ends of an array.
 
         Slice off the passed proportion of items from both ends of the passed
         array (i.e., with `proportiontocut` = 0.1, slices leftmost 10% **and**
@@ -1188,7 +1217,7 @@ class Stats:
 
         Parameters
         ----------
-        a : array
+        a : array_like
             Data to trim.
         proportiontocut : float
             Proportion (in range 0-1) of total data set to trim of each end.
@@ -1198,9 +1227,47 @@ class Stats:
 
         Returns
         -------
-        out : array
+        out : ndarray
             Trimmed version of array `a`. The order of the trimmed content
             is undefined.
+
+        See Also
+        --------
+        trim_mean
+
+        Examples
+        --------
+        Create an array of 10 values and trim 10% of those values from each end:
+
+        >>> import numpy as np
+        >>> from scipy import stats
+        >>> a = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+        >>> stats.trimboth(a, 0.1)
+        array([1, 3, 2, 4, 5, 6, 7, 8])
+
+        Note that the elements of the input array are trimmed by value, but the
+        output array is not necessarily sorted.
+
+        The proportion to trim is rounded down to the nearest integer. For
+        instance, trimming 25% of the values from each end of an array of 10
+        values will return an array of 6 values:
+
+        >>> b = np.arange(10)
+        >>> stats.trimboth(b, 1/4).shape
+        (6,)
+
+        Multidimensional arrays can be trimmed along any axis or across the entire
+        array:
+
+        >>> c = [2, 4, 6, 8, 0, 1, 3, 5, 7, 9]
+        >>> d = np.array([a, b, c])
+        >>> stats.trimboth(d, 0.4, axis=0).shape
+        (1, 10)
+        >>> stats.trimboth(d, 0.4, axis=1).shape
+        (3, 2)
+        >>> stats.trimboth(d, 0.4, axis=None).shape
+        (6,)
+
         """
         return scipy_trimboth(a, proportiontocut, axis)
 
@@ -1211,7 +1278,7 @@ class Stats:
 
         Parameters
         ----------
-        data : array
+        data : array_like
             Data to trim.
         proportiontocut : float, optional
             Percentage of trimming. If n is the number of unmasked values
@@ -1231,7 +1298,7 @@ class Stats:
 
         Returns
         -------
-        trimtail : array
+        trimtail : ndarray
             Returned array of same shape as `data` with masked tail values.
         """
         return scipy_trimtail(data, proportiontocut, tail, inclusive, axis)
@@ -1281,7 +1348,7 @@ class Stats:
 
         Returns
         -------
-        winsorized : array
+        winsorized : ndarray
             Winsorized array.
         """
         return scipy_winsorize(a, limits, inclusive, inplace, axis, nan_policy)
@@ -1298,7 +1365,7 @@ class Stats:
 
         Parameters
         ----------
-        a : array
+        a : sequence
             Input array.
         limits : {None, tuple of float}, optional
             Tuple of the percentages to cut on each side of the array, with respect
@@ -1348,7 +1415,7 @@ class Stats:
 
         Parameters
         ----------
-        a : array
+        a : sequence
             Input array.
         ddof : int, optional
             Delta Degrees of Freedom. The denominator used in calculations is `N - ddof`, 
@@ -1412,6 +1479,9 @@ class Stats:
         huber_proposal_2 = sm.robust.Huber(c, tol, maxiter, norm)
         return huber_proposal_2(data)
 
+
+    # lognormal_estimator da qui
+
     @staticmethod
     def lognormal_estimator(
         X_lognorm_data,
@@ -1419,32 +1489,9 @@ class Stats:
         ci=False,
         ci_method="zou",
         ci_type="two-sided",
-        conf_level=0.95):#,
-        #parkin_list=None
-    #):
-        """
-        Function to compute the estimation of the mean with appropriate confidence intervals.
-        
-        Parameters
-        ----------
-        X_lognorm_data : array
-            Input data lognormally distributed
-        method : string
-            Method to compute the mean estimator. Accepted values are "umvue_finney", "umvue_sichel", "qmle", "mle", "mme" and "mmue". Default is "umvue_finney".
-        ci : bool
-            Whether or not to compute the confidence interval for the estimation of the mean. Default is False.
-        ci_method : string
-            Method to use to compute the confidence interval for the estimation of the mean. Accepted values are "zou", "land", "cox" or "normal_approx". Default is "zou".
-        ci_type : string
-            Whether to compute the one-sided or two-sided confidence interval. Accpeted values are "two-sided" and "one-sided". Default is "two sided".
-        conf_level : float
-            Confidence level for the confidence intervals. Default is 0.95
-        
-        Returns
-        -------
-        result : array
-            resulting array containing the mean estimation with confidence intervals.
-        """
+        conf_level=0.95,
+        parkin_list=None
+    ):
         X_lognorm_data = np.asarray(X_lognorm_data, dtype=float)
         if X_lognorm_data.size < 2 or np.any(X_lognorm_data <= 0):
             raise ValueError("`data` must contain at least two positive values.")
@@ -1454,26 +1501,31 @@ class Stats:
         Y_mu_hat = float(np.mean(Y_norm_data))
         Y_sigma2_hat = float(np.var(Y_norm_data, ddof=1))
         Y_sigma2_mle = Y_sigma2_hat * (n - 1) / n
-
+        df = n - 1
         # Point estimation
-        if method == "umvue_finney":
-            X_theta_hat, X_var_hat = EnvStatsPy.umvue_finney_lognormal_estimator(X_lognorm_data)
+        if method == "mvue":
+            X_theta_hat, X_var_hat = Stats.umvue_finney_lognormal_estimator(X_lognorm_data)
+            sd_muhat_ci_normal = np.sqrt(np.exp(2 * Y_mu_hat) * ((Stats.finneys_g(n - 1, Y_sigma2_hat/2)**2) - Stats.finneys_g(n - 1, (Y_sigma2_hat * (n - 2))/(n - 1))))
         elif method == "umvue_sichel":
-            X_theta_hat, X_var_hat = EnvStatsPy.umvue_sichel_lognormal_estimator(X_lognorm_data)
+            X_theta_hat, X_var_hat = Stats.umvue_sichel_lognormal_estimator(X_lognorm_data)
         elif method == "qmle":
             X_theta_hat = math.exp(Y_mu_hat + 0.5 * Y_sigma2_hat)
             se2 = (np.exp(Y_sigma2_hat) - 1) * np.exp(2 * Y_mu_hat + Y_sigma2_hat)
+            sd_muhat_ci_normal = np.sqrt(np.exp(2 * Y_mu_hat + Y_sigma2_hat/n) * (np.exp(Y_sigma2_hat/n) * ((1 - (2 * Y_sigma2_hat)/df)**(-df/2)) - ((1 - Y_sigma2_hat/df)**(-df))))
             X_var_hat = se2 / n
         elif method == "mle":
-            X_theta_hat = math.exp(Y_mu_hat + 0.5 * Y_sigma2_mle)
+            X_theta_hat = np.exp(Y_mu_hat + 0.5 * Y_sigma2_mle)
             se2 = (np.exp(Y_sigma2_mle) - 1) * np.exp(2 * Y_mu_hat + Y_sigma2_mle)
             X_var_hat = se2 / n
+            sd_muhat_ci_normal = np.sqrt(np.exp(2 * Y_mu_hat + Y_sigma2_hat/n) * (np.exp(Y_sigma2_hat/n) * ((1 - (2 * Y_sigma2_hat)/n)**(-df/2)) - ((1 - Y_sigma2_hat/n)**(-df))))
         elif method == "mme":
             X_theta_hat = float(np.mean(X_lognorm_data))
-            X_var_hat = float(np.var(X_lognorm_data, ddof=1) / n)
+            X_var_hat = float(np.var(X_lognorm_data, ddof=0) / n)
+            sd_muhat_ci_normal = np.sqrt(X_var_hat)/np.sqrt(n)
         elif method == "mmue":
             X_theta_hat = float(np.mean(X_lognorm_data))
-            X_var_hat = float(np.var(X_lognorm_data, ddof=0) / n)
+            X_var_hat = float(np.var(X_lognorm_data, ddof=1) / n)
+            sd_muhat_ci_normal = np.sqrt(X_var_hat)/np.sqrt(n)
         else:
             raise ValueError(f"Unknown method '{method}'")
 
@@ -1493,43 +1545,24 @@ class Stats:
 
         # Confidence intervals
         if ci:
-            if ci_method == "land":
-                try:
-                    ci_limits = EnvStatsPy.ci_lnorm_land(
-                        mu_hat=Y_mu_hat + 0.5 * Y_sigma2_hat,
-                        sigma2_hat=Y_sigma2_hat,
-                        n=n,
-                        ci_type=ci_type,
-                        conf_level=conf_level
-                    )
-                except RuntimeError as e:
-                    warnings.warn(f"Land CI failed due to optimization error: {e}. Falling back to Zou method.", UserWarning)
-                    ci_limits = EnvStatsPy.ci_lnorm_zou(
-                        mu_hat=Y_mu_hat,  
-                        sigma2_hat=Y_sigma2_hat,
-                        n=n,
-                        ci_type=ci_type,
-                        conf_level=conf_level
-                    )
+            if ci_method == 'land':
+                ci_limits = Stats.ci_lnorm_land(
+                        mu_hat=Y_mu_hat, 
+                        sigma2_hat=Y_sigma2_hat, 
+                        n= n, 
+                        ci_type=ci_type, 
+                        conf_level=conf_level)
             elif ci_method == "normal_approx":
-                if method in ["mme", "mmue"]:
-                    ci_limits = EnvStatsPy.ci_standard_approx(
+                    ci_limits = Stats.ci_standard_approx(
                         mu_hat=X_theta_hat,
-                        sigma2_hat=X_sd_hat**2,
+                        sigma2_hat=sd_muhat_ci_normal**2,
                         n=n,
                         test_statistic="z",
                         ci_type=ci_type,
                         conf_level=conf_level
                     )
-                else:
-                    warnings.warn(
-                        f"'normal_approx' CI is not recommended with method='{method}'. "
-                        "It assumes normality of the arithmetic mean, which may not hold for lognormal-transformed estimates.",
-                        UserWarning
-                    )
-                    ci_limits = {"LCL": float("nan"), "UCL": float("nan")}
             elif ci_method == "zou":
-                ci_limits = EnvStatsPy.ci_lnorm_zou(
+                ci_limits = Stats.ci_lnorm_zou(
                     mu_hat=Y_mu_hat,  
                     sigma2_hat=Y_sigma2_hat,
                     n=n,
@@ -1537,28 +1570,21 @@ class Stats:
                     conf_level=conf_level
                 )
             elif ci_method == "cox":
-                if method in ["umvue_finney", "umvue_sichel"]:
-                    warnings.warn(
-                        "Using Cox CI with a UMVUE estimator: SE estimate returned is the UMVUE-based SE, not Cox-specific.",
-                        UserWarning
-                    )
-                ci_limits = EnvStatsPy.ci_cox(
+                ci_limits = Stats.ci_cox(
                     mu_hat=Y_mu_hat,
                     sigma2_hat=Y_sigma2_hat,
                     n=n,
                     ci_type=ci_type,
                     conf_level=conf_level
                 )
-            #elif ci_method == "parkin":
-            #    ci_limits = EnvStatsPy.ci_parkin(X_lognorm_data, ci_type, conf_level, parkin_list)
-            #elif ci_method == "sichel":
-            #    ci_limits = EnvStatsPy.ci_sichel(
-            #        mu_hat=Y_mu_hat,
-            #        sigma2_hat=Y_sigma2_hat,
-            #        n=n,
-            #        ci_type=ci_type,
-            #        conf_level=conf_level
-            #    )
+            elif ci_method == "sichel":
+                ci_limits = Stats.ci_sichel(
+                    mu_hat=Y_mu_hat,
+                    sigma2_hat=Y_sigma2_hat,
+                    n=n,
+                    ci_type=ci_type,
+                    conf_level=conf_level
+                )
             else:
                 raise ValueError(f"Unknown ci_method '{ci_method}'")
 
@@ -1571,21 +1597,9 @@ class Stats:
     def umvue_finney_lognormal_estimator(data):
         """
         UMVUE of the log‑normal mean & variance (Finney’s formula).
-        If data has fewer
+        Returns (mean_estimate, variance_estimate).  If data has fewer
         than two points, variance_estimate is NaN.  If data contains
         non‐positive values, returns (NaN, NaN) with a warning.
-
-        Parameters
-        ----------
-        data : array
-            Input data lognormally distributed.
-            
-        Returns
-        -------
-        umvu_mean : float
-            Estimator of the mean.
-        umvu_variance : float
-            Estimator of the variance.
         """
         data = np.asarray(data)
         n = data.size
@@ -1610,12 +1624,12 @@ class Stats:
         alpha = (n - 1.0) / 2.0
         z     = (n - 1.0)**2 / (4.0 * n) * s_sq
         
-        phi = EnvStatsPy.finneys_g(n - 1, s_sq/2)
+        phi = Stats.finneys_g(n - 1, s_sq/2)
         umvu_mean = np.exp(y_bar) * phi
     
         # Finney’s UMVUE for the variance (only defined for n>2)
         if n > 2:
-            umvu_variance = np.exp(2 * y_bar) * (EnvStatsPy.finneys_g(n - 1, 2 * s_sq) - EnvStatsPy.finneys_g(n - 1, (s_sq * (n - 2))/(n - 1)))
+            umvu_variance = np.exp(2 * y_bar) * (Stats.finneys_g(n - 1, 2 * s_sq) - Stats.finneys_g(n - 1, (s_sq * (n - 2))/(n - 1)))
         else:
             umvu_variance = np.nan
 
@@ -1625,24 +1639,6 @@ class Stats:
 
     @staticmethod
     def umvue_sichel_lognormal_estimator(X_lognorm_data):
-        """
-        UMVUE of the log‑normal mean & variance (Sichel’s formula).
-        If data has fewer
-        than two points, variance_estimate is NaN.  If data contains
-        non‐positive values, returns (NaN, NaN) with a warning.
-
-        Parameters
-        ----------
-        data : array
-            Input data lognormally distributed.
-            
-        Returns
-        -------
-        umvu_mean : float
-            Estimator of the mean.
-        umvu_variance : float
-            Estimator of the variance.
-        """
         X_lognorm_data = np.asarray(X_lognorm_data, dtype=float)
         if np.any(X_lognorm_data <= 0):
             raise ValueError("All observations must be positive.")
@@ -1668,29 +1664,6 @@ class Stats:
 
     @staticmethod
     def finneys_g(m, z, n_terms_inc=10, max_iter=100, tol=None):
-        """
-        Function for the computation of the formula for the g factor in Finney formula.
-
-        Parameters
-        ----------
-        m : int
-            Order of the g factor.
-        z : float
-            Input variance.
-        n : int
-            Number of samples.
-        n_terms_inc : int
-            ...
-        max_iter : int
-            Max number of iterations for the sum in the computation of the g factor.
-        tol : float or None
-            Tolerance value.
-            
-        Returns
-        -------
-        result : float
-            Resulting g value.
-        """
         tol = tol if tol is not None else np.finfo(float).eps
         m_arr = np.atleast_1d(m).astype(int)
         z_arr = np.atleast_1d(z).astype(float)
@@ -1753,171 +1726,13 @@ class Stats:
         _, _, psi_l, psi_u = min(entries, key=lambda e: abs(e[1] - V))
         return psi_l if p < 0.5 else psi_u
 
-    import math
-
-
-    def ci_lnorm_land(mu_hat, sigma2_hat, n, ci_type="two-sided", conf_level=0.95):
-        """
-        Land's CI for lognormal mean matching R implementations ci.lnorm.land, lands.C, ci.land.
-
-        Parameters
-        ----------
-        mu_hat : float
-            Mean value of the lognormal dataset.
-        sigma2_hat : float
-            Unbiased variance value of the lognormal dataset.
-        n : int
-            Number of samples.
-        ci_type : string
-            Whether to compute the one sided or two sided onfidence interval. Accepted values are "two-sided" and "one-sided". Default is "two-sided".
-        conf_level : float
-            Confidence level for the computation of the confidence interval. Default is 0.95.
-        Returns
-        -------
-        Intervals : dictionary
-            Dictionary containing the LCL (Lower Confidence Limit) and UCL (Upper Confidence Limit) values.
-        """
-        # Input validation 
-        if sigma2_hat <= 0:
-            raise ValueError("sigma2_hat must be positive")
-        if n < 2 or int(n) != n:
-            raise ValueError("n must be integer >= 2")
-        if not (0.5 <= conf_level < 1):
-            raise ValueError("conf_level must be in [0.5, 1)")
-        ci_type = ci_type.lower()
-        if ci_type not in ("two-sided", "lower", "upper"):
-            raise ValueError("ci_type must be 'two-sided', 'lower', or 'upper'")
-
-        # Land method parameters
-        lam = 0.5
-        nu = n - 1
-        gamma_sq = n
-        k = (nu + 1) / (2 * lam * gamma_sq)
-        S = math.sqrt((2 * lam * sigma2_hat) / k)
-
-        # Helper function: non-central t quantile
-        def qlands_t(p, nu, zeta):
-            return nct.ppf(p, df=nu, nc=zeta)
-
-        # lands.C equivalent in Python
-        def lands_C(S, nu, alpha):
-            """
-            Improved Land's C function with stabilized optimization and quantile logic.
-            """
-
-            if S <= 0:
-                raise ValueError("'S' must be positive.")
-            if nu < 2:
-                raise ValueError("'nu' must be at least 2.")
-            if not (0 < alpha < 1):
-                raise ValueError("'alpha' must be between 0 and 1.")
-
-            def qlands_t(p, nu, zeta):
-                """Stable non-central t-quantile"""
-                try:
-                    # Clip large zeta values to avoid nct.ppf instability
-                    if abs(zeta) > 100:
-                        zeta = 100 * math.copysign(1, zeta)
-                    qt = nct.ppf(p, df=nu, nc=zeta)
-                    if not np.isfinite(qt):
-                        raise ValueError("Non-finite result")
-                    return qt
-                except Exception:
-                    # Fallback to standard t approximation
-                    warnings.warn("Falling back to central t-distribution for quantile")
-                    return nct.ppf(p, df=nu, nc=0)
-
-            def objective(m):
-                T_m = (math.sqrt(nu + 1) * ((-S**2) / 2 - m)) / S
-                zeta_m = (-S * math.sqrt(nu + T_m**2)) / (2 * math.sqrt(nu + 1))
-                try:
-                    quantile = qlands_t(alpha, nu, zeta_m)
-                except Exception:
-                    quantile = float('inf')
-                return (T_m - quantile) ** 2
-
-            # Initial guess (same as R)
-            T0 = (-math.sqrt(nu + 1) * S) / 2
-            zeta0 = (-S * math.sqrt(nu + T0**2)) / (2 * math.sqrt(nu + 1))
-            try:
-                T0 = qlands_t(alpha, nu, zeta0)
-            except Exception:
-                T0 = -T0
-            m0 = (-S**2) / 2 - (S * T0) / math.sqrt(nu + 1)
-
-            # Use bounded optimization like R
-            bounds = [(-10 * abs(m0), 10 * abs(m0))]
-
-            res = minimize(
-                objective,
-                x0=[m0],
-                method='L-BFGS-B',
-                bounds=bounds,
-                options={'ftol': 1e-12, 'gtol': 1e-12, 'maxiter': 20000}
-            )
-
-            if not res.success:
-                raise RuntimeError(f"Optimization failed: {res.message}")
-
-            m_opt = res.x.item()
-            return (m_opt * math.sqrt(nu)) / S
-
-        # CI calculations matching R logic exactly
-        alpha = 1 - conf_level
-        if ci_type == "two-sided":
-            psi_low = lands_C(S, nu, alpha / 2)
-            psi_high = lands_C(S, nu, 1 - alpha / 2)
-            lcl = mu_hat + lam * sigma2_hat + (k * S / math.sqrt(nu)) * psi_low
-            ucl = mu_hat + lam * sigma2_hat + (k * S / math.sqrt(nu)) * psi_high
-        elif ci_type == "lower":
-            psi_low = lands_C(S, nu, alpha)
-            lcl = mu_hat + lam * sigma2_hat + (k * S / math.sqrt(nu)) * psi_low
-            ucl = math.inf
-        else:  # upper
-            psi_high = lands_C(S, nu, conf_level)
-            lcl = -math.inf
-            ucl = mu_hat + lam * sigma2_hat + (k * S / math.sqrt(nu)) * psi_high
-
-        # Exponentiate to original-scale mean CI
-        lcl_exp, ucl_exp = sorted([math.exp(lcl), math.exp(ucl)])
-        return {"LCL": lcl_exp, "UCL": ucl_exp}
 
     @staticmethod
     def ci_standard_approx(
         mu_hat, sigma2_hat, n,
         df=None, ci_type="two-sided", conf_level=0.95,
-        lb=-math.inf, ub=math.inf, test_statistic="z"):
-        """
-        Exact port of R's ci.lnorm.normal_approx for confidence intervals on the lognormal mean.
-        
-        Parameters
-        ----------
-        mu_hat : float
-            Mean value of the lognormal dataset.
-        sigma2_hat : float
-            Unbiased variance value of the lognormal dataset.
-        n : int
-            Number of samples.
-        df : float or None
-            Variance of the distribution used in the computation of the confidence intervals. (?)
-        ci_type : string
-            Whether to compute the one sided or two sided onfidence interval. Accepted values are "two-sided" and "one-sided". Default is "two-sided".
-        conf_level : float
-            Confidence level for the computation of the confidence interval. Default is 0.95.
-        lb : float or +-math.inf
-            ...
-        ub : float or +-math.inf
-            ...
-        test_statistic : string
-            Whether to compute the confidence interval using the t-test distribution or the standard normal distribution. 
-            If value is "t" it uses the t-test distribution, if the value is anything else it will use the standard normal distribution. 
-            Default value is "z".
-            
-        Returns
-        -------
-        Intervals : dictionary
-            Dictionary containing the LCL (Lower Confidence Limit) and UCL (Upper Confidence Limit) values.
-        """
+        lb=-math.inf, ub=math.inf, test_statistic="z"
+    ):
         sd_hat = np.sqrt(sigma2_hat)
         alpha = 1 - conf_level
         test_statistic = test_statistic.lower()
@@ -1938,23 +1753,6 @@ class Stats:
     def ci_lnorm_zou(mu_hat, sigma2_hat, n, ci_type, conf_level):
         """
         Exact port of R's ci.lnorm.zou() for confidence intervals on the lognormal mean.
-
-        Parameters
-        ----------
-        mu_hat : float
-            Mean value of the lognormal dataset.
-        sigma2_hat : float
-            Unbiased variance value of the lognormal dataset.
-        n : int
-            Number of samples.
-        ci_type : string
-            Whether to compute the one sided or two sided onfidence interval. Accepted values are "two-sided" and "one-sided".
-        conf_level : float
-            Confidence level for the computation of the confidence interval.
-        Returns
-        -------
-        Intervals : dictionary
-            Dictionary containing the LCL (Lower Confidence Limit) and UCL (Upper Confidence Limit) values.
         """
         alpha = 1 - conf_level
         sdlog = np.sqrt(sigma2_hat)
@@ -1996,53 +1794,340 @@ class Stats:
     def ci_cox(mu_hat, sigma2_hat, n, ci_type="two-sided", conf_level=0.95):
         """
         Cox method for confidence intervals on the lognormal mean.
-        Matches the logic of EnvStats::elnormAlt(ci.method="cox") in R.
+        This version assumes R's EnvStats might use a t-distribution if df is passed
+        to its internal ci.normal.approx.
+        mu_hat: Mean of the log-transformed data.
+        sigma2_hat: Variance of the log-transformed data.
+        """
+        alpha = 1.0 - conf_level
+        df_cox = n - 1
+
+        # Basic parameter validation
+        if not (0 < conf_level < 1):
+            raise ValueError("conf_level must be between 0 and 1.")
+        if n < 2: # Cox SE formula needs n and n+1. If n=1, df_cox=0.
+            warnings.warn(f"Sample size n={n} is too small for Cox method. Returning NaN CI.", RuntimeWarning)
+            return {"LCL": np.nan, "UCL": np.nan}
+        if sigma2_hat < 0:
+            warnings.warn("sigma2_hat is negative in ci_cox. Returning NaN CI.", RuntimeWarning)
+            return {"LCL": np.nan, "UCL": np.nan}
+
+
+        ci_type = ci_type.lower()
+        beta_hat = mu_hat + (sigma2_hat / 2.0)
+        
+        # Cox standard error formula
+        # Ensure n is float for division if it's an int, though it usually is from X_lognorm_data.size
+        n_float = float(n)
+        se_beta_hat_term1 = sigma2_hat / n_float
+        se_beta_hat_term2 = (sigma2_hat ** 2) / (2.0 * (n_float + 1.0))
+        
+        variance_beta_hat = se_beta_hat_term1 + se_beta_hat_term2
+        if variance_beta_hat < 0: 
+            warnings.warn(f"Calculated negative variance for se_beta_hat ({variance_beta_hat}) in Cox method. Returning NaN CI.", RuntimeWarning)
+            return {"LCL": np.nan, "UCL": np.nan}
+        se_beta_hat = math.sqrt(variance_beta_hat)
+
+        lcl_log, ucl_log = np.nan, np.nan
+
+        if se_beta_hat == 0 : # If variance is zero, CI is just the point estimate
+            if ci_type == "lower":
+                 lcl_log = beta_hat
+                 ucl_log = float("inf")
+            elif ci_type == "upper":
+                 lcl_log = float("-inf")
+                 ucl_log = beta_hat
+            else: # two-sided
+                 lcl_log = beta_hat
+                 ucl_log = beta_hat
+        elif df_cox == 0 : # n=1, t-distribution ppf will fail for df=0
+             warnings.warn(f"Degrees of freedom is 0 (n=1) in ci_cox, returning NaN CI.", RuntimeWarning)
+             return {"LCL": np.nan, "UCL": np.nan}
+        else:
+            # Using t-distribution as hypothesized for EnvStats::ci.normal.approx behavior
+            if ci_type == "two-sided":
+                if alpha == 1.0: # conf_level is 0, alpha/2 is 0.5
+                    t_val = 0.0 # t.ppf(0.5, df) is 0
+                elif alpha == 0.0: # conf_level is 1, alpha/2 is 0
+                     t_val = float("inf") # t.ppf(1.0, df) is inf
+                else:
+                    t_val = t.ppf(1.0 - alpha / 2.0, df_cox)
+                
+                lcl_log = beta_hat - t_val * se_beta_hat
+                ucl_log = beta_hat + t_val * se_beta_hat
+            elif ci_type == "lower":
+                if alpha == 1.0: # conf_level is 0
+                    t_val = 0.0 # t.ppf(0.5, df) is 0, lcl = beta_hat
+                elif alpha == 0.0: # conf_level is 1
+                     t_val = float("inf") # t.ppf(1.0, df) is inf, lcl = -inf
+                else:
+                    t_val = t.ppf(1.0 - alpha, df_cox) 
+                lcl_log = beta_hat - t_val * se_beta_hat
+                ucl_log = float("inf")
+            elif ci_type == "upper":
+                if alpha == 1.0: # conf_level is 0
+                    t_val = 0.0 # ucl = beta_hat
+                elif alpha == 0.0: # conf_level is 1
+                     t_val = float("inf") # ucl = inf
+                else:
+                    t_val = t.ppf(1.0 - alpha, df_cox) 
+                lcl_log = float("-inf")
+                ucl_log = beta_hat + t_val * se_beta_hat
+            else:
+                raise ValueError(f"Invalid ci_type: {ci_type}. Must be 'two-sided', 'lower', or 'upper'.")
+
+        # Exponentiate, handling -inf, inf, and nan
+        LCL = np.nan
+        if lcl_log == float("-inf"):
+            LCL = float("-inf")
+        elif not np.isnan(lcl_log): # np.isnan handles np.nan
+            try:
+                LCL = math.exp(lcl_log)
+            except OverflowError: # If lcl_log is huge
+                LCL = float("inf") 
+        
+        UCL = np.nan
+        if ucl_log == float("inf"):
+            UCL = float("inf")
+        elif not np.isnan(ucl_log):
+            try:
+                UCL = math.exp(ucl_log)
+            except OverflowError: # If ucl_log is huge
+                UCL = float("inf")
+        
+        return {"LCL": LCL, "UCL": UCL}
+
+    # Land method starts here
+    def lands_cond_t_prop_density_polar(theta, nu, zeta):
+        return np.exp((nu - 1) * np.log(np.cos(theta)) - (nu / 2) * np.log(nu) + (1 + nu) * zeta * np.sin(theta))
+
+    def lands_cond_t_prop_density(tau, nu, zeta):
+        return ((nu + tau**2) ** (-(nu + 1) / 2)) * np.exp(((nu + 1) * zeta * tau) / np.sqrt(nu + tau**2))
+
+
+    def qlands_t(p, nu, zeta, tol=np.finfo(float).eps**0.9):
+        if not (0 <= p <= 1):
+            raise ValueError("'p' must be between 0 and 1")
+        if nu < 2:
+            raise ValueError("'nu' must be >= 2")
+
+        if p == 0:
+            return -np.inf
+        if p == 1:
+            return np.inf
+
+        # Find theta_max for normalization
+        def fcn(theta):
+            return -(nu - 1) * np.tan(theta) + (1 + nu) * zeta * np.cos(theta)
+
+        sol = root_scalar(fcn, bracket=[-np.pi/2 + 1e-8, np.pi/2 - 1e-8], method='brentq', xtol=tol, maxiter=10000)
+        theta_max = sol.root
+        #print(f"[DEBUG] theta_max = {theta_max}")
+
+        # Adjust for p > 0.5
+        if p > 0.5:
+            new_zeta = -zeta
+            new_p = 1 - p
+            invert = True
+        else:
+            new_zeta = zeta
+            new_p = p
+            invert = False
+
+        #print(f"[DEBUG] p: {p}, new_p: {new_p}, zeta: {zeta}, new_zeta: {new_zeta}, invert: {invert}")
+
+        # Build density function with new_zeta
+        try:
+            test_val = lands_cond_t_prop_density_polar(theta_max, nu, new_zeta)
+            if np.isfinite(test_val):
+                scaling_factor, _ = quad(lands_cond_t_prop_density_polar, -np.pi/2, np.pi/2, args=(nu, new_zeta))
+                def density(theta):
+                    return lands_cond_t_prop_density_polar(theta, nu, new_zeta) / scaling_factor
+                #print(f"[DEBUG] Scaling factor (new_zeta={new_zeta}) = {scaling_factor}")
+            else:
+                raise Exception
+        except:
+            def quasi_density(theta, ln_c):
+                return np.exp(ln_c + (nu - 1) * np.log(np.cos(theta)) - (nu / 2) * np.log(nu) + (1 + nu) * new_zeta * np.sin(theta))
+
+            def fcn_to_minimize(ln_c):
+                integral, _ = quad(lambda theta: quasi_density(theta, ln_c), -np.pi/2, np.pi/2)
+                return (integral - 1)**2
+
+            start = -((nu - 1) * np.log(np.cos(theta_max)) - (nu / 2) * np.log(nu) + (1 + nu) * new_zeta * np.sin(theta_max))
+            res = minimize(fcn_to_minimize, x0=start, method='Nelder-Mead')
+            ln_c = res.x[0]
+
+            def density(theta):
+                return quasi_density(theta, ln_c)
+
+            #print(f"[DEBUG] Used fallback normalization constant ln_c (new_zeta={new_zeta}) = {ln_c}")
+
+        # Root of cumulative density - p
+        def integral_root(theta_val):
+            val, _ = quad(density, -np.pi/2, theta_val)
+            return val - new_p
+
+        root = root_scalar(integral_root, bracket=[-np.pi/2 + 1e-8, np.pi/2 - 1e-8], xtol=tol, maxiter=10000, method='brentq')
+        theta_quantile = root.root
+        quant = np.sqrt(nu) * np.tan(theta_quantile)
+
+        #print(f"[DEBUG] Root (theta_quantile): {theta_quantile}")
+        #print(f"[DEBUG] Raw quantile (before sign correction): {quant}")
+
+        return -quant if invert else quant
+
+    @staticmethod
+    def lands_C_old(S, nu, conf_level):
+        if S < np.finfo(float).eps:
+            raise ValueError("'S' must be positive")
+        if nu < 2:
+            raise ValueError("'nu' must be greater than or equal to 2")
+        if conf_level < 0 or conf_level > 1:
+            raise ValueError("'conf_level' must be between 0 and 1")
+
+        alpha = 1 - conf_level
+
+        def fcn_to_minimize(m):
+            T_m = (np.sqrt(nu + 1) * ((-S**2) / 2 - m)) / S
+            zeta_m = (-S * np.sqrt(nu + T_m**2)) / (2 * np.sqrt(nu + 1))
+            return (T_m - Stats.qlands_t(alpha, nu, zeta_m))**2
+
+        start_T_m = (-np.sqrt(nu + 1) * S) / 2
+        start_zeta_m = (-S * np.sqrt(nu + start_T_m**2)) / (2 * np.sqrt(nu + 1))
+        start_T_m = Stats.qlands_t(1 - conf_level, nu, start_zeta_m)
+        start_m = ((-S**2) / 2) - (S * start_T_m) / np.sqrt(nu + 1)
+
+        result = minimize(fcn_to_minimize, start_m)
+
+        m = result.x[0]
+        return (m * np.sqrt(nu)) / S
+
+    @staticmethod
+    def lands_C(S: float, nu: int, conf_level: float, tol: float = 1e-8, maxiter: int = 100) -> float:
+        """
+        Compute the constant C for Land's method, 
+        matching R's lands.C(S, nu, conf.level).
 
         Parameters
         ----------
-        mu_hat : float
-            Mean value of the lognormal dataset.
-        sigma2_hat : float
-            Unbiased variance value of the lognormal dataset.
-        n : int
-            Number of samples.
-        ci_type : string
-            Whether to compute the one sided or two sided onfidence interval. Accepted values are "two-sided" and "one-sided". Default is "two-sided".
+        S : float
+            Must be > 0.
+        nu : int
+            Degrees of freedom, >= 2.
         conf_level : float
-            Confidence level for the computation of the confidence interval. Default is 0.95.
+            Confidence level between 0 and 1.
+        tol : float
+            Tolerance for minimization.
+        maxiter : int
+            Maximum iterations for the optimizer.
+
         Returns
         -------
-        Intervals : dictionary
-            Dictionary containing the LCL (Lower Confidence Limit) and UCL (Upper Confidence Limit) values.
+        C : float
         """
-        alpha = 1 - conf_level
-        df = n - 1
-        ci_type = ci_type.lower()
+        if S <= np.finfo(float).eps:
+            raise ValueError("'S' must be positive")
+        if nu < 2 or int(nu) != nu:
+            raise ValueError("'nu' must be an integer >= 2")
+        if not (0 < conf_level < 1):
+            raise ValueError("'conf_level' must be between 0 and 1")
 
-        # Point estimate of mean on log scale plus half variance
-        beta_hat = mu_hat + (sigma2_hat / 2)
+        alpha = 1.0 - conf_level
 
-        # Cox standard error formula
-        se_beta_hat = math.sqrt(sigma2_hat / n + (sigma2_hat ** 2) / (2 * (n + 1)))
+        # objective(m) = [T(m) - qlands_t(alpha; nu, zeta(m))]^2
+        def objective(m):
+            Tm = (np.sqrt(nu + 1) * ((-S**2) / 2 - m)) / S
+            zeta_m = (-S * np.sqrt(nu + Tm**2)) / (2 * np.sqrt(nu + 1))
+            q = Stats.qlands_t(alpha, nu, zeta_m)
+            return (Tm - q) ** 2
 
-        # z critical value
-        z = norm.ppf(1 - alpha / 2) if ci_type == "two-sided" else norm.ppf(1 - alpha)
+        # initial guess for m via R's logic
+        # Tm0  = qlands_t(1-alpha, nu, zeta0)
+        Tm0 = Stats.qlands_t(1 - conf_level, nu,
+                       (-S * np.sqrt(nu + ((-np.sqrt(nu + 1)*S/2)**2))) /
+                       (2 * np.sqrt(nu + 1)))
+        m0 = (-S**2) / 2 - (S * Tm0) / np.sqrt(nu + 1)
+
+        # bracket ±S^2 around that start
+        bracket = (m0 - S**2, m0 + S**2)
+
+        # Brent's method on a bounded interval is often more robust:
+        res = minimize_scalar(
+            objective,
+            method='bounded',
+            bounds=bracket,
+            options={'xatol': tol, 'maxiter': maxiter}
+        )
+
+        if not res.success:
+            # fallback to Brent unrestricted
+            res = minimize_scalar(objective, bracket=bracket, method='Brent', tol=tol)
+            if not res.success:
+                raise RuntimeError("lands_C minimization failed to converge")
+
+        m_star = res.x
+        return (m_star * np.sqrt(nu)) / S
+
+    @staticmethod
+    def ci_land(lambda_, mu_hat, sig_sq_hat, n, nu, gamma_sq, ci_type="two-sided", conf_level=0.95):
+        if np.abs(lambda_) < np.finfo(float).eps:
+            raise ValueError("'lambda' cannot be 0")
+        if sig_sq_hat < np.finfo(float).eps:
+            raise ValueError("'sig_sq_hat' must be larger than 0")
+        if nu < 2 or nu != int(nu):
+            raise ValueError("'nu' must be an integer greater than or equal to 2")
+        if gamma_sq < np.finfo(float).eps:
+            raise ValueError("'gamma_sq' must be larger than 0")
+        if conf_level < 0.5 or conf_level >= 1:
+            raise ValueError("'conf_level' must be at least 50% and less than 100%")
+
+        k = (nu + 1) / (2 * lambda_ * gamma_sq)
+        S = np.sqrt((2 * lambda_ * sig_sq_hat) / k)
 
         if ci_type == "two-sided":
-            lcl = beta_hat - z * se_beta_hat
-            ucl = beta_hat + z * se_beta_hat
+            alpha = (1 - conf_level) / 2
+            lcl = mu_hat + lambda_ * sig_sq_hat + ((k * S) / np.sqrt(nu)) * Stats.lands_C(S, nu, alpha)
+            ucl = mu_hat + lambda_ * sig_sq_hat + ((k * S) / np.sqrt(nu)) * Stats.lands_C(S, nu, 1 - alpha)
         elif ci_type == "lower":
-            lcl = beta_hat - z * se_beta_hat
-            ucl = math.inf
+            lcl = mu_hat + lambda_ * sig_sq_hat + ((k * S) / np.sqrt(nu)) * Stats.lands_C(S, nu, 1 - conf_level)
+            ucl = np.inf
         elif ci_type == "upper":
-            lcl = -math.inf
-            ucl = beta_hat + z * se_beta_hat
+            lcl = -np.inf
+            ucl = mu_hat + lambda_ * sig_sq_hat + ((k * S) / np.sqrt(nu)) * Stats.lands_C(S, nu, conf_level)
         else:
-            raise ValueError("ci_type must be 'two-sided', 'lower', or 'upper'")
+            raise ValueError("Invalid ci_type. Choose from 'two-sided', 'lower', or 'upper'.")
 
-        # Transform back to original scale
-        lcl_exp, ucl_exp = sorted([math.exp(lcl), math.exp(ucl)])
-        return {"LCL": lcl_exp, "UCL": ucl_exp}
+        return {
+            "LCL": lcl,
+            "UCL": ucl,
+            "parameter": f"mu + {lambda_}*(sigma^2)",
+            "type": ci_type,
+            "method": "Land",
+            "conf_level": conf_level,
+            "sample_size": n,
+            "dof": nu
+        }
+
+    
+    @staticmethod
+    def ci_lnorm_land(mu_hat, sigma2_hat, n, ci_type='two-sided', conf_level=0.95):
+        result = Stats.ci_land(
+            lambda_=0.5,
+            mu_hat=mu_hat,
+            sig_sq_hat=sigma2_hat,
+            n=n,
+            nu=n - 1,
+            gamma_sq=n,
+            ci_type=ci_type,
+            conf_level=conf_level
+        )
+        
+        result['LCL'] = np.exp(result['LCL'])
+        result['UCL'] = np.exp(result['UCL'])
+        result['parameter'] = "mean"
+
+        return result
 
 
 
