@@ -8,7 +8,6 @@ PyCO2stats.egg-info/requires.txt
 PyCO2stats.egg-info/top_level.txt
 pyco2stats/Visualize_mpl.py
 pyco2stats/__init__.py
-pyco2stats/env_stats_py.py
 pyco2stats/gaussian_mixtures.py
 pyco2stats/propagate_errors.py
 pyco2stats/sinclair.py
