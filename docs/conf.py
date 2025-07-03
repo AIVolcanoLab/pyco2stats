@@ -9,6 +9,7 @@ release = '0.1.9'
 
 # Add any Sphinx extension module names here, as strings.
 extensions = [
+    'myst_nb'                    # for notebooks
     'sphinx.ext.autodoc',        # Auto-document docstrings
     'sphinx.ext.napoleon',       # Support for Google/NumPy-style docstrings
     'sphinx.ext.intersphinx',    # Link to other project's documentation
