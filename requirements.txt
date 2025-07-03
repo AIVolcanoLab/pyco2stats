@@ -41,3 +41,6 @@ zipp==3.19.2
 tqdm==4.66.1
 sphinx
 sphinx_rtd_theme
+nbsphinx
+nbconvert
+jupyter
