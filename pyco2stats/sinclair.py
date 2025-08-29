@@ -7,6 +7,9 @@ of polymodal values into two or more log-normal sub-populations. The method is b
 multiple superimposed log-normal populations plots as a series of joined straight-line segments with
 different slopes. Each straight-line segment represents a distinct statistical population, while changes in the slope of the curve (inflection points) indicate threshold values between different populations.
 
+Sinclair, A. J. (1974). “Selection of threshold values in geochemical data using probability graphs”. Journal of Geochemical
+Exploration 3(2), pages 129–149. doi: 10.1016/0375-6742(74)90030-2
+
 """
 
 class Sinclair:
