@@ -1,4 +1,4 @@
-How to cite
+Citation
 ============================
 
 If you use **pyco2stats** in your research, please cite:
