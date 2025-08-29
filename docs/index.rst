@@ -11,7 +11,7 @@ Introduction
 
 PyCO2stats is an open-source Python library designed to perform statistical analysis and modelling of CO2 fluxes and geochemical data analysis.
 
-PyCO2stats integrates classical and modern statistical techniques, including descriptive statystics (i.e. mean, standard deviation) and more complex analysis, such as the Gaussian Mixture Models (GMM), the Sinclair method, robust estimator for log-normal data and the Monte Carlo-based uncertainty propagation. The free library meets the transparency and reproducibility requirements and is user-friendly, being suited to be used by both Python expert and novice users.
+PyCO2stats integrates classical and modern statistical techniques, including descriptive statystics (i.e. mean, standard deviation) and more complex analysis, such as the Gaussian Mixture Models (GMM), the Sinclair method, robust estimator for log-normal data and the Monte Carlo-based uncertainty propagation. The free library meets the transparency and reproducibility requirements and is user-friendly, being suited to be used by both Python experts and novice users.
 
 In detail, pyco2stats is composed of 6 main classes:
    * **GMM**: this class allows to perform Gaussian Mixture Models (GMM). It enables the generation of synthetic datasets and the application of different approaches for the analysis of data with GMM;
