@@ -5,6 +5,15 @@ from sklearn.exceptions import ConvergenceWarning # sklearn GMM might raise this
 from pyco2stats.gaussian_mixtures import GMM
 from tqdm import tqdm
 
+"""
+The Propagate_Errors class is aimed to perform the Monte Carlo error propagation in order to quantify the uncertainty
+of fitted Gaussian Mixture Model (GMM) parameters. The class permits to estimate the effect of "analytical" uncertainties
+ on single observations on GMM results and enables to evaluate the effect of parameters (i.e. n° of observations)
+ on the final estimates. The Propagate_Errors assumes input data are normally-distributed, therefore log-transformation of 
+ raw data is required.
+ 
+"""
+
 class Propagate_Errors:
     """
     A class to perform Monte Carlo error propagation for Gaussian Mixture Models (GMMs)
