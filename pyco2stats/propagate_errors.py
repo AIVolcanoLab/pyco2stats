@@ -431,6 +431,4 @@ class Propagate_Errors:
         print(f"  Mean Weights: {mean_weights}")
         print(f"  Median Weights: {median_weights}")
         print(f"  CI (2.5% - 97.5%) Weights: {ci_weights}")
-
-
         
