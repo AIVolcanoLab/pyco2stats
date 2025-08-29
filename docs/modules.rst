@@ -1,11 +1,27 @@
-Pyco2stats Modules
-==================
+PyCO2stats API Reference
+========================
+
+This section documents the public API. Classes and functions are grouped by module.
+
+.. rubric:: Modules
+
+.. autosummary::
+   :toctree: api
+   :recursive:
+
+   pyco2stats.gaussian_mixtures
+   pyco2stats.sinclair
+   pyco2stats.stats
+   pyco2stats.propagate_errors
+   pyco2stats.visualize_mpl
+   pyco2stats.visualize_plotly
+
+.. rubric:: Full module pages
 
 .. automodule:: pyco2stats.gaussian_mixtures
    :members:
    :undoc-members:
    :show-inheritance:
-
 
 .. automodule:: pyco2stats.sinclair
    :members:
