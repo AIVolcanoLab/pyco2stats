@@ -1,10 +1,12 @@
 Pyco2stats Modules
 ==================
 
+ciao ciao
 .. automodule:: pyco2stats.gaussian_mixtures
    :members:
    :undoc-members:
    :show-inheritance:
+
 
 .. automodule:: pyco2stats.sinclair
    :members:
