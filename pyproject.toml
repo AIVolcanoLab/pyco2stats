@@ -4,13 +4,13 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "pyco2stats"
-version = "0.1.12"
+version = "0.1.21"
 description="A package for statistical analysis and plotting in the context of CO2 data"
 license = { file = "License.txt" }
 readme = "README.md"
-authors = [{name = "Maurizio Petrelli", email = "maurizio.petrelli@unipg.it"}, { name = "Marco Baroni", email = "mbaroni96@gmail.com"}, { name = "Alessandra Ariano", email = "alessandra.ariano@dottorandi.unipg.it"}]
+authors = [{ name = "Maurizio Petrelli", email = "maurizio.petrelli@unipg.it" }, { name = "Marco Baroni", email = "mbaroni96@gmail.com" }, { name = "Alessandra Ariano", email = "alessandra.ariano@dottorandi.unipg.it" }, { name = "Lisa Ricci", email = "lisa.ricci@collaboratori.unipg.it" }]
 
-dependencies = ["torch>=2.0", "astropy>=7.0", "numpy>=1.18.0", "scipy>=1.4.0", "matplotlib>=3.1.0", "scikit-learn", "statsmodels", "pandas", "openpyxl", "ipywidgets", "notebook", "jupyterlab"]
+dependencies = ["torch>=2.0", "astropy>=7.0", "numpy>=1.18.0", "scipy>=1.4.0", "matplotlib>=3.1.0", "plotly>=6.2", "kaleido", "dash", "dash_daq", "dash-bootstrap-components", "scikit-learn", "statsmodels", "pandas", "openpyxl", "ipywidgets>=8", "notebook", "jupyterlab", "jupyterlab_widgets>= 3"]
 requires-python = ">=3.10"
 
 [project.urls]
