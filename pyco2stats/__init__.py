@@ -1,4 +1,4 @@
-__author__ = 'Maurizio Petrelli, Alessandra Ariano'
+__author__ = 'Maurizio Petrelli, Alessandra Ariano, Marco Baroni'
 
 
 # PyCO2stats/__init__.py
