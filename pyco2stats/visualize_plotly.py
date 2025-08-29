@@ -452,4 +452,3 @@ class Visualize_Plotly:
                 fig.add_trace(line)
 
             return pts, line
-
