@@ -3,7 +3,7 @@
 Welcome to pyco2stats’s documentation!
 ======================================
 
-PyCO2stats is an open-source Python library designed to perform statistical analysis and modelling of CO2 fluxes and geochemical data analysis.
+In this documentation you will found:
 
 .. toctree::
    :maxdepth: 2
