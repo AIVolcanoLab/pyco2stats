@@ -455,4 +455,5 @@ class GMM:
             samples[i] = rng.normal(loc=chosen_mean, scale=chosen_std)
 
         return samples
+        
 
