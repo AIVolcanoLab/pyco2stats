@@ -15,9 +15,3 @@ PyCO2stats is an open-source Python library designed to perform statistical anal
    notebooks
    citation
 
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
