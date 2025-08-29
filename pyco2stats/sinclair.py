@@ -1,6 +1,14 @@
 import numpy as np
 from scipy.stats import norm
 
+"""
+The Sinclair method [Sinclair, 1974] is a reliable graphical procedure aimed to partition datasets
+of polymodal values into two or more log-normal sub-populations. The method is based on the evidence that, on a cumulative probability plot, a dataset composed of
+multiple superimposed log-normal populations plots as a series of joined straight-line segments with
+different slopes. Each straight-line segment represents a distinct statistical population, while changes in the slope of the curve (inflection points) indicate threshold values between different populations.
+
+"""
+
 class Sinclair:
     """
     Implements transformations between cumulative probabilities
