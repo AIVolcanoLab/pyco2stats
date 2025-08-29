@@ -5,6 +5,12 @@ from scipy.stats import norm
 from .sinclair import Sinclair
 from .gaussian_mixtures import GMM
 
+"""
+The Visualize classes are meant to provide tools to create graphical representations related to pyco2stats analyzed data.
+Visualize_Mpl relies on the Plotly library.
+
+"""
+
 class Visualize_Plotly:
     """
     Plotly-based Sinclair-style probability plots for raw data and GMMs.
