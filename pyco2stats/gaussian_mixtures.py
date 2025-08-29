@@ -7,6 +7,11 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.exceptions import ConvergenceWarning
 import warnings
 
+"""
+
+
+"""
+
 class GMM:
     @staticmethod
     def gaussian_mixture_em(data, n_components, max_iter=10000, tol=1e-7, random_state=None):
