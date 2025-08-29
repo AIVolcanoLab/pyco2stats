@@ -35,6 +35,13 @@ from scipy.stats import norm as norm_distribution # da mettere a posto norm è r
 
 import functools
 
+
+'''
+The Stats class includes a variety of statistical methodologies to analyze CO2 flux data and geochemical samplings in environmental and volcanic systems.
+Stats comprises robust statistics (i.e. biweight estimators, sigma-clipping, data-trimming,winsorizing procedures) and specific tools to estimate the
+central tendency and confidence intervals of log-normally distributed data.
+'''
+
 def deprecated(reason):
     def decorator(func):
         @functools.wraps(func)
