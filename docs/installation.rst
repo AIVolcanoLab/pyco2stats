@@ -9,14 +9,15 @@ Prerequisites
 
 We recommend using a virtual environment (``venv`` or ``conda``) to keep your dependencies isolated.
 
+To create a new environment using venv, in the anaconda or command prompt write and run, row by row:
 
-To create a new environment using venv:
 .. code-block:: bash
 
    python -m venv venv
    source venv/bin/activate   # On Windows: venv\Scripts\activate
 
 While with conda:
+
 .. code-block:: bash
 
   conda create -n pyco2env python=3.10
@@ -25,7 +26,7 @@ While with conda:
 Installing from PyPI
 --------------------
 
-The easiest way to install the latest stable release of pyco2stats is:
+The easiest way to install the latest stable release of pyco2stats is the following. In the anaconda or command prompt write and run, row by row:
 
 .. code-block:: bash
 
@@ -36,13 +37,13 @@ This will also install all required dependencies (NumPy, SciPy, pandas, matplotl
 Installing from Source
 ----------------------
 
-If you want the latest development version:
+If you want the latest development version, in the anaconda or command prompt write and run, row by row:
 
 .. code-block:: bash
 
    pip install git+https://github.com/AIVolcanoLab/pyco2stats.git
 
-Alternatively, clone the repository manually and install in *editable* mode:
+Alternatively, clone the repository manually and install in *editable* mode. In the anaconda or command prompt write and run, row by row:
 
 .. code-block:: bash
 
