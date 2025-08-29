@@ -12,6 +12,5 @@ In this documentation you will found:
    introduction
    installation
    modules
-   notebooks
    citation
 
