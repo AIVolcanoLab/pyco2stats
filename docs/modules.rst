@@ -1,13 +1,9 @@
-PyCO2stats API Reference
+PyCO2stats Modules
 ========================
 
 This section documents the public API. Classes and functions are grouped by module.
 
 .. rubric:: Modules
-
-.. autosummary::
-   :toctree: api
-   :recursive:
 
    pyco2stats.gaussian_mixtures
    pyco2stats.sinclair
