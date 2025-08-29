@@ -8,7 +8,9 @@ from sklearn.exceptions import ConvergenceWarning
 import warnings
 
 """
-
+Gaussian Mixture Models (GMMs) are probabilistic models that assume data points are composed by a mixture of several
+Gaussian distributions with unknown parameters.  GMMs allow the decomposition of a complex dataset into a set of
+simpler, underlying Gaussian components.
 
 """
 
