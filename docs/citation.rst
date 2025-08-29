@@ -1,3 +1,6 @@
+How to cite
+============================
+
 If you use **pyco2stats** in your research, please cite:
 
 Petrelli, M., Ariano, A., Baroni, M., Ricci, L., Ágreda-López, M., Frondini, F., Saldi, G., Cardellini, C., Perugini, D., Chiodini, G.
