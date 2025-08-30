@@ -7,16 +7,9 @@ via the Python Package Index (PyPI) or directly from the source repository on Gi
 Prerequisites
 -------------
 
-We recommend using a virtual environment (``venv`` or ``conda``) to keep your dependencies isolated.
+We recommend using a virtual environment to keep your dependencies isolated.
 
 To create a new environment using venv, in the anaconda or command prompt write and run, row by row:
-
-.. code-block:: bash
-
-   python -m venv venv
-   source venv/bin/activate   # On Windows: venv\Scripts\activate
-
-While with conda:
 
 .. code-block:: bash
 
