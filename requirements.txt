@@ -13,7 +13,7 @@ fonttools==4.53.1
 fsspec==2024.6.1
 importlib_metadata==8.2.0
 importlib_resources==6.4.0
-Jinja2==3.1.4
+Jinja2>=3.1.6
 kiwisolver==1.4.5
 MarkupSafe==2.1.5
 matplotlib==3.7.5
@@ -34,7 +34,7 @@ spectral==0.23.1
 sympy==1.13.1
 scikit-learn == 1.5
 statsmodels == 0.14
-torch==2.4.0
+torch>=2.7.1
 typing_extensions==4.12.2
 tzdata==2024.1
 zipp==3.19.2
