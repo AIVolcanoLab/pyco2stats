@@ -12,6 +12,8 @@ Here are interactive demonstrations to show the capabilities of **pyco2stats**.
    notebooks/Figure_Stats.ipynb
    notebooks/Figure_Montecarlo.ipynb
    notebooks/Sinclair.ipynb
+   notebooks/Figure_Visualize_1.ipynb
+   notebooks/Figure_Visualize_2.ipynb
 
 
 
