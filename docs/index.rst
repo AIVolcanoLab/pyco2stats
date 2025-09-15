@@ -11,6 +11,7 @@ In this documentation you will found:
 
    introduction
    installation
-   modules
    citation
+   notebooks
+   modules
 
