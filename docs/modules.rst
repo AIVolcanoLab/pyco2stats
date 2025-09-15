@@ -1,7 +1,7 @@
-PyCO2stats Modules
-========================
+PyCO2stats Function Description
+===============================
 
-This section documents the public API. Classes and functions are grouped by module.
+This section documents all the functions of PyCO2stats, grouped by module.
 
 .. rubric:: Modules
 
