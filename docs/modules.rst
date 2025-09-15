@@ -26,6 +26,7 @@ This section documents all the functions of PyCO2stats, grouped by module.
 
 .. automodule:: pyco2stats.stats
    :members:
+   :exclude-members: deprecated
    :undoc-members:
    :show-inheritance:
 
