@@ -20,11 +20,10 @@ extensions = [
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
+html_static_path = ['_static']
 
 # The theme to use for HTML and HTML Help pages.
 html_theme = 'sphinx_rtd_theme'
 
 # List of patterns, relative to source directory, that match files and directories to ignore when looking for source files.
 exclude_patterns = []
-
-html_static_path = ['_static']
