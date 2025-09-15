@@ -19,7 +19,7 @@ To create a new environment using conda, in the anaconda or command prompt write
 Installing from PyPI
 --------------------
 
-The easiest way to install the latest stable release of pyco2stats is the following. In the anaconda or command prompt write and run, row by row:
+The easiest way to install the latest stable release of pyco2stats is the following. In the anaconda or command prompt write and run:
 
 .. code-block:: bash
 
@@ -30,7 +30,7 @@ This will also install all required dependencies (NumPy, SciPy, pandas, matplotl
 Installing from Source
 ----------------------
 
-If you want the latest development version, in the anaconda or command prompt write and run, row by row:
+If you want the latest development version, in the anaconda or command prompt write and run:
 
 .. code-block:: bash
 
