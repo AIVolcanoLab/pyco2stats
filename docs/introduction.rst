@@ -17,8 +17,6 @@ The library includes six main components:
    :alt: Visual representation of PyCO2stats library.
    :width: 1000px
    :align: center
-Visual representation of PyCO2stats library.
-
 
 PyCO2stats is actively maintained. Feature requests and bug reports are welcome via GitHub issues and pull requests.
 
