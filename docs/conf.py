@@ -24,6 +24,16 @@ html_static_path = ['_static']
 
 # The theme to use for HTML and HTML Help pages.
 html_theme = 'sphinx_rtd_theme'
+html_theme_options = {
+    "repository_url": "https://github.com/your-org/your-repo",
+    "use_repository_button": True,
+    "use_issues_button": True,
+    "use_download_button": True,
+    "launch_buttons": {
+        "binderhub_url": "https://mybinder.org",
+        "notebook_interface": "jupyterlab",
+    },
+}
 
 # List of patterns, relative to source directory, that match files and directories to ignore when looking for source files.
 exclude_patterns = []
