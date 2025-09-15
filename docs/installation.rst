@@ -9,7 +9,7 @@ Prerequisites
 
 We recommend using a virtual environment to keep your dependencies isolated.
 
-To create a new environment using conda, in the anaconda or command prompt write and run, row by row:
+To create a new environment, in the anaconda or command prompt write and run, row by row:
 
 .. code-block:: bash
 
