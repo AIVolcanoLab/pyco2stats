@@ -7,13 +7,10 @@ Here are interactive demonstrations to show the capabilities of **pyco2stats**.
 .. toctree::
    :maxdepth: 1
 
-   notebooks/Figure_GMM.ipynb
-   notebooks/Figure_GMM_sampling.ipynb
-   notebooks/Figure_Stats.ipynb
-   notebooks/Figure_Montecarlo.ipynb
+   notebooks/GMM2.ipynb
+   notebooks/Stats.ipynb
+   notebooks/Montecarlo.ipynb
    notebooks/Sinclair.ipynb
-   notebooks/Figure_Visualize_1.ipynb
-   notebooks/Figure_Visualize_2.ipynb
 
 
 
