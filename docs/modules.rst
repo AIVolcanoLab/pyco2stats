@@ -1,5 +1,5 @@
-PyCO2stats Function Description
-===============================
+PyCO2stats Functions
+====================
 
 This section documents all the functions of PyCO2stats, grouped by module.
 
