@@ -6,8 +6,6 @@ Step 1: Installing Anaconda
 ---------------------------
 First, install 'Anaconda <https://www.anaconda.com/download/success>'_ for your OS.
 
-`Thermobar <https://www.jvolcanica.org/ojs/index.php/volcanica/article/view/161>`_
-
 Step 2: Installing PyCO2stats
 -----------------------------
 To create a new environment in the anaconda (or command prompt) write and run, row by row:
