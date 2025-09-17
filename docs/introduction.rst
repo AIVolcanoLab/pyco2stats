@@ -1,5 +1,5 @@
-Introduction
-------------
+Introduction and Citation
+============================
 
 PyCO2stats is an open-source Python library designed to perform statistical analysis and modelling of CO2 fluxes and geochemical data analysis.
 
@@ -21,3 +21,14 @@ The library includes six main components:
 PyCO2stats is actively maintained. Feature requests and bug reports are welcome via GitHub issues and pull requests.
 
 **GitHub:** `AIVolcanoLab/pyco2stats <https://github.com/AIVolcanoLab/pyco2stats>`_
+
+Citation
+----------------------------
+
+If you use **pyco2stats** in your research, please cite:
+
+Petrelli, M., Ariano, A., Baroni, M., Ricci, L., Ágreda-López, M., Frondini, F., Saldi, G., Cardellini, C., Perugini, D., Chiodini, G.
+**PyCO2stats: A Python Library for Statistical Modeling of CO2 Fluxes and Geochemical Population Analysis in Volcanic and Environmental Systems**.
+*Journal/venue*, Year, DOI: XXX.
+
+**Link to the paper here**
