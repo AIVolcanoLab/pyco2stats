@@ -8,7 +8,7 @@ First, install `Anaconda <https://www.anaconda.com/download/success>`_ for your 
 
 Step 2: Installing PyCO2stats
 -----------------------------
-To create a new environment in the anaconda (or command prompt) write and run, row by row:
+To create a new environment in the anaconda prompt write and run, row by row:
 
 .. code-block:: bash
 
