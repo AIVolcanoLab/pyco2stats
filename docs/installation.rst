@@ -1,11 +1,10 @@
 Installation
 ============
-
-We recommend using a virtual environment to keep your dependencies isolated. We strongly suggest installing pyCO2 in a [Conda environment](https://docs.conda.io/projects/conda/en/latest/user-guide/getting-started.html).
+We recommend using a virtual environment to keep your dependencies isolated. We strongly suggest installing pyCO2 in a 'Conda environment <https://docs.conda.io/projects/conda/en/latest/user-guide/getting-started.html>'.
 
 Step 1: Installing Anaconda
 ---------------------------
-First, install [Anaconda](https://www.anaconda.com/download/success) for your OS.
+First, install 'Anaconda <https://www.anaconda.com/download/success>' for your OS.
 
 Step 2: Installing PyCO2stats
 -----------------------------
