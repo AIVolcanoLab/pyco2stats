@@ -11,7 +11,6 @@ In this documentation you will found:
 
    introduction
    installation
-   citation
    notebooks
    modules
 
