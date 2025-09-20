@@ -21,7 +21,7 @@ The library includes six main components:
    :width: 1000px
    :align: center
 
-\n
+
 PyCO2stats is actively maintained. Feature requests and bug reports are welcome via GitHub issues and pull requests.
 
 **GitHub:** `AIVolcanoLab/pyco2stats <https://github.com/AIVolcanoLab/pyco2stats>`_
