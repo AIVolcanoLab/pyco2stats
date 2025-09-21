@@ -46,18 +46,6 @@ Alternatively, clone the repository manually and install in editable mode. In th
 
 This setup allows you to track changes to the source code without reinstalling.
 
-Step 4: Testing
----------------
-
-After installation, open a Python session and run:
-
-.. code-block:: bash
-
-  import pyco2stats
-  print(pyco2stats.__version__)
-
-If no error appears and the version is printed, the installation was successful.
-
 Troubleshooting
 ---------------
 
