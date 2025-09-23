@@ -16,7 +16,6 @@ extensions = [
     'sphinx.ext.viewcode',       # Add links to highlighted source code
     'sphinx.ext.mathjax',        # LaTeX math rendering
     'sphinx.ext.autosummary',    # Generate function/class summary tables
-    'sphinx.ext.jupyter_sphinx', # interactive notebooks
 ]
 
 # Add any paths that contain templates here, relative to this directory.
