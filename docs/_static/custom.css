@@ -1,0 +1,6 @@
+.wy-nav-content {
+    max-width: 100% !important;   /* di default è tipo 800px */
+}
+.rst-content {
+    max-width: 100% !important;
+}
