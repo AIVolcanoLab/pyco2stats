@@ -40,6 +40,7 @@ tzdata==2024.1
 zipp==3.19.2
 tqdm==4.66.1
 sphinx
+sphinx_charts
 sphinx_rtd_theme
 nbsphinx
 nbconvert
