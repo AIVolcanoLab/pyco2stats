@@ -13,6 +13,3 @@ In this documentation you will found:
    installation
    notebooks
    modules
-
-The interactive resulting from the plotly version is:
-.. chart:: charts/test.json
