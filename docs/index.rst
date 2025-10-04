@@ -14,3 +14,5 @@ In this documentation you will found:
    notebooks
    modules
 
+The interactive resulting from the plotly version is:
+.. chart:: charts/test.json
