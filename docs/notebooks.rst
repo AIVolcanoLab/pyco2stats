@@ -18,3 +18,11 @@ The interactive plot resulting from the plotly version is:
 
    (optional caption here)
 
+Interactive Sinclair method made with Plotly (client-side)
+=============================
+
+.. raw:: html
+
+   <iframe src="_static/sinclairplotly.html"
+           width="100%" height="680" style="border:none;"></iframe>
+
