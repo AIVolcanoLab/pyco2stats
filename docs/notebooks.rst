@@ -10,9 +10,5 @@ Here are interactive demonstrations to show the capabilities of **pyco2stats**.
    notebooks/GMM2.ipynb
    notebooks/Stats.ipynb
    notebooks/Montecarlo.ipynb
-
-.. raw:: html
-
-   <iframe src="_static/Sinclair_Method_plotlyonly (1).html"
-           width="100%" height="680" style="border:none;"></iframe>
+   sinclair.rst
 
