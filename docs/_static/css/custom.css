@@ -1,0 +1,2 @@
+/* Make the main content area wider (RTD theme) */
+.wy-nav-content { max-width: 1200px; }  /* try 1100–1400px to taste */
