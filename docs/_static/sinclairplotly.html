@@ -1,0 +1,233 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>pyco2stats – Interactive GMM (no server)</title>
+
+  <!-- You may vendor these into docs/_static for offline use.
+       If you do, change src to _static/plotly.min.js and _static/jstat.min.js -->
+  <script src="https://cdn.jsdelivr.net/npm/plotly.js-dist-min@2.35.2/plotly.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jstat@1.9.6/dist/jstat.min.js"></script>
+
+  <style>
+    :root { --card: #ffffff; --muted:#6b7280; --line:#e5e7eb; }
+    body { margin: 0; font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif; background:#fff; }
+    .wrap { display: grid; grid-template-columns: 260px 1fr; gap: 16px; padding: 12px; }
+    .panel { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; align-content: start; }
+    .card { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 12px; box-shadow: 0 1px 2px rgba(0,0,0,.04); }
+    .card h3 { margin: 0 0 10px; font-size: 1.05rem; }
+    .row { display: grid; grid-template-columns: auto 1fr auto; gap: 8px; align-items: center; margin: 6px 0; }
+    .row label { color: var(--muted); }
+    input[type=range] { width: 100%; }
+    .readout { font-variant-numeric: tabular-nums; min-width: 3.8ch; text-align: right; }
+    table { width: 100%; border-collapse: collapse; font-size: .95rem; }
+    th, td { padding: 8px 10px; border-top: 1px solid var(--line); text-align: center; }
+    th { text-align: left; }
+    .muted { color: var(--muted); }
+    @media (max-width: 900px){ .wrap { grid-template-columns: 1fr; } .panel{ grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <!-- Controls (σ, μ, weight) for each population -->
+  <div class="panel">
+    <div class="card">
+      <h3>Pop 1</h3>
+      <div class="row"><label>σ</label>
+        <input id="sigma-0" type="range" min="0" max="2" step="0.01" value="0.60">
+        <span id="sigma-r-0" class="readout">0.60</span>
+      </div>
+      <div class="row"><label>μ</label>
+        <input id="mu-0" type="range" min="-3.5" max="3.5" step="0.01" value="0.70">
+        <span id="mu-r-0" class="readout">0.70</span>
+      </div>
+      <div class="row"><label>Weight</label>
+        <input id="w-0" type="range" min="0" max="1" step="0.01" value="0.40">
+        <span id="w-r-0" class="readout">0.40</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Pop 2</h3>
+      <div class="row"><label>σ</label>
+        <input id="sigma-1" type="range" min="0" max="2" step="0.01" value="0.40">
+        <span id="sigma-r-1" class="readout">0.40</span>
+      </div>
+      <div class="row"><label>μ</label>
+        <input id="mu-1" type="range" min="-3.5" max="3.5" step="0.01" value="2.00">
+        <span id="mu-r-1" class="readout">2.00</span>
+      </div>
+      <div class="row"><label>Weight</label>
+        <input id="w-1" type="range" min="0" max="1" step="0.01" value="0.60">
+        <span id="w-r-1" class="readout">0.60</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Plot -->
+  <div class="card">
+    <div id="plot" style="height:540px;"></div>
+    <!-- Small table like your Dash DataTable -->
+    <div style="margin-top:10px;">
+      <table>
+        <thead>
+          <tr><th class="muted">Population</th><th>μ</th><th>σ</th><th>Weight</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Pop 1</td><td id="t-mu-0">0.70</td><td id="t-sigma-0">0.60</td><td id="t-w-0">0.40</td></tr>
+          <tr><td>Pop 2</td><td id="t-mu-1">2.00</td><td id="t-sigma-1">0.40</td><td id="t-w-1">0.60</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ---- 1) Synthetic data (mirrors your Python)
+  const init = {
+    means:  [0.7, 2.0],
+    sigmas: [0.6, 0.4],
+    weights:[0.4, 0.6],
+    N: 100,
+  };
+
+  // ---- 2) Constants & grid (match Python names)
+  const AX_MIN=-3.5, AX_MAX=3.5;
+  const X0=-3.0, X1=3.0, OFFSET=0.05;
+  const mi_x = Array.from({length:600}, (_,i)=> AX_MIN + i*(AX_MAX-AX_MIN)/599);
+
+  // Params array like your init_params
+  const params = [
+    {name:'Pop 1', mu:init.means[0], sigma:init.sigmas[0], weight:init.weights[0], color:'firebrick'},
+    {name:'Pop 2', mu:init.means[1], sigma:init.sigmas[1], weight:init.weights[1], color:'navy'}
+  ];
+
+  // ---- Helpers: Gaussian CDF/inv via jStat; clamp for safety
+  const Phi  = (x, mu, sigma) => jStat.normal.cdf(x, mu, sigma);
+  const PHI1 = (p) => jStat.normal.inv(Math.min(1-1e-12, Math.max(1e-12, p)), 0, 1);
+  const clamp01 = (x) => Math.max(0, Math.min(1, x));
+
+  // Mixture CDF at value x
+  function mixtureCDF(x, ps){
+    let s = 0;
+    for(const p of ps) s += p.weight * Phi(x, p.mu, p.sigma);
+    return clamp01(s);
+  }
+  // Combined "sigma" curve: z = Φ^{-1}(CDF_mixture(y))
+  function combinedZ(ps){ return mi_x.map(y => PHI1(mixtureCDF(y, ps))); }
+
+  // Sample from the mixture (static, like your df.log10CO2)
+  function sampleMixture(n, ps){
+    const out = [];
+    for(let i=0;i<n;i++){
+      const u = Math.random();
+      const p = (u < ps[0].weight) ? ps[0] : ps[1];
+      const y = jStat.normal.sample(p.mu, p.sigma);
+      // place each point at its mixture-z position (visual like your plot)
+      const z = PHI1(mixtureCDF(y, ps));
+      out.push([z, y]);
+    }
+    return out;
+  }
+
+  const raw = sampleMixture(init.N, params);
+  const rawY = raw.map(d=>d[1]);
+  const Y_MIN = Math.min(...rawY) - 0.5;
+  const Y_MAX = Math.max(...rawY) + 0.5;
+
+  // ---- 3) Build the Plotly figure (same lines/legend/axes)
+  function lineShape(i, p){
+    const z0 = X0 + i*OFFSET, z1 = X1 - i*OFFSET;
+    const y0 = p.sigma*z0 + p.mu, y1 = p.sigma*z1 + p.mu;
+    return {type:'line', editable:true, name:p.name,
+            x0:z0, x1:z1, y0, y1, line:{color:p.color, width:3}};
+  }
+
+  const traces = [
+    {type:'scatter', mode:'markers', name:'Raw Data',
+     x: raw.map(r=>r[0]), y: raw.map(r=>r[1]),
+     marker:{size:8, opacity:0.6, color:'gray'}},
+    {type:'scatter', mode:'lines', name:'Combined',
+     x: combinedZ(params), y: mi_x, line:{color:'green', width:3}}
+  ];
+
+  const layout = {
+    width: 880, height: 540,
+    margin: {l:40, r:40, t:20, b:40},
+    xaxis: {range:[AX_MIN,AX_MAX], title:'σ-value (z)'},
+    yaxis: {range:[Y_MIN,Y_MAX],   title:'log\u2081\u2080(CO\u2082)'},
+    legend:{x:0.8, y:0.1, bgcolor:'rgba(255,255,255,0.8)'},
+    shapes: [ lineShape(0, params[0]), lineShape(1, params[1]) ]
+  };
+
+  const config = {responsive:true, editable:true, edits:{shapePosition:true}};
+  const div = document.getElementById('plot');
+  Plotly.newPlot(div, traces, layout, config);
+
+  // ---- UI syncing: sliders ↔ shapes ↔ combined curve
+  function setReadouts(){
+    for(let i=0;i<2;i++){
+      document.getElementById(`mu-r-${i}`).textContent    = params[i].mu.toFixed(2);
+      document.getElementById(`sigma-r-${i}`).textContent = params[i].sigma.toFixed(2);
+      document.getElementById(`w-r-${i}`).textContent     = params[i].weight.toFixed(2);
+      document.getElementById(`t-mu-${i}`).textContent    = params[i].mu.toFixed(2);
+      document.getElementById(`t-sigma-${i}`).textContent = params[i].sigma.toFixed(2);
+      document.getElementById(`t-w-${i}`).textContent     = params[i].weight.toFixed(2);
+    }
+  }
+  setReadouts();
+
+  function refreshCombined(){
+    const x = combinedZ(params);
+    Plotly.restyle(div, {x:[null, x], y:[null, mi_x]}, [0,1]); // only trace 1 changes
+  }
+
+  function refreshShapes(){
+    const updates = {};
+    params.forEach((p,i)=>{
+      const z0 = X0 + i*OFFSET, z1 = X1 - i*OFFSET;
+      updates[`shapes[${i}].y0`] = p.sigma*z0 + p.mu;
+      updates[`shapes[${i}].y1`] = p.sigma*z1 + p.mu;
+    });
+    Plotly.relayout(div, updates);
+  }
+
+  function attachSlider(id, key, idx){
+    const el = document.getElementById(id);
+    el.addEventListener('input', () => {
+      let v = parseFloat(el.value);
+      if(key === 'weight'){
+        // keep weights normalized (two-population)
+        params[idx].weight = v;
+        params[1-idx].weight = Math.max(0, Math.min(1, 1 - v));
+        document.getElementById(`w-${1-idx}`).value = params[1-idx].weight.toFixed(2);
+      }else{
+        params[idx][key] = v;
+      }
+      setReadouts(); refreshShapes(); refreshCombined();
+    });
+  }
+
+  attachSlider('mu-0','mu',0);     attachSlider('sigma-0','sigma',0); attachSlider('w-0','weight',0);
+  attachSlider('mu-1','mu',1);     attachSlider('sigma-1','sigma',1); attachSlider('w-1','weight',1);
+
+  // When a line is dragged, update μ & σ and sync sliders/table
+  div.on('plotly_relayout', (e) => {
+    for(let i=0;i<2;i++){
+      const y0 = e[`shapes[${i}].y0`]; const y1 = e[`shapes[${i}].y1`];
+      if(y0 !== undefined && y1 !== undefined){
+        const z0 = X0 + i*OFFSET, z1 = X1 - i*OFFSET;
+        const sigma = (y1 - y0)/(z1 - z0);
+        const mu    = y0 - sigma*z0;
+        params[i].sigma = sigma; params[i].mu = mu;
+        document.getElementById(`sigma-${i}`).value = sigma;
+        document.getElementById(`mu-${i}`).value    = mu;
+        setReadouts(); refreshCombined();
+        break;
+      }
+    }
+  });
+</script>
+</body>
+</html>
