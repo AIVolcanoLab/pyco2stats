@@ -1,3 +1,6 @@
+Interactive Sinclair method made with Visualize_Plotly and Plotly
+=================================================================
+
 .. raw:: html
 
    <iframe src="_static/Sinclair_Method:plotlyonly (1).html"
