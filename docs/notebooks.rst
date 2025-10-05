@@ -10,5 +10,6 @@ Here are interactive demonstrations to show the capabilities of **pyco2stats**.
    notebooks/GMM2.ipynb
    notebooks/Stats.ipynb
    notebooks/Montecarlo.ipynb
-   sinclair.rst
+
+sinclair.rst
 
