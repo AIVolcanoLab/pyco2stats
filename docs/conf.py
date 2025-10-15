@@ -15,8 +15,7 @@ extensions = [
     'sphinx.ext.intersphinx',    # Link to other project's documentation
     'sphinx.ext.viewcode',       # Add links to highlighted source code
     'sphinx.ext.mathjax',        # LaTeX math rendering
-    'sphinx.ext.autosummary',    # Generate function/class summary tables
-    'sphinx_charts.charts',      # Used for the plotly interactive graph
+    'sphinx.ext.autosummary',    # Generate function/class summary table
 ]
 
 # Add any paths that contain templates here, relative to this directory.
