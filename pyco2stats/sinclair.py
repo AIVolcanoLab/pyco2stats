@@ -76,7 +76,7 @@ class Sinclair:
         return sigma_values, sorted_data
 
     @staticmethod
-    def combine_gaussians(x: np.ndarray, means: np.ndarray, stds: np.ndarray, weights: np.ndarray) -> np.ndarray:
+    def calculate_combined_population(x: np.ndarray, means: np.ndarray, stds: np.ndarray, weights: np.ndarray) -> np.ndarray:
         """
         Computes the cumulative distribution of a weighted mixture of Gaussian distributions.
 
