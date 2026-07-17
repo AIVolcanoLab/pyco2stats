@@ -20,7 +20,7 @@ class GMM:
         """
         Fit a Gaussian Mixture Model (GMM) to the given data using the Expectation-Maximization (EM) algorithm.
 
-        From 10.1016/j.ijggc.2016.02.012
+        The method was taken from Elío et al., 2016 (DOI: 10.1016/j.ijggc.2016.02.012).
 
         Parameters
         ----------
