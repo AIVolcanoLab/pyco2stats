@@ -222,7 +222,7 @@ class GMM:
 
 
     @staticmethod
-    def constrained_gaussian_mixture(X, mean_constraints, std_constraints, n_components, n_epochs=5000,
+    def constrained_gaussian_mixture(X, mean_bounds, std_bounds, n_components, n_epochs=5000,
                                               lr=0.001, verbose=True):
         """
         Optimize a Gaussian Mixture Model (GMM) using PyTorch with specified constraints on means and standard deviations.
@@ -232,9 +232,9 @@ class GMM:
         ----------
         X : array
             Input data to fit the GMM. Should be 1D for this implementation (univariate GMM).
-        mean_constraints : list of tuples
+        mean_bounds : list of tuples
             List of tuples specifying (min, max) constraints for each component's mean. Length must equal n_components.
-        std_constraints : list of tuples
+        std_bounds : list of tuples
             List of tuples specifying (min, max) constraints for each component's standard deviation. 
             Lower bound should be > 0 for numerical stability. Length must equal n_components.
         n_components : int
@@ -255,7 +255,7 @@ class GMM:
         optimized_weights : array
             Optimized weights (mixing proportions) of the Gaussian components.
         """
-        if len(mean_constraints) != n_components or len(std_constraints) != n_components:
+        if len(mean_bounds) != n_components or len(std_bounds) != n_components:
             raise ValueError("Length of constraints lists must match n_components.")
 
         # Convert input data to a PyTorch tensor
@@ -263,13 +263,13 @@ class GMM:
 
         # Initialize the parameters
         # Initialize means by sampling within the mean constraints
-        initial_means = torch.tensor([np.random.uniform(low=mean_constraints[i][0], high=mean_constraints[i][1])
+        initial_means = torch.tensor([np.random.uniform(low=mean_bounds[i][0], high=mean_bounds[i][1])
                                       for i in range(n_components)], requires_grad=True)
 
         # Initialize standard deviations by sampling within the std constraints
         # Ensure initial stds are within valid positive range
         initial_stds = torch.tensor(
-            [np.random.uniform(low=max(std_constraints[i][0], 1e-6), high=std_constraints[i][1])  # Ensure positive init
+            [np.random.uniform(low=max(std_bounds[i][0], 1e-6), high=std_bounds[i][1])  # Ensure positive init
              for i in range(n_components)], requires_grad=True)
 
         # Initialize logits for weights (softmax will be applied)
@@ -287,9 +287,9 @@ class GMM:
             with torch.no_grad():
                 for i in range(n_components):
                     # Clamp means
-                    means[i].clamp_(mean_constraints[i][0], mean_constraints[i][1])
+                    means[i].clamp_(mean_bounds[i][0], mean_bounds[i][1])
                     # Clamp standard deviations - ensure lower bound is positive
-                    stds[i].clamp_(max(std_constraints[i][0], 1e-6), std_constraints[i][1])
+                    stds[i].clamp_(max(std_bounds[i][0], 1e-6), std_bounds[i][1])
 
         # Training loop
         for epoch in range(n_epochs):
