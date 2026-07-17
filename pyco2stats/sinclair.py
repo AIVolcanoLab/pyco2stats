@@ -54,7 +54,7 @@ class Sinclair:
         return norm.cdf(sigma)
 
     @staticmethod
-    def raw_data_to_sigma(raw_data: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+    def get_raw_data(raw_data: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
         """
         Converts raw data into sorted values and their corresponding sigma-values.
 
