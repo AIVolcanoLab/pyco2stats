@@ -403,7 +403,8 @@ class Visualize_Plotly:
     def qq_plot(raw_data, model_data, fig=None,
                     marker_kwargs=None, line_kwargs=None):
             """
-            Draw a Q–Q plot comparing two samples:
+            Draw a Q–Q plot comparing two samples
+            
             Parameters
             ----------
             raw_data : array-like
