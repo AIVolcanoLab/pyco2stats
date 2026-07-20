@@ -226,7 +226,7 @@ class Visualize_Mpl:
 
 
     @staticmethod
-    def qq_plot(raw_data, model_data, ax, line_kwargs=None, marker_kwargs=None):
+    def qq_plot(raw_data, model_data, ax = None, line_kwargs=None, marker_kwargs=None):
         
         """
         Create a Q-Q plot comparing raw data to model-simulated data.
@@ -262,6 +262,9 @@ class Visualize_Mpl:
         # Match the reference percentiles to the same empirical percentiles
         reference_percentiles = np.percentile(reference_population_sorted, percentiles)
 
+        if ax is None:
+            fig, ax = plt.subplots()
+
 
         # Plot the observed data percentiles vs. reference population percentiles
         ax.plot(observed_data_sorted, reference_percentiles,  **marker_kwargs, linestyle='', label='Observed Data vs. Reference Population')
@@ -278,15 +281,13 @@ class Visualize_Mpl:
             label='45° Line'
         )
 
-    def plot_gmm_pdf(ax, x, meds, stds, weights, data=None,
+    def plot_gmm_pdf(x, meds, stds, weights, ax = None, data=None,
                  pdf_plot_kwargs=None, component_plot_kwargs=None, hist_plot_kwargs=None):
         """
         Plot the Gaussian Mixture Model PDF and its components.
 
         Parameters
         ----------
-        ax : Matplotlib axis object
-            Axes object where to plot.
         x : array
             x values.
         meds : list or array
@@ -295,6 +296,8 @@ class Visualize_Mpl:
             Standard deviations of the Gaussian components.
         weights : list or array
             Weights of the Gaussian components.
+        ax : Matplotlib axis object
+            Axes object where to plot.
         data : list or array, optional 
             Raw data to plot as a histogram.
         pdf_plot_kwargs : list
@@ -314,6 +317,9 @@ class Visualize_Mpl:
             component_plot_kwargs = {}
         if hist_plot_kwargs is None:
             hist_plot_kwargs = {}
+
+        if ax is None:
+            fig, ax = plt.subplots()
 
         # Compute the Gaussian Mixture PDF
         pdf = GMM.gaussian_mixture_pdf(x, meds, stds, weights)
