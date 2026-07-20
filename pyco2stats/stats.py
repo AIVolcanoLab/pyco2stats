@@ -131,7 +131,7 @@ class Stats:
         lower_ci_median = np.exp(lower_bound_mu)
         upper_ci_median = np.exp(upper_bound_mu)
 
-        return  median_estimate, ower_ci_median, upper_ci_median
+        return  median_estimate, lower_ci_median, upper_ci_median
 
     @staticmethod
     def bootstrap_mean_ci(data, n_bootstraps=1000, confidence_level=0.95):
