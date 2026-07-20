@@ -258,7 +258,7 @@ class Stats:
 
     @staticmethod
     def mad_std(data, axis=None, func=None, ignore_nan=False):
-        """
+        r"""
         Calculate a robust standard deviation using the median absolute
         deviation (MAD), mutuated from astropy.
 
@@ -608,7 +608,7 @@ class Stats:
     
     @staticmethod
     def biweight_scale(data, c=9.0, M=None, axis=None, modify_sample_size=False, ignore_nan=False):
-        """
+        r"""
         Compute the biweight scale.
 
         The biweight scale is a robust statistic for determining the
