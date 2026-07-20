@@ -35,7 +35,7 @@ class Visualize_Mpl:
         ax : matplotlib.axes.Axes
             The Axes object with the plot.
         """
-        sigma_vals, sorted_data = Sinclair.raw_data_to_sigma(raw_data)
+        sigma_vals, sorted_data = Sinclair.get_raw_data(raw_data)
         if ax is None:
             fig, ax = plt.subplots()
         ax.scatter(sigma_vals, sorted_data, **scatter_kwargs)
@@ -68,7 +68,7 @@ class Visualize_Mpl:
         """
         # Use extended x_vals to compute tails beyond the plot window
         x_vals = np.linspace(x_range[0] - 1.5, x_range[1] + 1.5, 600)
-        y_cdf = Sinclair.combine_gaussians(x_vals, means, stds, weights)
+        y_cdf = Sinclair.calculate_combined_population(x_vals, means, stds, weights)
         sigma_vals = Sinclair.cumulative_to_sigma(y_cdf)
 
         if ax is None:
