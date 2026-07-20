@@ -548,7 +548,7 @@ class Stats:
    
     @staticmethod
     def biweight_location(data, c=6.0, M=None, axis=None, ignore_nan=False):
-        """
+        r"""
         Compute the biweight location.
 
         The biweight location is a robust statistic for determining the
