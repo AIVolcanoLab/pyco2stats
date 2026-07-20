@@ -1,40 +1,75 @@
-import os
+from pathlib import Path
 import sys
-sys.path.insert(0, os.path.abspath('..'))
+import tomllib
+
+
+# Repository root
+ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT))
+
 
 # Project information
-project = 'pyco2stats'
-author = 'Maurizio Petrelli, Alessandra Ariano, Marco Baroni, Frondini Francesco, Ágreda-López Mónica, Chiodini Giovanni'
-release = '0.1.9'
+project = "pyco2stats"
+author = (
+    "Maurizio Petrelli, Marco Baroni, Alessandra Ariano, Monica Ágreda-López, Lisa Ricci, Francesco Frondini, Giuseppe Saldi, Carlo Cardellini, Diego Perugini, Giovanni Chiodini"
+)
 
-# Add any Sphinx extension module names here, as strings.
+# Read the version directly from pyproject.toml
+with (ROOT / "pyproject.toml").open("rb") as file:
+    pyproject = tomllib.load(file)
+
+release = pyproject["project"]["version"]
+version = release
+
+
 extensions = [
-    'nbsphinx',                   # for notebooks
-    'sphinx.ext.autodoc',        # Auto-document docstrings
-    'sphinx.ext.napoleon',       # Support for Google/NumPy-style docstrings
-    'sphinx.ext.intersphinx',    # Link to other project's documentation
-    'sphinx.ext.viewcode',       # Add links to highlighted source code
-    'sphinx.ext.mathjax',        # LaTeX math rendering
-    'sphinx.ext.autosummary',    # Generate function/class summary table
+    "nbsphinx",
+    "sphinx.ext.autodoc",
+    "sphinx.ext.napoleon",
+    "sphinx.ext.intersphinx",
+    "sphinx.ext.viewcode",
+    "sphinx.ext.mathjax",
+    "sphinx.ext.autosummary",
+    "sphinx_rtd_theme",
 ]
 
-# Add any paths that contain templates here, relative to this directory.
-templates_path = ['_templates']
-html_static_path = ['_static']
-html_css_files = ['css/custom.css']
 
-# The theme to use for HTML and HTML Help pages.
-html_theme = 'sphinx_rtd_theme'
+# Autodoc configuration
+autodoc_member_order = "bysource"
+autosummary_generate = True
+
+# Your project currently contains both NumPy-style and Google-style docstrings
+napoleon_numpy_docstring = True
+napoleon_google_docstring = True
+
+
+templates_path = ["_templates"]
+exclude_patterns = [
+    "_build",
+    "**.ipynb_checkpoints",
+]
+
+
+html_theme = "sphinx_rtd_theme"
+
 html_theme_options = {
-    "repository_url": "https://github.com/your-org/your-repo",
-    "use_repository_button": True,
-    "use_issues_button": True,
-    "use_download_button": True,
-    "launch_buttons": {
-        "binderhub_url": "https://mybinder.org",
-        "notebook_interface": "jupyterlab",
-    },
+    "collapse_navigation": False,
+    "sticky_navigation": True,
+    "navigation_depth": 4,
+    "includehidden": True,
+    "titles_only": False,
 }
 
-# List of patterns, relative to source directory, that match files and directories to ignore when looking for source files.
-exclude_patterns = []
+
+# Enables the GitHub source links supported by sphinx_rtd_theme
+html_context = {
+    "display_github": True,
+    "github_user": "AIVolcanoLab",
+    "github_repo": "pyco2stats",
+    "github_version": "main",
+    "conf_py_path": "/docs/",
+}
+
+
+html_static_path = ["_static"]
+html_css_files = ["css/custom.css"]
