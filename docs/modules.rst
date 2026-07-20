@@ -1,46 +1,66 @@
 PyCO2stats Functions
 ====================
 
-This section documents all the functions of PyCO2stats, grouped by module.
+This section documents the public functions and classes of PyCO2stats,
+grouped by module.
 
-.. rubric:: Modules
 
-   pyco2stats.gaussian_mixtures
-   pyco2stats.sinclair
-   pyco2stats.stats
-   pyco2stats.propagate_errors
-   pyco2stats.visualize_mpl
-   pyco2stats.visualize_plotly
-
-.. rubric:: Full module pages
+Gaussian mixtures
+-----------------
 
 .. automodule:: pyco2stats.gaussian_mixtures
    :members:
    :undoc-members:
+   :member-order: bysource
    :show-inheritance:
+
+
+Sinclair
+--------
 
 .. automodule:: pyco2stats.sinclair
    :members:
    :undoc-members:
+   :member-order: bysource
    :show-inheritance:
+
+
+Statistics
+----------
 
 .. automodule:: pyco2stats.stats
    :members:
-   :exclude-members: deprecated
    :undoc-members:
+   :member-order: bysource
+   :exclude-members: deprecated
    :show-inheritance:
+
+
+Error propagation
+-----------------
 
 .. automodule:: pyco2stats.propagate_errors
    :members:
    :undoc-members:
+   :member-order: bysource
    :show-inheritance:
+
+
+Matplotlib visualization
+------------------------
 
 .. automodule:: pyco2stats.visualize_mpl
    :members:
    :undoc-members:
+   :member-order: bysource
    :show-inheritance:
+
+
+Plotly visualization
+--------------------
 
 .. automodule:: pyco2stats.visualize_plotly
    :members:
    :undoc-members:
+   :member-order: bysource
    :show-inheritance:
