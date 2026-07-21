@@ -226,7 +226,7 @@ class Stats:
 
     @staticmethod
     def mad(data, axis=None, func=None, ignore_nan=False):
-        """
+        r"""
         Calculate the median absolute deviation (MAD) mutuated from astropy.
 
         The MAD is defined as :math: median(abs(a - median(a))).
