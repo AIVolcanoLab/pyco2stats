@@ -339,7 +339,7 @@ class Visualize_Mpl:
         x_plot = np.sort(x)
 
         # Compute the Gaussian Mixture PDF
-        pdf = GMM.gaussian_mixture_pdf(x, meds, stds, weights)
+        pdf = GMM.gaussian_mixture_pdf(x_plot, meds, stds, weights)
 
         # Plot the Gaussian Mixture PDF
         ax.plot(x_plot, pdf, label='Gaussian Mixture PDF', **pdf_plot_kwargs)
