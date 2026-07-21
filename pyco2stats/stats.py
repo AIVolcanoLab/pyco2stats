@@ -35,13 +35,6 @@ from scipy.stats import norm as norm_distribution # da mettere a posto norm è r
 
 import functools
 
-
-"""
-The Stats class includes a variety of statistical methodologies to analyze CO2 flux data and geochemical samplings in environmental and volcanic systems.
-Stats comprises robust statistics (i.e. biweight estimators, sigma-clipping, data-trimming, winsorizing procedures) and specific tools to estimate the
-central tendency and confidence intervals of log-normally distributed data.
-"""
-
 def deprecated(reason):
     def decorator(func):
         @functools.wraps(func)
@@ -57,6 +50,13 @@ def deprecated(reason):
 
 
 class Stats:
+
+    """
+    The Stats class includes a variety of statistical methodologies to analyze CO2 flux data and geochemical samplings in environmental and volcanic systems.
+    Stats comprises robust statistics (i.e. biweight estimators, sigma-clipping, data-trimming, winsorizing procedures) and specific tools to estimate the
+    central tendency and confidence intervals of log-normally distributed data.
+    """
+    
     @staticmethod
     def lognormal_median_ci(data, confidence_level=0.95):
         """
@@ -263,7 +263,7 @@ class Stats:
         """
         Calculate the median absolute deviation (MAD) mutuated from astropy.
 
-        The MAD is defined as :math: median(abs(a - median(a))).
+        The MAD is defined as 'median(|a - median(a)|)'.
 
         Parameters
         ----------
@@ -302,8 +302,8 @@ class Stats:
 
             \sigma \approx \frac{\textrm{MAD}}{\Phi^{-1}(3/4)} \approx 1.4826 \cdot \textrm{MAD}
 
-        where :math: \Phi^{-1}(P) is the normal inverse cumulative
-        distribution function evaluated at probability :math: P = 3/4.
+        where :math: '\Phi^{-1}(P)' is the normal inverse cumulative
+        distribution function evaluated at probability :math: 'P = 3/4'.
 
         Parameters
         ----------
@@ -333,7 +333,7 @@ class Stats:
 
     @staticmethod
     def sigma_clip(data,sigma=3,sigma_lower=None,sigma_upper=None,maxiters=5, cenfunc="median", stdfunc="std", axis=None, masked=True, return_bounds=False, copy=True, grow=False):
-        """
+        r"""
         Perform sigma-clipping on the provided data. Mutuated from astropy.
 
         The data will be iterated over, each time rejecting values that are
@@ -632,8 +632,7 @@ class Stats:
         Compute the biweight scale.
 
         The biweight scale is a robust statistic for determining the
-        standard deviation of a distribution.  It is the square root of the
-        `biweight midvariance.
+        standard deviation of a distribution.  It is the square root of the biweight midvariance.
 
         It is given by:
 
@@ -1705,7 +1704,7 @@ class Stats:
             =
             \hat{\mu}
             +
-            \frac{\\hat{\sigma}^{2}}{2}
+            \frac{\hat{\sigma}^{2}}{2}
 
         and a Student's t critical value. The resulting limits are then
         exponentiated to return to the original data scale.
@@ -2155,7 +2154,7 @@ class Stats:
 
         .. math::
 
-            \\mu + \\lambda \\sigma^2
+            \mu + \lambda \sigma^2
 
         using Land's conditional t distribution and the numerically
         determined C constants.
@@ -2250,7 +2249,7 @@ class Stats:
 
         .. math::
 
-            \\mu + \\frac{1}{2}\\sigma^2
+            \mu + \frac{1}{2}\sigma^2
 
         and exponentiates the resulting confidence limits to obtain an
         interval for the arithmetic mean on the original data scale.
