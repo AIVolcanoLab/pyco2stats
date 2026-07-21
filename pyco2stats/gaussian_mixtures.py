@@ -169,7 +169,7 @@ class GMM:
             The log-likelihood values over the iterations.
         """
         
-        X = X.reshape(-1, 1)
+        X = np.asarray(X, dtype=float).reshape(-1, 1)
 
         # Standardize data to avoid numerical issues
         scaler = StandardScaler()
