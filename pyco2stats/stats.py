@@ -1064,6 +1064,72 @@ class Stats:
         conf_level=0.95,
         parkin_list=None
     ):
+    """
+        Estimate the mean and its uncertainty for log-normally distributed data.
+
+        Several estimators of the arithmetic mean of a log-normal population
+        are available. Optionally, a confidence interval can also be computed
+        using one of the supported methods.
+
+        Parameters
+        ----------
+        X_lognorm_data : array-like
+            One-dimensional array containing at least two strictly positive
+            observations assumed to follow a log-normal distribution.
+        method : {'umvue', 'umvue_sichel', 'qmle', 'mle', 'mme', 'mmue'}, optional
+            Method used to estimate the population mean:
+
+            * ``'umvue'`` uses Finney's uniformly minimum-variance unbiased
+              estimator.
+            * ``'umvue_sichel'`` uses Sichel's estimator.
+            * ``'qmle'`` uses the quasi-maximum-likelihood estimator.
+            * ``'mle'`` uses the maximum-likelihood estimator.
+            * ``'mme'`` uses the method-of-moments estimator.
+            * ``'mmue'`` uses the unbiased method-of-moments estimator.
+
+            The default is ``'umvue'``.
+        ci : bool, optional
+            If `True`, compute a confidence interval for the estimated mean.
+            The default is `False`.
+        ci_method : {'land', 'normal_approx', 'zou', 'cox', 'sichel'}, optional
+            Method used to calculate the confidence interval. The default is
+            ``'zou'``.
+        ci_type : {'two-sided', 'lower', 'upper'}, optional
+            Type of confidence interval. The default is ``'two-sided'``.
+        conf_level : float, optional
+            Confidence level, expressed as a value between 0 and 1. The
+            default is 0.95.
+        parkin_list : optional
+            Reserved parameter retained for compatibility. It is currently
+            not used by the calculation.
+
+        Returns
+        -------
+        result : dict
+            Dictionary containing:
+
+            * ``'sample_size'``: number of observations.
+            * ``'method'``: point-estimation method.
+            * ``'mean_estimate'``: estimated arithmetic mean.
+            * ``'sd_estimate'``: estimated standard deviation of the estimator.
+
+            If ``ci=True``, the dictionary is extended with the confidence
+            interval information returned by the selected ``ci_method``,
+            including ``'LCL'`` and ``'UCL'``.
+
+        Raises
+        ------
+        ValueError
+            If fewer than two observations are provided, if any observation
+            is non-positive, or if an unsupported estimation or confidence
+            interval method is selected.
+
+        Warns
+        -----
+        UserWarning
+            If the variance or standard-deviation estimate is not available
+            for the selected method.
+        """
         X_lognorm_data = np.asarray(X_lognorm_data, dtype=float)
         if X_lognorm_data.size < 2 or np.any(X_lognorm_data <= 0):
             raise ValueError("`data` must contain at least two positive values.")
@@ -1211,6 +1277,38 @@ class Stats:
 
     @staticmethod
     def umvue_sichel_lognormal_estimator(X_lognorm_data):
+            """
+        Estimate the mean and variance of a log-normal population using
+        Sichel's estimator.
+
+        The method operates on log-transformed observations and uses the
+        confluent hypergeometric limit function to compute the correction
+        factor for the mean estimate.
+
+        Parameters
+        ----------
+        X_lognorm_data : array-like
+            Strictly positive observations assumed to follow a log-normal
+            distribution.
+
+        Returns
+        -------
+        mean_est : float
+            Estimated arithmetic mean of the log-normal population.
+        variance_est : float
+            Estimated variance of the log-normal population.
+
+        Raises
+        ------
+        ValueError
+            If one or more observations are non-positive.
+
+        Warns
+        -----
+        RuntimeWarning
+            If evaluation of the hypergeometric function fails. In that
+            case, ``(np.nan, np.nan)`` is returned.
+        """
         X_lognorm_data = np.asarray(X_lognorm_data, dtype=float)
         if np.any(X_lognorm_data <= 0):
             raise ValueError("All observations must be positive.")
@@ -1236,6 +1334,45 @@ class Stats:
 
     @staticmethod
     def finneys_g(m, z, n_terms_inc=10, max_iter=100, tol=None):
+    """
+        Evaluate Finney's correction function for log-normal estimation.
+
+        The function evaluates the correction series used in Finney's
+        uniformly minimum-variance unbiased estimator of the arithmetic
+        mean of a log-normal population. The series is expanded in blocks
+        until the last term is smaller than the specified tolerance.
+
+        Parameters
+        ----------
+        m : int or array-like of int
+            Degrees-of-freedom parameter of Finney's correction function.
+        z : float or array-like of float
+            Argument of Finney's correction function. If negative values are
+            supplied, alternating signs are applied to the series terms.
+        n_terms_inc : int, optional
+            Number of additional series terms evaluated at each iteration.
+            The default is 10.
+        max_iter : int, optional
+            Maximum number of series-expansion iterations. The default is
+            100.
+        tol : float or None, optional
+            Convergence tolerance applied to the final series term. If
+            `None`, machine precision for floating-point values is used.
+
+        Returns
+        -------
+        result : float or numpy.ndarray
+            Value of Finney's correction function. A scalar is returned for
+            scalar input; otherwise, an array is returned. Values for which
+            the calculation fails or does not converge are returned as
+            ``np.nan``.
+
+        Warns
+        -----
+        RuntimeWarning
+            If non-finite terms are generated, the series evaluation fails,
+            or convergence is not reached within ``max_iter`` iterations.
+        """
         tol = tol if tol is not None else np.finfo(float).eps
         m_arr = np.atleast_1d(m).astype(int)
         z_arr = np.atleast_1d(z).astype(float)
@@ -1289,6 +1426,39 @@ class Stats:
 
     @staticmethod
     def lookup_psi(p, V, n, psi_table=psi_table):
+        """
+        Retrieve a lower or upper Psi factor from a lookup table.
+
+        The lookup is first restricted to entries matching the requested
+        sample size. If an exact match for ``V`` is unavailable, the entry
+        with the nearest tabulated value is used.
+
+        Parameters
+        ----------
+        p : float
+            Probability used to select the lower or upper Psi factor.
+            Values below 0.5 select the lower factor; values greater than or
+            equal to 0.5 select the upper factor.
+        V : float
+            Variance-related value used to select the corresponding table
+            entry.
+        n : int
+            Sample size for which the Psi factors are required.
+        psi_table : sequence of tuple, optional
+            Lookup table whose entries have the form
+            ``(sample_size, V, lower_psi, upper_psi)``.
+
+        Returns
+        -------
+        psi : float
+            Selected lower or upper Psi factor.
+
+        Raises
+        ------
+        ValueError
+            If the lookup table contains no entries for the requested
+            sample size.
+        """
         entries = [e for e in psi_table if e[0] == n]
         if not entries:
             raise ValueError(f"No Psi-factors for n={n}")
@@ -1305,6 +1475,53 @@ class Stats:
         df=None, ci_type="two-sided", conf_level=0.95,
         lb=-math.inf, ub=math.inf, test_statistic="z"
     ):
+        """
+        Compute a normal- or Student's t-based approximate confidence interval.
+
+        The interval is constructed around ``mu_hat`` using the square root
+        of ``sigma2_hat`` as its standard-error estimate. Optional lower and
+        upper bounds can be used to truncate the resulting interval.
+
+        Parameters
+        ----------
+        mu_hat : float
+            Point estimate around which the confidence interval is
+            constructed.
+        sigma2_hat : float
+            Estimated variance of ``mu_hat``.
+        n : int
+            Sample size. When a t interval is requested and ``df`` is not
+            provided, the degrees of freedom are set to ``n - 1``.
+        df : int or None, optional
+            Degrees of freedom for the Student's t distribution. The default
+            is `None`.
+        ci_type : {'two-sided', 'lower', 'upper'}, optional
+            Type of confidence interval. The default is ``'two-sided'``.
+        conf_level : float, optional
+            Confidence level, expressed as a value between 0 and 1. The
+            default is 0.95.
+        lb : float, optional
+            Minimum permitted value for the lower confidence limit. The
+            default is negative infinity.
+        ub : float, optional
+            Maximum permitted value for the upper confidence limit. The
+            default is positive infinity.
+        test_statistic : {'z', 't'}, optional
+            Distribution used to obtain the critical quantiles. The default
+            is ``'z'``.
+
+        Returns
+        -------
+        limits : dict
+            Dictionary containing ``'LCL'`` and ``'UCL'``, representing the
+            lower and upper confidence limits.
+
+        Raises
+        ------
+        ValueError
+            If a t-based interval is requested but the degrees of freedom
+            cannot be determined.
+        """
         sd_hat = np.sqrt(sigma2_hat)
         alpha = 1 - conf_level
         test_statistic = test_statistic.lower()
@@ -1471,13 +1688,85 @@ class Stats:
 
     # Land method starts here
     def lands_cond_t_prop_density_polar(theta, nu, zeta):
+        """
+        Evaluate Land's conditional t proportional density in polar coordinates.
+
+        Parameters
+        ----------
+        theta : float or array-like
+            Angular coordinate at which the proportional density is
+            evaluated.
+        nu : int
+            Degrees of freedom of the conditional t distribution.
+        zeta : float
+            Non-centrality or shape parameter of the conditional
+            distribution.
+
+        Returns
+        -------
+        density : float or numpy.ndarray
+            Unnormalized proportional density evaluated at ``theta``.
+        """
         return np.exp((nu - 1) * np.log(np.cos(theta)) - (nu / 2) * np.log(nu) + (1 + nu) * zeta * np.sin(theta))
 
     def lands_cond_t_prop_density(tau, nu, zeta):
+        """
+        Evaluate Land's conditional t proportional density.
+
+        Parameters
+        ----------
+        tau : float or array-like
+            Value at which the proportional conditional t density is
+            evaluated.
+        nu : int
+            Degrees of freedom of the conditional t distribution.
+        zeta : float
+            Non-centrality or shape parameter of the conditional
+            distribution.
+
+        Returns
+        -------
+        density : float or numpy.ndarray
+            Unnormalized proportional density evaluated at ``tau``.
+        """
         return ((nu + tau**2) ** (-(nu + 1) / 2)) * np.exp(((nu + 1) * zeta * tau) / np.sqrt(nu + tau**2))
 
 
     def qlands_t(p, nu, zeta, tol=np.finfo(float).eps**0.9):
+        """
+        Compute a quantile of Land's conditional t distribution.
+
+        The proportional density is normalized numerically in polar
+        coordinates. The requested quantile is then obtained by numerical
+        integration and root finding.
+
+        Parameters
+        ----------
+        p : float
+            Cumulative probability at which the quantile is evaluated. Must
+            be between 0 and 1.
+        nu : int
+            Degrees of freedom. Must be greater than or equal to 2.
+        zeta : float
+            Non-centrality or shape parameter of Land's conditional t
+            distribution.
+        tol : float, optional
+            Numerical tolerance used by the root-finding procedures. The
+            default is approximately machine precision raised to 0.9.
+
+        Returns
+        -------
+        quantile : float
+            Quantile corresponding to cumulative probability ``p``.
+            Negative and positive infinity are returned for ``p=0`` and
+            ``p=1``, respectively.
+
+        Raises
+        ------
+        ValueError
+            If ``p`` is outside the interval [0, 1] or if ``nu`` is smaller
+            than 2.
+        """
         if not (0 <= p <= 1):
             raise ValueError("'p' must be between 0 and 1")
         if nu < 2:
@@ -1551,6 +1840,39 @@ class Stats:
 
     @staticmethod
     def lands_C_old(S, nu, conf_level):
+        """
+        Compute Land's C constant using the legacy minimization procedure.
+
+        This method is retained as the previous implementation of the
+        numerical procedure used to determine Land's C constant. New code
+        should generally use :meth:`lands_C`.
+
+        Parameters
+        ----------
+        S : float
+            Positive scale parameter used in Land's method.
+        nu : int
+            Degrees of freedom. Must be greater than or equal to 2.
+        conf_level : float
+            Probability level used to calculate the constant. Must be
+            between 0 and 1.
+
+        Returns
+        -------
+        C : float
+            Land's C constant.
+
+        Raises
+        ------
+        ValueError
+            If ``S`` is not positive, ``nu`` is smaller than 2, or
+            ``conf_level`` is outside the interval [0, 1].
+
+        See Also
+        --------
+        lands_C
+            Updated implementation of the same numerical calculation.
+        """
         if S < np.finfo(float).eps:
             raise ValueError("'S' must be positive")
         if nu < 2:
@@ -1643,6 +1965,59 @@ class Stats:
 
     @staticmethod
     def ci_land(lambda_, mu_hat, sig_sq_hat, n, nu, gamma_sq, ci_type="two-sided", conf_level=0.95):
+        r"""
+        Compute a confidence interval using Land's exact method.
+
+        The interval is calculated for a parameter of the form
+
+        .. math::
+
+            \\mu + \\lambda \\sigma^2
+
+        using Land's conditional t distribution and the numerically
+        determined C constants.
+
+        Parameters
+        ----------
+        lambda_ : float
+            Coefficient multiplying the variance term. It must be non-zero.
+        mu_hat : float
+            Estimate of the location parameter.
+        sig_sq_hat : float
+            Positive estimate of the variance parameter.
+        n : int
+            Sample size reported in the returned result.
+        nu : int
+            Degrees of freedom. Must be an integer greater than or equal to
+            2.
+        gamma_sq : float
+            Positive scaling parameter used in the Land transformation.
+        ci_type : {'two-sided', 'lower', 'upper'}, optional
+            Type of confidence interval. The default is ``'two-sided'``.
+        conf_level : float, optional
+            Confidence level. It must be at least 0.5 and smaller than 1.
+            The default is 0.95.
+
+        Returns
+        -------
+        result : dict
+            Dictionary containing:
+
+            * ``'LCL'``: lower confidence limit.
+            * ``'UCL'``: upper confidence limit.
+            * ``'parameter'``: description of the estimated parameter.
+            * ``'type'``: confidence-interval type.
+            * ``'method'``: confidence-interval method.
+            * ``'conf_level'``: requested confidence level.
+            * ``'sample_size'``: sample size.
+            * ``'dof'``: degrees of freedom.
+
+        Raises
+        ------
+        ValueError
+            If the input parameters are outside their permitted ranges or
+            if ``ci_type`` is not one of the supported values.
+        """
         if np.abs(lambda_) < np.finfo(float).eps:
             raise ValueError("'lambda' cannot be 0")
         if sig_sq_hat < np.finfo(float).eps:
@@ -1684,6 +2059,44 @@ class Stats:
     
     @staticmethod
     def ci_lnorm_land(mu_hat, sigma2_hat, n, ci_type='two-sided', conf_level=0.95):
+        r"""
+        Compute a Land confidence interval for the arithmetic mean of a
+        log-normal population.
+
+        This method applies :meth:`ci_land` to the log-scale parameter
+
+        .. math::
+
+            \\mu + \\frac{1}{2}\\sigma^2
+
+        and exponentiates the resulting confidence limits to obtain an
+        interval for the arithmetic mean on the original data scale.
+
+        Parameters
+        ----------
+        mu_hat : float
+            Estimated mean of the log-transformed observations.
+        sigma2_hat : float
+            Estimated variance of the log-transformed observations.
+        n : int
+            Sample size. The degrees of freedom are set to ``n - 1``.
+        ci_type : {'two-sided', 'lower', 'upper'}, optional
+            Type of confidence interval. The default is ``'two-sided'``.
+        conf_level : float, optional
+            Confidence level. The default is 0.95.
+
+        Returns
+        -------
+        result : dict
+            Dictionary returned by :meth:`ci_land`, with ``'LCL'`` and
+            ``'UCL'`` exponentiated to the original data scale and
+            ``'parameter'`` set to ``'mean'``.
+
+        Raises
+        ------
+        ValueError
+            If one of the parameters passed to :meth:`ci_land` is invalid.
+        """
         result = Stats.ci_land(
             lambda_=0.5,
             mu_hat=mu_hat,
