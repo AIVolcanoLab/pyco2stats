@@ -281,75 +281,146 @@ class Visualize_Mpl:
             label='45° Line'
         )
 
-    def plot_gmm_pdf(x, meds, stds, weights, ax = None, data=None,
-                 pdf_plot_kwargs=None, component_plot_kwargs=None, hist_plot_kwargs=None):
+    @staticmethod
+    def plot_gmm_pdf(x, meds, stds, weights, ax=None, data=None, pdf_plot_kwargs=None, component_plot_kwargs=None, hist_plot_kwargs=None):
         """
         Plot the Gaussian Mixture Model PDF and its components.
-
+    
         Parameters
         ----------
-        x : array
-            x values.
-        meds : list or array
+        x : array-like
+            Values at which the Gaussian mixture PDF is evaluated.
+        meds : array-like
             Means of the Gaussian components.
-        stds : list or array
+        stds : array-like
             Standard deviations of the Gaussian components.
-        weights : list or array
+        weights : array-like
             Weights of the Gaussian components.
-        ax : Matplotlib axis object
-            Axes object where to plot.
-        data : list or array, optional 
-            Raw data to plot as a histogram.
-        pdf_plot_kwargs : list
-            Keyword arguments for the main GMM PDF plot.
-        component_plot_kwargs : list 
-            Keyword arguments for the individual component plots.
-        hist_plot_kwargs : list
-             Keyword arguments for the histogram plot.
-
+        ax : matplotlib.axes.Axes, optional
+            Axes on which to draw the plot. If `None`, new axes are created.
+        data : array-like, optional
+            Raw observations to display as a histogram.
+        pdf_plot_kwargs : dict, optional
+            Keyword arguments passed to the total GMM PDF plot.
+        component_plot_kwargs : dict, optional
+            Keyword arguments passed to the component plots.
+        hist_plot_kwargs : dict, optional
+            Keyword arguments passed to the histogram.
+    
         Returns
         -------
-        None
+        ax : matplotlib.axes.Axes
+            Axes containing the plotted Gaussian mixture model.
         """
         if pdf_plot_kwargs is None:
             pdf_plot_kwargs = {}
+    
         if component_plot_kwargs is None:
             component_plot_kwargs = {}
+    
         if hist_plot_kwargs is None:
             hist_plot_kwargs = {}
-
+    
         if ax is None:
             fig, ax = plt.subplots()
-
+    
+        # Convert all inputs to NumPy arrays
+        x = np.asarray(x, dtype=float).ravel()
+        meds = np.asarray(meds, dtype=float).ravel()
+        stds = np.asarray(stds, dtype=float).ravel()
+        weights = np.asarray(weights, dtype=float).ravel()
+    
+        # Remove invalid x values
+        x = x[np.isfinite(x)]
+    
+        if x.size == 0:
+            raise ValueError("x must contain at least one finite value.")
+    
+        if not (len(meds) == len(stds) == len(weights)):
+            raise ValueError(
+                "meds, stds, and weights must contain the same number "
+                "of components."
+            )
+    
+        if np.any(~np.isfinite(meds)):
+            raise ValueError("meds must contain only finite values.")
+    
+        if np.any(~np.isfinite(stds)) or np.any(stds <= 0):
+            raise ValueError(
+                "stds must contain only finite and positive values."
+            )
+    
+        if np.any(~np.isfinite(weights)) or np.any(weights < 0):
+            raise ValueError(
+                "weights must contain only finite and non-negative values."
+            )
+    
         weight_sum = np.sum(weights)
     
         if weight_sum <= 0:
-            raise ValueError("The sum of weights must be greater than zero.")
+            raise ValueError(
+                "The sum of weights must be greater than zero."
+            )
     
-        # Normalize weights when necessary
+        # Normalize weights
         weights = weights / weight_sum
     
-        # Sort the Gaussian components by increasing mean
+        # Sort components by increasing mean
         component_order = np.argsort(meds)
+    
         meds = meds[component_order]
         stds = stds[component_order]
         weights = weights[component_order]
     
-        # Crucial correction: sort x before drawing connected lines
+        # Sort x before computing the PDFs
         x_plot = np.sort(x)
-
-        # Compute the Gaussian Mixture PDF
-        pdf = GMM.gaussian_mixture_pdf(x_plot, meds, stds, weights)
-
-        # Plot the Gaussian Mixture PDF
-        ax.plot(x_plot, pdf, label='Gaussian Mixture PDF', **pdf_plot_kwargs)
-
-        # Plot each Gaussian component
-        for i, (med, std, weight) in enumerate(zip(meds, stds, weights)):
-            ax.plot(x_plot, weight * norm.pdf(x, med, std), label=f'Component {i + 1}', **component_plot_kwargs)
-
-        # Plot the histogram of the raw data if provided
+    
+        # Compute the total PDF on the sorted x values
+        pdf = GMM.gaussian_mixture_pdf(
+            x_plot,
+            meds,
+            stds,
+            weights
+        )
+    
+        # Plot the total Gaussian mixture PDF
+        ax.plot(
+            x_plot,
+            pdf,
+            label="Gaussian Mixture PDF",
+            **pdf_plot_kwargs
+        )
+    
+        # Plot the individual Gaussian components
+        for i, (med, std, weight) in enumerate(
+            zip(meds, stds, weights),
+            start=1
+        ):
+            component_pdf = weight * norm.pdf(
+                x_plot,
+                med,
+                std
+            )
+    
+            ax.plot(
+                x_plot,
+                component_pdf,
+                label=f"Component {i}",
+                **component_plot_kwargs
+            )
+    
+        # Optionally plot the histogram
         if data is not None:
-            ax.hist(data, bins=20, density=True, **hist_plot_kwargs)
-
+            data = np.asarray(data, dtype=float).ravel()
+            data = data[np.isfinite(data)]
+    
+            ax.hist(
+                data,
+                bins=20,
+                density=True,
+                **hist_plot_kwargs
+            )
+    
         ax.legend()
+    
+        return ax
