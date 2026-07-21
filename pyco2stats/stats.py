@@ -298,20 +298,7 @@ class Stats:
         return astropy_mad_std(data, axis, func, ignore_nan)
 
     @staticmethod
-    def sigma_clip(
-        data,
-        sigma=3,
-        sigma_lower=None,
-        sigma_upper=None,
-        maxiters=5,
-        cenfunc="median",
-        stdfunc="std",
-        axis=None,
-        masked=True,
-        return_bounds=False,
-        copy=True,
-        grow=False,
-    ):
+    def sigma_clip(data,sigma=3,sigma_lower=None,sigma_upper=None,maxiters=5, cenfunc="median", stdfunc="std", axis=None, masked=True, return_bounds=False, copy=True, grow=False):
         """
         Perform sigma-clipping on the provided data. Mutuated from astropy.
 
@@ -778,8 +765,7 @@ class Stats:
 
     @staticmethod
     def trimboth(a, proportiontocut=0.2, axis=0):
-        """Slice off a proportion of items from both ends of an array.
-
+        """
         Slice off the passed proportion of items from both ends of the passed
         array (i.e., with `proportiontocut` = 0.1, slices leftmost 10% **and**
         rightmost 10% of scores). The trimmed values are the lowest and
@@ -1064,7 +1050,7 @@ class Stats:
         conf_level=0.95,
         parkin_list=None
     ):
-    """
+        """
         Estimate the mean and its uncertainty for log-normally distributed data.
 
         Several estimators of the arithmetic mean of a log-normal population
@@ -1277,7 +1263,7 @@ class Stats:
 
     @staticmethod
     def umvue_sichel_lognormal_estimator(X_lognorm_data):
-            """
+        """
         Estimate the mean and variance of a log-normal population using
         Sichel's estimator.
 
@@ -1334,7 +1320,7 @@ class Stats:
 
     @staticmethod
     def finneys_g(m, z, n_terms_inc=10, max_iter=100, tol=None):
-    """
+        """
         Evaluate Finney's correction function for log-normal estimation.
 
         The function evaluates the correction series used in Finney's
@@ -1473,8 +1459,7 @@ class Stats:
     def ci_standard_approx(
         mu_hat, sigma2_hat, n,
         df=None, ci_type="two-sided", conf_level=0.95,
-        lb=-math.inf, ub=math.inf, test_statistic="z"
-    ):
+        lb=-math.inf, ub=math.inf, test_statistic="z"):
         """
         Compute a normal- or Student's t-based approximate confidence interval.
 
