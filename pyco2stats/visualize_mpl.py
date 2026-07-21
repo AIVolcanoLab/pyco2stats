@@ -321,6 +321,23 @@ class Visualize_Mpl:
         if ax is None:
             fig, ax = plt.subplots()
 
+        weight_sum = np.sum(weights)
+    
+        if weight_sum <= 0:
+            raise ValueError("The sum of weights must be greater than zero.")
+    
+        # Normalize weights when necessary
+        weights = weights / weight_sum
+    
+        # Sort the Gaussian components by increasing mean
+        component_order = np.argsort(meds)
+        meds = meds[component_order]
+        stds = stds[component_order]
+        weights = weights[component_order]
+    
+        # Crucial correction: sort x before drawing connected lines
+        x_plot = np.sort(x)
+
         # Compute the Gaussian Mixture PDF
         pdf = GMM.gaussian_mixture_pdf(x, meds, stds, weights)
 
