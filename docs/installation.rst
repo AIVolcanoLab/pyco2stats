@@ -30,10 +30,11 @@ This will also install all required dependencies (NumPy, SciPy, pandas, matplotl
 Step 2.2: Installing from source
 --------------------------------
 
-If you want the latest development version, in the anaconda or command prompt write and run:
+If you want the latest development version, in the anaconda or command prompt write and run, line by line:
 
 .. code-block:: bash
 
+  conda install git
   pip install git+https://github.com/AIVolcanoLab/pyco2stats.git
 
 Alternatively, clone the repository manually and install in editable mode. In the anaconda or command prompt write and run, row by row:
