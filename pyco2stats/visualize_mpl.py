@@ -342,11 +342,11 @@ class Visualize_Mpl:
         pdf = GMM.gaussian_mixture_pdf(x, meds, stds, weights)
 
         # Plot the Gaussian Mixture PDF
-        ax.plot(x, pdf, label='Gaussian Mixture PDF', **pdf_plot_kwargs)
+        ax.plot(x_plot, pdf, label='Gaussian Mixture PDF', **pdf_plot_kwargs)
 
         # Plot each Gaussian component
         for i, (med, std, weight) in enumerate(zip(meds, stds, weights)):
-            ax.plot(x, weight * norm.pdf(x, med, std), label=f'Component {i + 1}', **component_plot_kwargs)
+            ax.plot(x_plot, weight * norm.pdf(x, med, std), label=f'Component {i + 1}', **component_plot_kwargs)
 
         # Plot the histogram of the raw data if provided
         if data is not None:
