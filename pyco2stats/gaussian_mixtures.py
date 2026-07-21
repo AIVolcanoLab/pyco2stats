@@ -16,7 +16,7 @@ simpler, underlying Gaussian components.
 
 class GMM:
     @staticmethod
-    def gaussian_mixture_em(data, n_components, max_iter=10000, tol=1e-7, random_state=None):
+    def gaussian_mixture_em(data, n_components, max_iter=100, tol=1e-6, random_state=None):
         """
         Fit a Gaussian Mixture Model (GMM) to the given data using the Expectation-Maximization (EM) algorithm.
 
