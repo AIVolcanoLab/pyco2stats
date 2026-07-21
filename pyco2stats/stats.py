@@ -60,22 +60,37 @@ class Stats:
     @staticmethod
     def lognormal_median_ci(data, confidence_level=0.95):
         """
-        Estimates the median and its confidence interval for data assumed
-        to be log-normally distributed.
+        Estimate the median and its confidence interval for data assumed
+        to follow a log-normal distribution.
 
-        Args:
-            data (array-like): A list, numpy array, or pandas Series of
-                               positive numerical data points.
-            confidence_level (float): The desired confidence level (e.g., 0.95 for 95%).
-                                     Must be between 0 and 1.
+        The median is estimated by exponentiating the arithmetic mean of
+        the log-transformed observations. The confidence interval is
+        constructed on the logarithmic scale using Student's t
+        distribution and then transformed back to the original scale.
 
-        Returns:
-            dict: A dictionary containing:
-                  'median_estimate': The point estimate of the median.
-                  'confidence_interval': A tuple (lower_bound, upper_bound)
-                                         for the median.
-                  Returns None if input data is invalid (e.g., non-positive values,
-                  not enough data points).
+        Parameters
+        ----------
+        data : array-like
+            One-dimensional sequence of strictly positive numerical
+            observations. At least two observations are required.
+        confidence_level : float, optional
+            Confidence level for the interval. It must be strictly between
+            0 and 1. The default is 0.95.
+
+        Returns
+        -------
+        median_estimate : float
+            Point estimate of the median of the log-normal distribution.
+        lower_ci_median : float
+            Lower confidence limit for the median.
+        upper_ci_median : float
+            Upper confidence limit for the median.
+
+        Notes
+        -----
+        The function returns `None` if the input contains non-positive
+        values, fewer than two observations, an invalid confidence level,
+        or cannot be converted to a NumPy array.
         """
         # --- Input Validation ---
         try:
@@ -136,23 +151,42 @@ class Stats:
     @staticmethod
     def bootstrap_mean_ci(data, n_bootstraps=1000, confidence_level=0.95):
         """
-        Estimates the mean and confidence interval for a log-normal distribution
-        using the bootstrapping method.
+        Estimate the mean and its confidence interval using bootstrap
+        resampling.
 
-        Args:
-            data (array-like): A 1D array or list containing the log-normally
-                               distributed data.
-            n_bootstraps (int): The number of bootstrap samples to generate.
-                               Defaults to 1000.
-            confidence_level (float): The desired confidence level for the interval.
-                                     Must be between 0 and 1. Defaults to 0.95.
+        Bootstrap samples are generated with replacement from the original
+        observations. The estimated mean is calculated as the mean of the
+        bootstrap means, while the confidence limits are obtained using
+        the percentile method.
 
-        Returns:
-            tuple: A tuple containing:
-                   - estimated_mean (float): The estimated mean of the log-normal
-                                             distribution (mean of bootstrap means).
-                   - ci_lower (float): The lower bound of the confidence interval.
-                   - ci_upper (float): The upper bound of the confidence interval.
+        Parameters
+        ----------
+        data : array-like
+            One-dimensional sequence of numerical observations.
+        n_bootstraps : int, optional
+            Number of bootstrap samples to generate. The default is 1000.
+        confidence_level : float, optional
+            Confidence level for the percentile interval. It must be
+            strictly between 0 and 1. The default is 0.95.
+
+        Returns
+        -------
+        estimated_mean : float
+            Mean of the bootstrap mean estimates.
+        ci_lower : float
+            Lower bound of the percentile confidence interval.
+        ci_upper : float
+            Upper bound of the percentile confidence interval.
+
+        Raises
+        ------
+        ValueError
+            If ``confidence_level`` is not strictly between 0 and 1.
+
+        Notes
+        -----
+        If ``data`` is empty, the function returns
+        ``(np.nan, np.nan, np.nan)``.
         """
         if not 0 < confidence_level < 1:
             raise ValueError("confidence_level must be between 0 and 1")
@@ -704,6 +738,12 @@ class Stats:
         axis : {None, int}, optional
             Axis along which to trim. If None, the whole array is trimmed, but its
             shape is maintained.
+
+        Returns
+        -------
+        trimmed_data : numpy.ma.MaskedArray
+            Masked array with values outside the specified limits masked.
+            The shape of the input array is preserved.
         """
         return scipy_trim(a, limits, inclusive, axis)
 
@@ -760,6 +800,13 @@ class Stats:
         ddof : int, optional
             Means Delta Degrees of Freedom. The denominator used in the calculations
             is ``n - ddof``, where ``n`` represents the number of elements.
+
+        Returns
+        -------
+        trimmed_std : float or numpy.ndarray
+            Standard deviation calculated after trimming the input data.
+            A scalar is returned when the calculation reduces all selected
+            axes; otherwise, an array is returned.
         """
         return scipy_trimmed_std(a, limits, inclusive, relative, axis, ddof)
 
@@ -1012,27 +1059,40 @@ class Stats:
     @staticmethod
     def Huber(data, c=1.5, tol=1e-08, maxiter=30, norm=None):
         """
-        Huber's proposal 2 for estimating location and scale jointly. 
-        Return joint estimates of Huber's scale and location. 
-        Mutuated from statsmodels.robust.
+        Estimate location and scale jointly using Huber's Proposal 2.
+
+        This method applies the Huber robust location and scale estimator
+        implemented in ``statsmodels.robust.Huber``.
 
         Parameters
         ----------
+        data : array-like
+            Numerical observations for which robust location and scale
+            estimates are calculated.
         c : float, optional
-            Threshold used in threshold for :math: \chi=\psi^2.  Default value is 1.5.
+            Threshold used in the Huber weighting function. The default is
+            1.5.
         tol : float, optional
-            Tolerance for convergence.  Default value is 1e-08.
+            Convergence tolerance. The default is ``1e-8``.
         maxiter : int, optional
-            Maximum number of iterations.  Default value is 30.
-        norm : statsmodels.robust.norms.RobustNorm, optional
-            A robust norm used in M estimator of location. If None,
-            the location estimator defaults to a one-step
-            fixed point version of the M-estimator using Huber's T.
+            Maximum number of iterations. The default is 30.
+        norm : statsmodels.robust.norms.RobustNorm or None, optional
+            Robust norm used for the location estimator. If `None`, a
+            one-step fixed-point version of the M-estimator based on
+            Huber's T norm is used.
 
         Returns
         -------
-        huber : tuple
-            Returns a tuple (location, scale) of the joint estimates.
+        location : float or numpy.ndarray
+            Robust estimate of the central location.
+        scale : float or numpy.ndarray
+            Robust estimate of the scale.
+
+        Raises
+        ------
+        ValueError
+            If the location and scale estimation does not converge within
+            the specified number of iterations.
         """
         huber_proposal_2 = sm.robust.Huber(c, tol, maxiter, norm)
         return huber_proposal_2(data)
@@ -1220,10 +1280,45 @@ class Stats:
     @staticmethod
     def umvue_finney_lognormal_estimator(data):
         """
-        UMVUE of the log‑normal mean & variance (Finney’s formula).
-        Returns (mean_estimate, variance_estimate).  If data has fewer
-        than two points, variance_estimate is NaN.  If data contains
-        non‐positive values, returns (NaN, NaN) with a warning.
+        Estimate the mean and variance of a log-normal population using
+        Finney's UMVUE method.
+
+        The uniformly minimum-variance unbiased estimator is calculated
+        from the mean and sample variance of the log-transformed data using
+        Finney's correction function.
+
+        Parameters
+        ----------
+        data : array-like
+            Observations assumed to follow a log-normal distribution.
+            All observations must be strictly positive.
+
+        Returns
+        -------
+        umvu_mean : float
+            Uniformly minimum-variance unbiased estimate of the arithmetic
+            mean of the log-normal population.
+        umvu_variance : float
+            Uniformly minimum-variance unbiased estimate of the population
+            variance. ``np.nan`` is returned when fewer than three
+            observations are available.
+
+        Warns
+        -----
+        UserWarning
+            If one or more observations are non-positive.
+
+        Notes
+        -----
+        If ``data`` is empty, the function returns
+        ``(np.nan, np.nan)``.
+
+        If ``data`` contains a single positive observation, the observation
+        itself is returned as the mean estimate and the variance estimate
+        is ``np.nan``.
+
+        If non-positive observations are present, the function returns
+        ``(np.nan, np.nan)``.
         """
         data = np.asarray(data)
         n = data.size
@@ -1526,7 +1621,38 @@ class Stats:
     @staticmethod
     def ci_lnorm_zou(mu_hat, sigma2_hat, n, ci_type, conf_level):
         """
-        Exact port of R's ci.lnorm.zou() for confidence intervals on the lognormal mean.
+        Compute a confidence interval for a log-normal mean using Zou's
+        method.
+
+        Separate confidence intervals are constructed for the mean and
+        variance on the logarithmic scale. Their distances from the point
+        estimates are then combined to obtain confidence limits for the
+        arithmetic mean on the original scale.
+
+        Parameters
+        ----------
+        mu_hat : float
+            Estimated mean of the log-transformed observations.
+        sigma2_hat : float
+            Estimated variance of the log-transformed observations.
+        n : int
+            Number of observations. The degrees of freedom used for the
+            variance interval are ``n - 1``.
+        ci_type : {'two-sided', 'lower', 'upper'}
+            Type of confidence interval to calculate.
+        conf_level : float
+            Confidence level, expressed as a value between 0 and 1.
+
+        Returns
+        -------
+        limits : dict
+            Dictionary containing:
+
+            * ``'LCL'``: lower confidence limit.
+            * ``'UCL'``: upper confidence limit.
+
+            For a lower one-sided interval, ``UCL`` is positive infinity.
+            For an upper one-sided interval, ``LCL`` is negative infinity.
         """
         alpha = 1 - conf_level
         sdlog = np.sqrt(sigma2_hat)
@@ -1566,12 +1692,64 @@ class Stats:
 
     @staticmethod
     def ci_cox(mu_hat, sigma2_hat, n, ci_type="two-sided", conf_level=0.95):
-        """
-        Cox method for confidence intervals on the lognormal mean.
-        This version assumes R's EnvStats might use a t-distribution if df is passed
-        to its internal ci.normal.approx.
-        mu_hat: Mean of the log-transformed data.
-        sigma2_hat: Variance of the log-transformed data.
+        r"""
+        Compute a Cox confidence interval for the arithmetic mean of a
+        log-normal population.
+
+        The interval is constructed for the logarithm of the arithmetic
+        mean using the estimate
+
+        .. math::
+
+            \hat{\beta}
+            =
+            \hat{\mu}
+            +
+            \frac{\\hat{\sigma}^{2}}{2}
+
+        and a Student's t critical value. The resulting limits are then
+        exponentiated to return to the original data scale.
+
+        Parameters
+        ----------
+        mu_hat : float
+            Estimated mean of the log-transformed observations.
+        sigma2_hat : float
+            Estimated variance of the log-transformed observations. It
+            should be non-negative.
+        n : int
+            Number of observations. The degrees of freedom are set to
+            ``n - 1``.
+        ci_type : {'two-sided', 'lower', 'upper'}, optional
+            Type of confidence interval. The default is ``'two-sided'``.
+        conf_level : float, optional
+            Confidence level, strictly between 0 and 1. The default is
+            0.95.
+
+        Returns
+        -------
+        limits : dict
+            Dictionary containing:
+
+            * ``'LCL'``: lower confidence limit.
+            * ``'UCL'``: upper confidence limit.
+
+            ``np.nan`` limits are returned when the interval cannot be
+            calculated because of an insufficient sample size or an
+            invalid variance estimate.
+
+        Raises
+        ------
+        ValueError
+            If ``conf_level`` is not strictly between 0 and 1 or if
+            ``ci_type`` is not ``'two-sided'``, ``'lower'``, or ``'upper'``.
+
+        Warns
+        -----
+        RuntimeWarning
+            If the sample size is smaller than 2, if ``sigma2_hat`` is
+            negative, if the calculated variance of the estimator is
+            negative, or if valid degrees of freedom are unavailable.
         """
         alpha = 1.0 - conf_level
         df_cox = n - 1
@@ -1885,25 +2063,45 @@ class Stats:
     @staticmethod
     def lands_C(S: float, nu: int, conf_level: float, tol: float = 1e-8, maxiter: int = 100) -> float:
         """
-        Compute the constant C for Land's method, 
-        matching R's lands.C(S, nu, conf.level).
+        Compute the constant C used in Land's confidence-interval method.
+
+        The constant is obtained by numerically minimizing the squared
+        difference between a transformed t statistic and the corresponding
+        quantile of Land's conditional t distribution.
+
+        A bounded scalar minimization is attempted first. If it does not
+        converge, an unrestricted Brent minimization is used as a fallback.
 
         Parameters
         ----------
         S : float
-            Must be > 0.
+            Positive scale parameter used in Land's transformation.
         nu : int
-            Degrees of freedom, >= 2.
+            Integer number of degrees of freedom. It must be greater than
+            or equal to 2.
         conf_level : float
-            Confidence level between 0 and 1.
-        tol : float
-            Tolerance for minimization.
-        maxiter : int
-            Maximum iterations for the optimizer.
+            Confidence level, strictly between 0 and 1.
+        tol : float, optional
+            Absolute numerical tolerance used by the minimizer. The default
+            is ``1e-8``.
+        maxiter : int, optional
+            Maximum number of iterations for the bounded minimization. The
+            default is 100.
 
         Returns
         -------
         C : float
+            Numerically estimated Land C constant.
+
+        Raises
+        ------
+        ValueError
+            If ``S`` is not positive, if ``nu`` is not an integer greater
+            than or equal to 2, or if ``conf_level`` is not strictly between
+            0 and 1.
+        RuntimeError
+            If both the bounded and fallback Brent minimizations fail to
+            converge.
         """
         if S <= np.finfo(float).eps:
             raise ValueError("'S' must be positive")
