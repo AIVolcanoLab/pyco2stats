@@ -96,7 +96,8 @@ class Sinclair:
         y_comb : array
             The combined cumulative distribution evaluated at the points x.
         """
-        y_comb = np.zeros_like(x)
+        x = np.asarray(x, dtype=float)
+        y_comb = np.zeros_like(x, dtype=float)
         for mu, sigma, w in zip(means, stds, weights):
             y_comb += w * norm.cdf(x, loc=mu, scale=sigma)
         return y_comb
