@@ -103,16 +103,18 @@ class Visualize_Mpl:
         ax : matplotlib.axes.Axes
             The Axes object with the plots.
         """
+        if ax is None:
+            fig, ax = plt.subplots()
 
         means = np.atleast_1d(means)
         stds  = np.atleast_1d(stds)
 
         for mean, std in zip(means, stds):
-            Visualize_Mpl.pp_one_population(mean, std, z_range=(-3.5, 3.5), ax=ax, **line_kwargs)
+            Visualize_Mpl.pp_one_population(mean, std, z_range=z_range, ax=ax, **line_kwargs)
 
         return ax  
 
-
+    @staticmethod
     def pp_one_population(mean, std, z_range=(-3.5, 3.5), ax=None, **line_kwargs):
         """
         Plot a single Gaussian distribution on a probability plot.
@@ -203,7 +205,7 @@ class Visualize_Mpl:
             fig, ax = plt.subplots()
 
         if percentiles == 'standard':
-            perc_values = [1, 5, 10, 25, 50, 75, 95, 90, 99]
+            perc_values = [1, 5, 10, 25, 50, 75, 90, 95, 99]
         elif percentiles == 'full':
             perc_values = [0.5, 1, 2, 4, 6, 8, 10, 15, 20, 25, 30, 35, 40, 50,
                            60, 65, 70, 75, 80, 85, 90, 92, 94, 96, 98, 99, 99.5]
@@ -248,6 +250,15 @@ class Visualize_Mpl:
         -------
         None
         """
+        marker_kwargs = (
+            {} if marker_kwargs is None
+            else marker_kwargs.copy()
+        )
+        
+        line_kwargs = (
+            {} if line_kwargs is None
+            else line_kwargs.copy()
+        )
         
         # Sort both observed data and reference population
         observed_data_sorted = np.sort(raw_data)
@@ -280,6 +291,8 @@ class Visualize_Mpl:
             **lk,
             label='45° Line'
         )
+
+    return ax
 
     @staticmethod
     def plot_gmm_pdf(x, meds, stds, weights, ax=None, data=None, pdf_plot_kwargs=None, component_plot_kwargs=None, hist_plot_kwargs=None):
