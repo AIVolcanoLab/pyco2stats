@@ -291,7 +291,7 @@ class Visualize_Plotly:
                 **awk
             )
 
-    return fig
+        return fig
     
     @staticmethod
     def plot_gmm_pdf(x_values, meds, stds, weights,
