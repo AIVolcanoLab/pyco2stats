@@ -396,10 +396,10 @@ class Visualize_Plotly:
             # fallback manual sum
             pdf_vals = _np.zeros_like(x_values, dtype=float)
             for mu_i, sigma_i, w_i in zip(meds, stds, weights):
-                pdf_vals += w_i * norm.pdf(x_values, mu_i, sigma_i)
+                pdf_vals += w_i * norm.pdf(x_plot, mu_i, sigma_i)
 
         pdf_trace = go.Scatter(
-            x=x_values,
+            x=x_plot,
             y=pdf_vals,
             mode='lines',
             name='Gaussian Mixture PDF',
