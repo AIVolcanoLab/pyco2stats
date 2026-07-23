@@ -209,12 +209,12 @@ class GMM:
                 with warnings.catch_warnings():
                     warnings.filterwarnings('ignore', category=ConvergenceWarning)
                     gmm_iter = GaussianMixture(n_components=n_components, covariance_type=covariance_type,  
-                                               max_iter=i, tol=tol, n_init=n_init, init_params='random_from_data')
+                                               max_iter=i, tol=tol, n_init=n_init, init_params='random_from_data', random_state = random_state)
                     gmm_iter.fit(X_scaled)
                     log_likelihoods.append(gmm_iter.lower_bound_)
             else:
                 gmm_iter = GaussianMixture(n_components=n_components, covariance_type=covariance_type,  
-                                               max_iter=i, tol=tol, n_init=n_init, init_params='random_from_data')
+                                               max_iter=i, tol=tol, n_init=n_init, init_params='random_from_data', random_state = random_state)
                 gmm_iter.fit(X_scaled)
                 log_likelihoods.append(gmm_iter.lower_bound_)
 
