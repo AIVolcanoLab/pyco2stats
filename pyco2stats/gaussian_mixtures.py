@@ -134,7 +134,7 @@ class GMM:
         return means, std_devs, weights, log_likelihoods
 
     @staticmethod
-    def gaussian_mixture_sklearn(X, n_components = 3, max_iter = 10, tol = 1e-10, n_init = 20, suppress_warnings= True, covariance_type = 'spherical'  ):
+    def gaussian_mixture_sklearn(X, n_components = 3, max_iter = 10, tol = 1e-10, n_init = 20, suppress_warnings= True, covariance_type = 'spherical' , random_state = 42  ):
         """
         Fit a Gaussian Mixture Model (GMM) mutuated from sklearn.
 
@@ -154,6 +154,8 @@ class GMM:
             If True, suppresses the generation of warnings. Default is True.
         covariance_type : string
             Can be 'full', 'tied', 'diag' or 'spherical'. Describes the type of covariance parameters to use. Default is 'spherical'.
+        random_state : int
+            Random seed for model initializations.
 
         Returns
         -------
@@ -163,8 +165,6 @@ class GMM:
             The standard deviations of the Gaussian components.
         weights : array
             The weights (mixing proportions) of the Gaussian components.
-        max_iter : int
-            Maximum number of iteration (given as input).
         log_likelihoods : list 
             The log-likelihood values over the iterations.
         """
@@ -182,12 +182,12 @@ class GMM:
               
                 # Fit GMM with the parameters
                 gmm = GaussianMixture(n_components=n_components, covariance_type=covariance_type,  
-                                      max_iter=max_iter, tol=tol, n_init=n_init, random_state=42, init_params='random_from_data')
+                                      max_iter=max_iter, tol=tol, n_init=n_init, random_state=random_state, init_params='random_from_data')
                 gmm.fit(X_scaled)
         else:
             # Fit GMM with the parameters
                 gmm = GaussianMixture(n_components=n_components, covariance_type=covariance_type,  
-                                      max_iter=max_iter, tol=tol, n_init=n_init, random_state=42, init_params='random_from_data')
+                                      max_iter=max_iter, tol=tol, n_init=n_init, random_state=random_state, init_params='random_from_data')
                 gmm.fit(X_scaled)
 
 
@@ -198,6 +198,7 @@ class GMM:
 
         # Inverse transform the means to the original scale
         original_means =  scaler.inverse_transform(gmm.means_).flatten()
+        
         original_std_devs = std_devs  * scaler.scale_
 
         # Custom tracking of log-likelihood over iterations
@@ -217,13 +218,13 @@ class GMM:
                 gmm_iter.fit(X_scaled)
                 log_likelihoods.append(gmm_iter.lower_bound_)
 
-        return original_means, original_std_devs, weights,  log_likelihoods
+        return original_means, original_std_devs, weights, log_likelihoods
 
 
 
     @staticmethod
     def constrained_gaussian_mixture(X, mean_bounds, std_bounds, n_components, n_epochs=5000,
-                                              lr=0.001, verbose=True):
+                                              lr=0.001, verbose=True, random_state = 42):
         """
         Optimize a Gaussian Mixture Model (GMM) using PyTorch with specified constraints on means and standard deviations.
         Uses Softmax for stable weight optimization and LogSumExp for numerical stability.
@@ -245,6 +246,8 @@ class GMM:
             Learning rate for the optimizer. Default is 0.001.
         verbose : bool
             If True, prints progress every 200 epochs. Default is True.
+        random_state : int
+            Random seed for model initializations.
 
         Returns
         -------
@@ -257,6 +260,8 @@ class GMM:
         """
         if len(mean_bounds) != n_components or len(std_bounds) != n_components:
             raise ValueError("Length of constraints lists must match n_components.")
+
+        rng = np.random.default_rng(random_state)
 
         # Convert input data to a PyTorch tensor
         X = torch.tensor(X, dtype=torch.float32)
@@ -377,6 +382,9 @@ class GMM:
         pdf : array
             The computed PDF values for the Gaussian Mixture Model at each x.
         """
+
+        if not (len(meds) == len(stds) == len(weights)):
+            raise ValueError("meds, stds, and weights must have the same length.")
         # Ensure inputs are numpy arrays for consistent operations
         x = np.asarray(x)
         meds = np.asarray(meds)
