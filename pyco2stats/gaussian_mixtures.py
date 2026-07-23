@@ -268,13 +268,13 @@ class GMM:
 
         # Initialize the parameters
         # Initialize means by sampling within the mean constraints
-        initial_means = torch.tensor([np.random.uniform(low=mean_bounds[i][0], high=mean_bounds[i][1])
+        initial_means = torch.tensor([rng.uniform(low=mean_bounds[i][0], high=mean_bounds[i][1])
                                       for i in range(n_components)], requires_grad=True)
 
         # Initialize standard deviations by sampling within the std constraints
         # Ensure initial stds are within valid positive range
         initial_stds = torch.tensor(
-            [np.random.uniform(low=max(std_bounds[i][0], 1e-6), high=std_bounds[i][1])  # Ensure positive init
+            [rng.uniform(low=max(std_bounds[i][0], 1e-6), high=std_bounds[i][1])  # Ensure positive init
              for i in range(n_components)], requires_grad=True)
 
         # Initialize logits for weights (softmax will be applied)
