@@ -1902,7 +1902,7 @@ class Stats:
         """
         return ((nu + tau**2) ** (-(nu + 1) / 2)) * np.exp(((nu + 1) * zeta * tau) / np.sqrt(nu + tau**2))
 
-
+    @staticmethod
     def qlands_t(p, nu, zeta, tol=np.finfo(float).eps**0.9):
         """
         Compute a quantile of Land's conditional t distribution.
@@ -1970,11 +1970,11 @@ class Stats:
 
         # Build density function with new_zeta
         try:
-            test_val = lands_cond_t_prop_density_polar(theta_max, nu, new_zeta)
+            test_val = Stats.lands_cond_t_prop_density_polar(theta_max, nu, new_zeta)
             if np.isfinite(test_val):
                 scaling_factor, _ = quad(lands_cond_t_prop_density_polar, -np.pi/2, np.pi/2, args=(nu, new_zeta))
                 def density(theta):
-                    return lands_cond_t_prop_density_polar(theta, nu, new_zeta) / scaling_factor
+                    return Stats.lands_cond_t_prop_density_polar(theta, nu, new_zeta) / scaling_factor
                 #print(f"[DEBUG] Scaling factor (new_zeta={new_zeta}) = {scaling_factor}")
             else:
                 raise Exception
