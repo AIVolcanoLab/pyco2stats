@@ -348,14 +348,23 @@ class Propagate_Errors:
                 )
 
                 # --- Parameter Alignment Step ---
-                # Note: PyTorch tensors need detachment before sorting with numpy
-                means_np = means.detach().numpy()
+                means_np = np.asarray(means)
+                std_devs_np = np.asarray(std_devs)
+                weights_np = np.asarray(weights)
+                
                 sort_indices = np.argsort(means_np)
-
+                
                 aligned_means = means_np[sort_indices]
+                aligned_std_devs = std_devs_np[sort_indices]
+                aligned_weights = weights_np[sort_indices]
+                # Note: PyTorch tensors need detachment before sorting with numpy
+                #means_np = means.detach().numpy()
+                #sort_indices = np.argsort(means_np)
+
+                #aligned_means = means_np[sort_indices]
                 # Need to align std_devs and weights (which are already numpy from GMM method)
-                aligned_std_devs = std_devs[sort_indices]
-                aligned_weights = weights[sort_indices]
+                #aligned_std_devs = std_devs[sort_indices]
+                #aligned_weights = weights[sort_indices]
                 # --- End Alignment Step ---
 
                 simulated_means.append(aligned_means)
