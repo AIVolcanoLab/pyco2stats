@@ -115,8 +115,7 @@ class Stats:
                 return None
 
         except Exception as e:
-            print(f"Error processing input data: {e}")
-            return None
+            raise ValueError(f"Error processing input data: {e}")
 
         # --- Calculations ---
         # 1. Log-transform the data
@@ -1209,11 +1208,11 @@ class Stats:
         elif method == "mme":
             X_theta_hat = float(np.mean(X_lognorm_data))
             X_var_hat = float(np.var(X_lognorm_data, ddof=0) / n)
-            sd_muhat_ci_normal = np.sqrt(X_var_hat)/np.sqrt(n)
+            sd_muhat_ci_normal = np.sqrt(X_var_hat)#/np.sqrt(n)
         elif method == "mmue":
             X_theta_hat = float(np.mean(X_lognorm_data))
             X_var_hat = float(np.var(X_lognorm_data, ddof=1) / n)
-            sd_muhat_ci_normal = np.sqrt(X_var_hat)/np.sqrt(n)
+            sd_muhat_ci_normal = np.sqrt(X_var_hat)#/np.sqrt(n)
         else:
             raise ValueError(f"Unknown method '{method}'")
 
@@ -1265,14 +1264,14 @@ class Stats:
                     ci_type=ci_type,
                     conf_level=conf_level
                 )
-            elif ci_method == "sichel":
-                ci_limits = Stats.ci_sichel(
-                    mu_hat=Y_mu_hat,
-                    sigma2_hat=Y_sigma2_hat,
-                    n=n,
-                    ci_type=ci_type,
-                    conf_level=conf_level
-                )
+            #elif ci_method == "sichel":
+            #    ci_limits = Stats.ci_sichel(
+            #        mu_hat=Y_mu_hat,
+            #        sigma2_hat=Y_sigma2_hat,
+            #        n=n,
+            #        ci_type=ci_type,
+            #        conf_level=conf_level
+            #    )
             else:
                 raise ValueError(f"Unknown ci_method '{ci_method}'")
 
@@ -1499,18 +1498,15 @@ class Stats:
 
         return float(result) if result.size == 1 else result
 
-    # Example Psi-factor table; extend as needed
-    psi_table = [
+    @staticmethod
+    def lookup_psi(p, V, n, psi_table=[
         (3, 0.20, 0.58, 1.87),
         (3, 0.40, 0.49, 2.29),
         (5, 0.20, 0.67, 1.73),
         (5, 0.40, 0.55, 2.08),
         (10,0.20, 0.75, 1.59),
         (10,0.40, 0.64, 1.82),
-    ]
-
-    @staticmethod
-    def lookup_psi(p, V, n, psi_table=psi_table):
+    ]):
         """
         Retrieve a lower or upper Psi factor from a lookup table.
 
@@ -1531,7 +1527,13 @@ class Stats:
             Sample size for which the Psi factors are required.
         psi_table : sequence of tuple, optional
             Lookup table whose entries have the form
-            ``(sample_size, V, lower_psi, upper_psi)``.
+            ``(sample_size, V, lower_psi, upper_psi)``. Default is 
+            [(3, 0.20, 0.58, 1.87),
+             (3, 0.40, 0.49, 2.29),
+             (5, 0.20, 0.67, 1.73),
+             (5, 0.40, 0.55, 2.08),
+             (10,0.20, 0.75, 1.59),
+             (10,0.40, 0.64, 1.82),]
 
         Returns
         -------
@@ -1688,7 +1690,7 @@ class Stats:
             UCL = math.inf
         else:  # upper
             dU = (mean_UCL - mu_hat)**2 + (var_UCL - theta2_hat)**2
-            LCL = -math.inf
+            LCL = 0#-math.inf
             UCL = math.exp(pivot + math.sqrt(dU))
 
         return {"LCL": LCL, "UCL": UCL}
@@ -1835,7 +1837,7 @@ class Stats:
         # Exponentiate, handling -inf, inf, and nan
         LCL = np.nan
         if lcl_log == float("-inf"):
-            LCL = float("-inf")
+            LCL = 0#float("-inf")
         elif not np.isnan(lcl_log): # np.isnan handles np.nan
             try:
                 LCL = math.exp(lcl_log)
@@ -1854,6 +1856,7 @@ class Stats:
         return {"LCL": LCL, "UCL": UCL}
 
     # Land method starts here
+    @staticmethod
     def lands_cond_t_prop_density_polar(theta, nu, zeta):
         """
         Evaluate Land's conditional t proportional density in polar coordinates.
@@ -1876,6 +1879,7 @@ class Stats:
         """
         return np.exp((nu - 1) * np.log(np.cos(theta)) - (nu / 2) * np.log(nu) + (1 + nu) * zeta * np.sin(theta))
 
+    @staticmethod
     def lands_cond_t_prop_density(tau, nu, zeta):
         """
         Evaluate Land's conditional t proportional density.
