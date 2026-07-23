@@ -36,7 +36,7 @@ class Visualize_Plotly:
             The Scatter trace representing the raw data.
         """
         # 1) compute the sigma‐quantiles and sort
-        sigma_vals, sorted_data = Sinclair.raw_data_to_sigma(raw_data)
+        sigma_vals, sorted_data = Sinclair.get_raw_data(raw_data)
 
         # 2) copy the user kwargs so we don't mutate their dict
         margs = {} if marker_kwargs is None else marker_kwargs.copy()
@@ -91,7 +91,7 @@ class Visualize_Plotly:
         line : plotly.graph_objects.Scatter
             Line trace representing the fitted reference line.
         """
-        sigma_vals, sorted_data = Sinclair.raw_data_to_sigma(raw_data)
+        sigma_vals, sorted_data = Sinclair.get_raw_data(raw_data)
         skw = scatter_kwargs or {}
         scatter = go.Scatter(
             x=sigma_vals,
@@ -211,7 +211,7 @@ class Visualize_Plotly:
             Trace representing the combined population CDF.
         """
         x = np.linspace(z_range[0], z_range[1], 600)
-        cdf = Sinclair.combine_gaussians(x, np.array(means), np.array(stds), np.array(weights))
+        cdf = Sinclair.calculate_combined_population(x, np.array(means), np.array(stds), np.array(weights))
         sigma_vals = Sinclair.cumulative_to_sigma(cdf)
         largs = line_kwargs or {}
         trace = go.Scatter(
@@ -254,7 +254,8 @@ class Visualize_Plotly:
         
         Returns
         -------
-        None
+        fig : plotly.graph_objects.Figure
+            The figure passed in the function.
         """
         # 1) choose levels
         levels = [1,5,10,25,50,75,90,95,99] if percentiles=="full" else list(percentiles)
@@ -289,6 +290,9 @@ class Visualize_Plotly:
                 xanchor="center",
                 **awk
             )
+
+    return fig
+    
     @staticmethod
     def plot_gmm_pdf(x_values, meds, stds, weights,
                      data=None,
@@ -334,6 +338,11 @@ class Visualize_Plotly:
         import plotly.graph_objects as go
         from .gaussian_mixtures import GMM
 
+        x_values = np.asarray(x_values,dtype=float).ravel()
+        
+        x_values = x_values[np.isfinite(x_values)]
+        x_plot = np.sort(x_values)
+
         # prepare kwargs dicts
         pdf_plot_kwargs       = pdf_plot_kwargs or {}
         component_plot_kwargs = component_plot_kwargs or {}
@@ -368,10 +377,10 @@ class Visualize_Plotly:
         # 2) individual component traces
         comp_traces = []
         for idx, (mu, sigma, w) in enumerate(zip(meds, stds, weights), start=1):
-            y_comp = w * norm.pdf(x_values, mu, sigma)
+            y_comp = w * norm.pdf(x_plot, mu, sigma)
             comp_traces.append(
                 go.Scatter(
-                    x=x_values,
+                    x=x_plot,
                     y=y_comp,
                     mode='lines',
                     name=f'Component {idx}',
@@ -382,7 +391,7 @@ class Visualize_Plotly:
         # 3) total mixture PDF
         try:
             # if your GMM class defines this
-            pdf_vals = GMM.gaussian_mixture_pdf(x_values, meds, stds, weights)
+            pdf_vals = GMM.gaussian_mixture_pdf(x_plot, meds, stds, weights)
         except Exception:
             # fallback manual sum
             pdf_vals = _np.zeros_like(x_values, dtype=float)
