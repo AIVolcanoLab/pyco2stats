@@ -292,7 +292,7 @@ class Visualize_Mpl:
             label='45° Line'
         )
 
-    return ax
+        return ax
 
     @staticmethod
     def plot_gmm_pdf(x, meds, stds, weights, ax=None, data=None, pdf_plot_kwargs=None, component_plot_kwargs=None, hist_plot_kwargs=None):
