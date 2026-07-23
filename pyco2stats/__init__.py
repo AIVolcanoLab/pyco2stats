@@ -1,4 +1,4 @@
-__author__ = 'Maurizio Petrelli, Alessandra Ariano, Marco Baroni'
+__author__ = 'Maurizio Petrelli, Marco Bareoni, Alessandra Ariano, Mónica Ágreda-López, Lisa Ricci, Francesco Frondini, Giuseppe Saldi, Carlo Cardellini, Diego Perugini, Giovanni Chiodini'
 
 
 # PyCO2stats/__init__.py
@@ -9,4 +9,4 @@ from .visualize_mpl import Visualize_Mpl
 from .propagate_errors import Propagate_Errors
 from .visualize_plotly import Visualize_Plotly
 
-__all__ = ["DataHandler", "GMM", "Visualize_Mpl", "Sinclair", "Stats", "Propagate_Errors", "Visualize_Plotly"]
+__all__ = ["GMM", "Visualize_Mpl", "Sinclair", "Stats", "Propagate_Errors", "Visualize_Plotly"]
