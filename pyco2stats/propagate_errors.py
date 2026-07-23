@@ -122,7 +122,7 @@ class Propagate_Errors:
             # Generate perturbed log-transformed data using additive noise
             # Pass original_log_data and percentage_relative_error directly
             perturbed_log_data = Propagate_Errors._generate_perturbed_sample(
-                original_log_data, percentage_relative_error # Pass percentage directly
+                original_log_data, percentage_relative_error, random_state=None # Pass percentage directly
             )
 
             # Store stats of the perturbed sample BEFORE fitting GMM
@@ -229,7 +229,7 @@ class Propagate_Errors:
             # Generate perturbed log-transformed data using additive noise
             # Pass original_log_data and percentage_relative_error directly
             perturbed_log_data = Propagate_Errors._generate_perturbed_sample(
-                original_log_data, percentage_relative_error # Pass percentage directly
+                original_log_data, percentage_relative_error, random_state = None # Pass percentage directly
             )
 
             # sklearn GMM expects data in a 2D array, even for univariate data
@@ -333,7 +333,7 @@ class Propagate_Errors:
             # Generate perturbed log-transformed data using additive noise
             # Pass original_log_data and percentage_relative_error directly
             perturbed_log_data = Propagate_Errors._generate_perturbed_sample(
-                original_log_data, percentage_relative_error # Pass percentage directly
+                original_log_data, percentage_relative_error, random_state = None # Pass percentage directly
             )
 
             # Convert perturbed data (NumPy array) to PyTorch tensor using torch.from_numpy
