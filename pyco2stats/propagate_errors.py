@@ -23,7 +23,7 @@ class Propagate_Errors:
     """
 
     @staticmethod
-    def _generate_perturbed_sample(data_log_scale, percentage_relative_error):
+    def _generate_perturbed_sample(data_log_scale, percentage_relative_error, random_state = None):
         """
         Generates a single perturbed dataset by adding random noise to the
         log-transformed data, where the noise standard deviation is a fixed
@@ -49,8 +49,10 @@ class Propagate_Errors:
         # This is the percentage relative error (as a fraction)
         std_dev_additive_noise = percentage_relative_error / 100.0
 
+        rng = np.random.default_rng(random_state)
+
         # Generate random noise from a normal distribution with the calculated std dev
-        additive_noise = np.random.normal(loc=0, scale=std_dev_additive_noise, size=data_log_scale.shape)
+        additive_noise = rng.normal(loc=0, scale=std_dev_additive_noise, size=data_log_scale.shape)
 
         # Add the noise to the log-transformed data
         perturbed_data_log_scale = data_log_scale + additive_noise
@@ -60,13 +62,13 @@ class Propagate_Errors:
     @staticmethod
     def propagate_em_error(
         original_log_data, # Renamed to clarify it's the log data, removed type hint for flexibility
-        percentage_relative_error: float, # Renamed parameter for clarity
-        n_simulations: int,
-        n_components: int,
-        random_state: None,
-        max_iter: int = 100,
+        percentage_relative_error, # Renamed parameter for clarity
+        n_simulations,
+        n_components,
+        random_state = None,
+        max_iter = 100,
         tol: float = 1e-6,
-        show_progress: bool = False
+        show_progress = False
     ) -> dict:
         """
         Propagates error through the EM-based GMM fitting by simulating
@@ -85,10 +87,14 @@ class Propagate_Errors:
             The number of Monte Carlo simulations to run.
         n_components : int
             The number of Gaussian components in the mixture.
+        random_state : int
+            Random seed. Default is None.
         max_iter : int
             Max iterations for the EM algorithm.
         tol : float
             Tolerance for EM convergence.
+        show_progress : bool
+            If to show a progress bar or not. Default is False.
 
         Returns
         -------
@@ -110,8 +116,6 @@ class Propagate_Errors:
 
 
         # original_log_data_std and original_log_data_mean are not needed for perturbation std dev calculation now
-
-
        
         iterator = tqdm(range(n_simulations), desc="gaussian_mixture_em Monte Carlo") if show_progress else range(n_simulations)
         for i in iterator:
