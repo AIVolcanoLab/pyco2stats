@@ -1195,6 +1195,7 @@ class Stats:
             sd_muhat_ci_normal = np.sqrt(np.exp(2 * Y_mu_hat) * ((Stats.finneys_g(n - 1, Y_sigma2_hat/2)**2) - Stats.finneys_g(n - 1, (Y_sigma2_hat * (n - 2))/(n - 1))))
         elif method == "umvue_sichel":
             X_theta_hat, X_var_hat = Stats.umvue_sichel_lognormal_estimator(X_lognorm_data)
+            sd_muhat_ci_normal = np.sqrt(X_var_hat)
         elif method == "qmle":
             X_theta_hat = math.exp(Y_mu_hat + 0.5 * Y_sigma2_hat)
             se2 = (np.exp(Y_sigma2_hat) - 1) * np.exp(2 * Y_mu_hat + Y_sigma2_hat)
@@ -1972,7 +1973,7 @@ class Stats:
         try:
             test_val = Stats.lands_cond_t_prop_density_polar(theta_max, nu, new_zeta)
             if np.isfinite(test_val):
-                scaling_factor, _ = quad(lands_cond_t_prop_density_polar, -np.pi/2, np.pi/2, args=(nu, new_zeta))
+                scaling_factor, _ = quad(Stats.lands_cond_t_prop_density_polar, -np.pi/2, np.pi/2, args=(nu, new_zeta))
                 def density(theta):
                     return Stats.lands_cond_t_prop_density_polar(theta, nu, new_zeta) / scaling_factor
                 #print(f"[DEBUG] Scaling factor (new_zeta={new_zeta}) = {scaling_factor}")
