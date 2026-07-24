@@ -193,7 +193,19 @@ class GMM:
 
         # Get the optimized parameters
         means = gmm.means_.flatten()
-        std_devs = np.sqrt(gmm.covariances_.flatten()) if covariance_type == 'full' else np.sqrt(gmm.covariances_)
+        #std_devs = np.sqrt(gmm.covariances_.flatten()) if covariance_type == 'full' else np.sqrt(gmm.covariances_)
+        if covariance_type == "full":
+            variances = gmm.covariances_[:, 0, 0]
+        elif covariance_type == "tied":
+            variances = np.repeat(gmm.covariances_[0, 0],n_components)
+        elif covariance_type == "diag":
+            variances = gmm.covariances_[:, 0]
+        elif covariance_type == "spherical":
+            variances = gmm.covariances_
+        else:
+            raise ValueError("covariance_type must be 'full', 'tied', 'diag', or 'spherical'.")
+        original_std_devs = (np.sqrt(variances) * scaler.scale_[0])
+        
         weights = gmm.weights_
 
         # Inverse transform the means to the original scale
