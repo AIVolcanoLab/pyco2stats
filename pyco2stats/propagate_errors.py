@@ -36,6 +36,8 @@ class Propagate_Errors:
         percentage_relative_error : float
             The relative uncertainty in percent (e.g., 5 for 5%).
             This directly determines the standard deviation of the additive noise on the log scale.
+        random_state : int
+            Random seed. Default is None.
 
         Returns
         -------
@@ -98,7 +100,7 @@ class Propagate_Errors:
 
         Returns
         -------
-        Result : dist
+        Result : dict
             A dictionary containing lists of results from each simulation:
             {'means': list[np.ndarray], 'std_devs': list[np.ndarray], 'weights': list[np.ndarray],
             'perturbed_data_means': list[float], 'perturbed_data_stds': list[float]}
@@ -116,13 +118,14 @@ class Propagate_Errors:
 
 
         # original_log_data_std and original_log_data_mean are not needed for perturbation std dev calculation now
-       
+        rng = np.random.default_rng(random_state)
         iterator = tqdm(range(n_simulations), desc="gaussian_mixture_em Monte Carlo") if show_progress else range(n_simulations)
         for i in iterator:
+         
             # Generate perturbed log-transformed data using additive noise
             # Pass original_log_data and percentage_relative_error directly
             perturbed_log_data = Propagate_Errors._generate_perturbed_sample(
-                original_log_data, percentage_relative_error, random_state=None # Pass percentage directly
+                original_log_data, percentage_relative_error, random_state=rng # Pass percentage directly
             )
 
             # Store stats of the perturbed sample BEFORE fitting GMM
@@ -172,6 +175,7 @@ class Propagate_Errors:
         percentage_relative_error: float, # Renamed parameter
         n_simulations: int,
         n_components: int,
+        random_state = None,
         max_iter: int = 10,
         tol: float = 1e-10,
         n_init: int = 20,
@@ -195,6 +199,8 @@ class Propagate_Errors:
             The number of Monte Carlo simulations to run.
         n_components : int
             The number of Gaussian components in the mixture.
+        random_state : int
+            Random seed. Default is None.
         max_iter : int
             Max iterations for the sklearn EM algorithm.
         tol : float
@@ -216,20 +222,18 @@ class Propagate_Errors:
         # Ensure input data is a numpy array
         original_log_data = np.asarray(original_log_data)
 
-
         simulated_means = []
         simulated_std_devs = []
         simulated_weights = []
 
         # original_log_data_std is not needed for perturbation std dev calculation now
-
-
+        rng = np.random.default_rng(random_state)
         iterator = tqdm(range(n_simulations), desc="gaussian_mixture_sklearn Monte Carlo") if show_progress else range(n_simulations)
         for i in iterator:
             # Generate perturbed log-transformed data using additive noise
             # Pass original_log_data and percentage_relative_error directly
             perturbed_log_data = Propagate_Errors._generate_perturbed_sample(
-                original_log_data, percentage_relative_error, random_state = None # Pass percentage directly
+                original_log_data, percentage_relative_error, random_state = rng # Pass percentage directly
             )
 
             # sklearn GMM expects data in a 2D array, even for univariate data
@@ -240,7 +244,7 @@ class Propagate_Errors:
                 means, std_devs, weights, _ = GMM.gaussian_mixture_sklearn(
                     perturbed_data_2d, n_components=n_components, max_iter=max_iter,
                     tol=tol, n_init=n_init, suppress_warnings=suppress_warnings,
-                    covariance_type=covariance_type
+                    covariance_type=covariance_type, random_state = random_state
                 )
 
                 # --- Parameter Alignment Step ---
@@ -278,6 +282,7 @@ class Propagate_Errors:
         mean_constraints: list,
         std_constraints: list,
         n_components: int,
+        random_state = None,
         n_epochs: int = 5000,
         lr: float = 0.001,
         verbose: bool = False, # Suppress verbose output during MC simulations
@@ -303,6 +308,8 @@ class Propagate_Errors:
             List of tuples specifying (min, max) constraints for each component's std dev on the log scale.
         n_components : int
             Number of Gaussian components.
+        random_state : int
+            Random seed. Default is None.
         n_epochs : int
             Number of optimization epochs for constrained GMM.
         lr : float
@@ -327,13 +334,13 @@ class Propagate_Errors:
 
         # original_log_data_std is not needed for perturbation std dev calculation now
 
-
+        rng = np.random.default_rng(random_state)
         iterator = tqdm(range(n_simulations), desc="constrained_gaussian_mixture Monte Carlo") if show_progress else range(n_simulations)
         for i in iterator:
             # Generate perturbed log-transformed data using additive noise
             # Pass original_log_data and percentage_relative_error directly
             perturbed_log_data = Propagate_Errors._generate_perturbed_sample(
-                original_log_data, percentage_relative_error, random_state = None # Pass percentage directly
+                original_log_data, percentage_relative_error, random_state = rng # Pass percentage directly
             )
 
             # Convert perturbed data (NumPy array) to PyTorch tensor using torch.from_numpy
@@ -344,7 +351,7 @@ class Propagate_Errors:
             try:
                 means, std_devs, weights = GMM.constrained_gaussian_mixture(
                     perturbed_data_tensor, mean_constraints, std_constraints,
-                    n_components, n_epochs=n_epochs, lr=lr, verbose=False # Force verbose off for MC
+                    n_components, n_epochs=n_epochs, lr=lr, verbose=verbose, random_state = random_state # Force verbose off for MC
                 )
 
                 # --- Parameter Alignment Step ---
