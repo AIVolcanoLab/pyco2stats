@@ -1195,7 +1195,7 @@ class Stats:
             sd_muhat_ci_normal = np.sqrt(np.exp(2 * Y_mu_hat) * ((Stats.finneys_g(n - 1, Y_sigma2_hat/2)**2) - Stats.finneys_g(n - 1, (Y_sigma2_hat * (n - 2))/(n - 1))))
         elif method == "umvue_sichel":
             X_theta_hat, X_var_hat = Stats.umvue_sichel_lognormal_estimator(X_lognorm_data)
-            sd_muhat_ci_normal = np.sqrt(X_var_hat)
+            sd_muhat_ci_normal = np.sqrt(np.exp(2 * Y_mu_hat) * (Stats.finneys_g(n - 1,Y_sigma2_hat / 2) ** 2- Stats.finneys_g(n - 1,Y_sigma2_hat * (n - 2) / (n - 1))))
         elif method == "qmle":
             X_theta_hat = math.exp(Y_mu_hat + 0.5 * Y_sigma2_hat)
             se2 = (np.exp(Y_sigma2_hat) - 1) * np.exp(2 * Y_mu_hat + Y_sigma2_hat)
@@ -1404,7 +1404,7 @@ class Stats:
         hat_sigma2 = np.var(log_data, ddof=1)
 
         z1 = (n - 1) / 2
-        z2 = hat_sigma2 * (n - 1) / 4
+        z2 = hat_sigma2 * (n - 1) / (4 * n)
         try:
             gamma_n = hyp0f1(z1, z2)
         except Exception as e:
@@ -1458,6 +1458,9 @@ class Stats:
             If non-finite terms are generated, the series evaluation fails,
             or convergence is not reached within ``max_iter`` iterations.
         """
+        if np.unique(X_lognorm_data).size < 2:
+            raise ValueError("At least two distinct observations are required.")
+        
         tol = tol if tol is not None else np.finfo(float).eps
         m_arr = np.atleast_1d(m).astype(int)
         z_arr = np.atleast_1d(z).astype(float)
