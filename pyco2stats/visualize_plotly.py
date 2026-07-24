@@ -69,7 +69,7 @@ class Visualize_Plotly:
         return trace
 
     @staticmethod
-    def qq_plot(raw_data, fig=None, scatter_kwargs=None, line_kwargs=None):
+    def qq_plot_normal(raw_data, fig=None, scatter_kwargs=None, line_kwargs=None):
         """
         Generate a QQ-plot with sigma quantiles versus sorted data.
         
