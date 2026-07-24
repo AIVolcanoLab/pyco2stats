@@ -204,6 +204,7 @@ class GMM:
             variances = gmm.covariances_
         else:
             raise ValueError("covariance_type must be 'full', 'tied', 'diag', or 'spherical'.")
+            
         original_std_devs = (np.sqrt(variances) * scaler.scale_[0])
         
         weights = gmm.weights_
@@ -211,7 +212,7 @@ class GMM:
         # Inverse transform the means to the original scale
         original_means =  scaler.inverse_transform(gmm.means_).flatten()
         
-        original_std_devs = std_devs  * scaler.scale_
+        #original_std_devs = std_devs  * scaler.scale_
 
         # Custom tracking of log-likelihood over iterations
         log_likelihoods = []
