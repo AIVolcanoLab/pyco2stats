@@ -299,7 +299,7 @@ class Stats:
 
         .. math::
 
-            \sigma \approx \frac{\textrm{MAD}}{\Phi^{-1}(3/4)} \approx 1.4826 \cdot \textrm{MAD}
+            \sigma \approx \frac{\textrm{MAD}}{\Phi^{-1}(P)} \approx 1.4826 \cdot \textrm{MAD}
 
         where 
         
