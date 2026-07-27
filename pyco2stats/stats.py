@@ -1197,7 +1197,7 @@ class Stats:
             X_theta_hat, X_var_hat = Stats.umvue_sichel_lognormal_estimator(X_lognorm_data)
             sd_muhat_ci_normal = np.sqrt(np.exp(2 * Y_mu_hat) * (Stats.finneys_g(n - 1,Y_sigma2_hat / 2) ** 2- Stats.finneys_g(n - 1,Y_sigma2_hat * (n - 2) / (n - 1))))
         elif method == "qmle":
-            X_theta_hat = math.exp(Y_mu_hat + 0.5 * Y_sigma2_hat)
+            X_theta_hat = np.exp(Y_mu_hat + 0.5 * Y_sigma2_hat)
             se2 = (np.exp(Y_sigma2_hat) - 1) * np.exp(2 * Y_mu_hat + Y_sigma2_hat)
             sd_muhat_ci_normal = np.sqrt(np.exp(2 * Y_mu_hat + Y_sigma2_hat/n) * (np.exp(Y_sigma2_hat/n) * ((1 - (2 * Y_sigma2_hat)/df)**(-df/2)) - ((1 - Y_sigma2_hat/df)**(-df))))
             X_var_hat = se2 / n
@@ -1247,39 +1247,36 @@ class Stats:
                         n=n,
                         test_statistic="z",
                         ci_type=ci_type,
-                        conf_level=conf_level
-                    )
+                        conf_level=conf_level)
             elif ci_method == "zou":
                 ci_limits = Stats.ci_lnorm_zou(
                     mu_hat=Y_mu_hat,  
                     sigma2_hat=Y_sigma2_hat,
                     n=n,
                     ci_type=ci_type,
-                    conf_level=conf_level
-                )
+                    conf_level=conf_level)
             elif ci_method == "cox":
                 ci_limits = Stats.ci_cox(
                     mu_hat=Y_mu_hat,
                     sigma2_hat=Y_sigma2_hat,
                     n=n,
                     ci_type=ci_type,
-                    conf_level=conf_level
-                )
-            #elif ci_method == "sichel":
-            #    ci_limits = Stats.ci_sichel(
-            #        mu_hat=Y_mu_hat,
-            #        sigma2_hat=Y_sigma2_hat,
-            #        n=n,
-            #        ci_type=ci_type,
-            #        conf_level=conf_level
-            #    )
+                    conf_level=conf_level)
+            elif ci_method == "sichel":
+                if method not in {"umvue", "umvue_sichel"}:
+                    warnings.warn("Sichel confidence intervals are designed for the Finney-Sichel UMVUE estimator.", UserWarning)
+                ci_limits = Stats.ci_sichel(
+                    mu_hat=Y_mu_hat,
+                    sigma2_hat=Y_sigma2_hat,
+                    n=n,
+                    ci_type=ci_type,
+                    conf_level=conf_level)
             else:
                 raise ValueError(f"Unknown ci_method '{ci_method}'")
 
             result.update(ci_limits)
 
         return result
-
 
     @staticmethod
     def umvue_finney_lognormal_estimator(data):
@@ -1344,8 +1341,8 @@ class Stats:
         s_sq  = log_data.var(ddof=1)
 
         # Finney’s UMVUE for the mean
-        alpha = (n - 1.0) / 2.0
-        z     = (n - 1.0)**2 / (4.0 * n) * s_sq
+        #alpha = (n - 1.0) / 2.0
+        #z     = (n - 1.0)**2 / (4.0 * n) * s_sq
         
         phi = Stats.finneys_g(n - 1, s_sq/2)
         umvu_mean = np.exp(y_bar) * phi
@@ -1362,10 +1359,16 @@ class Stats:
 
     @staticmethod
     def umvue_sichel_lognormal_estimator(X_lognorm_data):
-        """
+        r"""
         Estimate the mean and variance of a log-normal population using
-        Sichel's estimator.
+        Sichel's estimator. Functionally, this is identical to the Finney's UMVUE estimator,
+        but it is based on th ecomputation of the hypergeometric function:
 
+        .. math::
+
+        _{0}F_{1}(v,z) = \sum_{k=0}^{\inf}\frac{z^{k}}{(v)_{k}k!}
+
+        Where the term encompassing v is the rising factorial of v
         The method operates on log-transformed observations and uses the
         confluent hypergeometric limit function to compute the correction
         factor for the mean estimate.
@@ -1403,10 +1406,10 @@ class Stats:
         hat_mu = np.mean(log_data)
         hat_sigma2 = np.var(log_data, ddof=1)
 
-        z1 = (n - 1) / 2
-        z2 = hat_sigma2 * (n - 1) / (4 * n)
+        v = (n - 1) / 2
+        z = hat_sigma2 * ((n - 1)**2) / (4 * n)
         try:
-            gamma_n = hyp0f1(z1, z2)
+            gamma_n = hyp0f1(v,z)
         except Exception as e:
             warnings.warn(f"Sichel estimator hyp0f1 failed: {e}", RuntimeWarning)
             return np.nan, np.nan
@@ -1458,8 +1461,6 @@ class Stats:
             If non-finite terms are generated, the series evaluation fails,
             or convergence is not reached within ``max_iter`` iterations.
         """
-        if np.unique(X_lognorm_data).size < 2:
-            raise ValueError("At least two distinct observations are required.")
         
         tol = tol if tol is not None else np.finfo(float).eps
         m_arr = np.atleast_1d(m).astype(int)
@@ -1503,68 +1504,10 @@ class Stats:
         return float(result) if result.size == 1 else result
 
     @staticmethod
-    def lookup_psi(p, V, n, psi_table=[
-        (3, 0.20, 0.58, 1.87),
-        (3, 0.40, 0.49, 2.29),
-        (5, 0.20, 0.67, 1.73),
-        (5, 0.40, 0.55, 2.08),
-        (10,0.20, 0.75, 1.59),
-        (10,0.40, 0.64, 1.82),
-    ]):
-        """
-        Retrieve a lower or upper Psi factor from a lookup table.
-
-        The lookup is first restricted to entries matching the requested
-        sample size. If an exact match for ``V`` is unavailable, the entry
-        with the nearest tabulated value is used.
-
-        Parameters
-        ----------
-        p : float
-            Probability used to select the lower or upper Psi factor.
-            Values below 0.5 select the lower factor; values greater than or
-            equal to 0.5 select the upper factor.
-        V : float
-            Variance-related value used to select the corresponding table
-            entry.
-        n : int
-            Sample size for which the Psi factors are required.
-        psi_table : sequence of tuple, optional
-            Lookup table whose entries have the form
-            ``(sample_size, V, lower_psi, upper_psi)``. Default is 
-            [(3, 0.20, 0.58, 1.87),
-             (3, 0.40, 0.49, 2.29),
-             (5, 0.20, 0.67, 1.73),
-             (5, 0.40, 0.55, 2.08),
-             (10,0.20, 0.75, 1.59),
-             (10,0.40, 0.64, 1.82),]
-
-        Returns
-        -------
-        psi : float
-            Selected lower or upper Psi factor.
-
-        Raises
-        ------
-        ValueError
-            If the lookup table contains no entries for the requested
-            sample size.
-        """
-        entries = [e for e in psi_table if e[0] == n]
-        if not entries:
-            raise ValueError(f"No Psi-factors for n={n}")
-        for _, v_val, psi_l, psi_u in entries:
-            if math.isclose(v_val, V):
-                return psi_l if p < 0.5 else psi_u
-        _, _, psi_l, psi_u = min(entries, key=lambda e: abs(e[1] - V))
-        return psi_l if p < 0.5 else psi_u
-
-
-    @staticmethod
     def ci_standard_approx(
         mu_hat, sigma2_hat, n,
         df=None, ci_type="two-sided", conf_level=0.95,
-        lb=-math.inf, ub=math.inf, test_statistic="z"):
+        lb=-math.inf, ub=math.inf, test_statistic="t"):
         """
         Compute a normal- or Student's t-based approximate confidence interval.
 
@@ -1612,6 +1555,9 @@ class Stats:
             If a t-based interval is requested but the degrees of freedom
             cannot be determined.
         """
+        if ci_type not in {"two-sided","lower","upper",}:
+            raise ValueError("ci_type must be 'two-sided', 'lower', or 'upper'.")
+        
         sd_hat = np.sqrt(sigma2_hat)
         alpha = 1 - conf_level
         test_statistic = test_statistic.lower()
@@ -2308,3 +2254,102 @@ class Stats:
         result['parameter'] = "mean"
 
         return result
+
+    @staticmethod
+    def ci_sichel(mu_hat, sigma2_hat, n, ci_type="two-sided", conf_level=0.95, sigma2_assumed=0.7):
+        """
+        Compute Sichel confidence limits for the arithmetic mean of a log-normal population. 
+
+        Parameters
+        ----------
+        mu_hat : float
+            Mean of the natural-log observations.
+        sigma2_hat : float
+            Sample variance of the natural-log observations calculated
+            with ``ddof=1``.
+        n : int
+            Sample size.
+        ci_type : {'two-sided', 'lower', 'upper'}, optional
+            Type of confidence interval.
+        conf_level : float, optional
+            Confidence level. The default is 0.95.
+        sigma2_assumed : float or {'sample'}, optional
+            Population log-variance used to evaluate Sichel's sampling
+            distribution. The historical value is 0.7. If ``'sample'``,
+            ``sigma2_hat`` is used.
+
+        Returns
+        -------
+        limits : dict
+            Dictionary containing ``LCL`` and ``UCL``.
+        """
+        sigma2_used = sigma2_hat if sigma2_assumed == "sample" else float(sigma2_assumed)
+
+        # Sichel uses the logarithmic variance calculated with divisor n.
+        V = (n - 1) * sigma2_hat / n
+
+        def gamma_n(v):
+            return hyp0f1((n - 1) / 2, (n - 1) * np.asarray(v) / 4)
+
+        def sigma_t2(v):
+            v = np.asarray(v)
+            return np.maximum(v / (n - 1) + np.log(gamma_n(v**2 / (n - 1))), 0.0)
+
+        # Sichel point estimator.
+        t_estimate = np.exp(mu_hat) * gamma_n(V)
+
+        # Gauss-Legendre quadrature on the probability scale of W, where:
+        # W = sigma^2 * chi-square(n - 1) / n.
+        nodes, weights = np.polynomial.legendre.leggauss(96)
+        probabilities = (nodes + 1) / 2
+        weights = weights / 2
+
+        w = stats.gamma.ppf(probabilities, a=(n - 1) / 2, scale=2 * sigma2_used / n)
+        sigma_t2_w = sigma_t2(w)
+        sigma_t_w = np.sqrt(sigma_t2_w)
+        d_w = sigma2_used / 2 - np.log(gamma_n(w)) - sigma_t2_w / 2
+        multiplier = np.sqrt(n / sigma2_used)
+
+        def cdf_T(T):
+            return float(np.dot(weights, norm.cdf(multiplier * (sigma_t_w * T + d_w))))
+
+        def quantile_T(p):
+            lower, upper = -4.0, 4.0
+
+            for _ in range(20):
+                if cdf_T(lower) <= p:
+                    break
+                lower *= 2
+
+            for _ in range(20):
+                if cdf_T(upper) >= p:
+                    break
+                upper *= 2
+
+            return brentq(lambda T: cdf_T(T) - p, lower, upper, xtol=1e-10)
+
+        sigma_t2_V = float(sigma_t2(V))
+        sigma_t_V = np.sqrt(sigma_t2_V)
+
+        def psi(p):
+            T_complement = quantile_T(1 - p)
+            return np.exp(sigma_t2_V / 2 - T_complement * sigma_t_V)
+
+        alpha = 1 - conf_level
+
+        if ci_type == "two-sided":
+            LCL = t_estimate * psi(alpha / 2)
+            UCL = t_estimate * psi(1 - alpha / 2)
+
+        elif ci_type == "lower":
+            LCL = t_estimate * psi(alpha)
+            UCL = math.inf
+
+        elif ci_type == "upper":
+            LCL = 0.0
+            UCL = t_estimate * psi(1 - alpha)
+
+        else:
+            raise ValueError("ci_type must be 'two-sided', 'lower', or 'upper'.")
+
+        return {"LCL": float(LCL), "UCL": float(UCL)}
