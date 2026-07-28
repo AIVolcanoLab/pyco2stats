@@ -1366,7 +1366,7 @@ class Stats:
 
         .. math::
 
-            {}_{0}F_{1}(v,z) = \sum_{k=0}^{\inf}\frac{z^{k}}{(v)_{k}k!}
+            {}_{0}F_{1}(v,z) = \sum_{k=0}^{\infty}\frac{z^{k}}{(v)_{k}k!}
 
         Where the term encompassing v is the rising factorial of v
         The method operates on log-transformed observations and uses the
