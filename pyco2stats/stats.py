@@ -1366,7 +1366,7 @@ class Stats:
 
         .. math::
 
-        _{0}F_{1}(v,z) = \sum_{k=0}^{\inf}\frac{z^{k}}{(v)_{k}k!}
+        {}_{0}F_{1}(v,z) = \sum_{k=0}^{\inf}\frac{z^{k}}{(v)_{k}k!}
 
         Where the term encompassing v is the rising factorial of v
         The method operates on log-transformed observations and uses the
@@ -1422,8 +1422,12 @@ class Stats:
 
     @staticmethod
     def finneys_g(m, z, n_terms_inc=10, max_iter=100, tol=1e-10):
-        """
-        Evaluate Finney's correction function for log-normal estimation.
+        r"""
+        Evaluate Finney's correction function for log-normal estimation:
+
+        .. math::
+
+            g_{m}(z) = 1 + \sum_{i = 1}^{\infinity}\frac{m^{2i-1}z^{i}}{i!(m+1)^{i}\prod_{j=1}^{i-1}(m+2j)}
 
         The function evaluates the correction series used in Finney's
         uniformly minimum-variance unbiased estimator of the arithmetic
