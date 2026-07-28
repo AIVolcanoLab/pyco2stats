@@ -1421,7 +1421,7 @@ class Stats:
 
 
     @staticmethod
-    def finneys_g(m, z, n_terms_inc=10, max_iter=100, tol=None):
+    def finneys_g(m, z, n_terms_inc=10, max_iter=100, tol=1e-10):
         """
         Evaluate Finney's correction function for log-normal estimation.
 
@@ -1432,20 +1432,15 @@ class Stats:
 
         Parameters
         ----------
-        m : int or array-like of int
-            Degrees-of-freedom parameter of Finney's correction function.
+        m : int
+            Degrees-of-freedom parameter of Finney's correction function (usually number of samples - 1).
         z : float or array-like of float
             Argument of Finney's correction function. If negative values are
             supplied, alternating signs are applied to the series terms.
-        n_terms_inc : int, optional
-            Number of additional series terms evaluated at each iteration.
-            The default is 10.
         max_iter : int, optional
-            Maximum number of series-expansion iterations. The default is
-            100.
+            Maximum number of series-expansion iterations. The default is 100.
         tol : float or None, optional
-            Convergence tolerance applied to the final series term. If
-            `None`, machine precision for floating-point values is used.
+            Convergence tolerance applied to the final series term. Default is 10^-10.
 
         Returns
         -------
@@ -1461,47 +1456,63 @@ class Stats:
             If non-finite terms are generated, the series evaluation fails,
             or convergence is not reached within ``max_iter`` iterations.
         """
+
+        if isinstance(z, np.ndarray) == True or isinstance(z, list) == True:
+            g = np.ones(len(z))
+            term = np.ones(len(z))*(m * z / (m + 1))
+            for k in range(len(z)):
+                for i in range(max_iter+1):
+                    term[k] *= (m / (m + 2 * i)) * (m / (m + 1)) * (z[i] / (i + 1))
+                    g[k] += term[k]
+        else:
+            term = m * z / (m + 1)
+            g = 1.0 + term
+            for i in range(1, max_iter):
+                term *= (m / (m + 2 * i)) * (m / (m + 1)) * (z / (i + 1))
+                g += term
         
-        tol = tol if tol is not None else np.finfo(float).eps
-        m_arr = np.atleast_1d(m).astype(int)
-        z_arr = np.atleast_1d(z).astype(float)
-        result = np.full_like(z_arr, np.nan, dtype=float)
+        return g
+        
+        #tol = tol if tol is not None else np.finfo(float).eps
+        #m_arr = np.atleast_1d(m).astype(int)
+        #z_arr = np.atleast_1d(z).astype(float)
+        #result = np.full_like(z_arr, np.nan, dtype=float)
 
-        def _terms(m_i, z_i, n_terms):
-            p = np.arange(2, n_terms)
-            num = np.concatenate(([0], [math.log(m_i) + math.log(abs(z_i))],
-                                   2*p*math.log(m_i) + np.log(m_i + 2*p) + p*math.log(abs(z_i))))
-            cumsum_m2p = np.cumsum(np.log(m_i + 2*p))
-            cumsum_p = np.cumsum(np.log(p))
-            denom = np.concatenate(([0], [math.log(m_i + 1)],
-                                     math.log(m_i) + math.log(m_i + 2) + cumsum_m2p
-                                     + p*math.log(m_i + 1) + cumsum_p))
-            terms = np.exp(num - denom)
-            if z_i < 0:
-                terms *= (-1)**np.arange(len(terms))
-            return terms
+        #def _terms(m_i, z_i, n_terms):
+        #    p = np.arange(2, n_terms)
+        #    num = np.concatenate(([0], [math.log(m_i) + math.log(abs(z_i))],
+        #                           2*p*math.log(m_i) + np.log(m_i + 2*p) + p*math.log(abs(z_i))))
+        #    cumsum_m2p = np.cumsum(np.log(m_i + 2*p))
+        #    cumsum_p = np.cumsum(np.log(p))
+        #    denom = np.concatenate(([0], [math.log(m_i + 1)],
+        #                             math.log(m_i) + math.log(m_i + 2) + cumsum_m2p
+        #                             + p*math.log(m_i + 1) + cumsum_p))
+        #    terms = np.exp(num - denom)
+        #    if z_i < 0:
+        #        terms *= (-1)**np.arange(len(terms))
+        #    return terms
 
-        for idx, (m_i, z_i) in enumerate(zip(m_arr, z_arr)):
-            converged = False
-            for block in range(1, max_iter+1):
-                n_terms = n_terms_inc * block
-                try:
-                    terms = _terms(m_i, z_i, n_terms)
-                    if not np.isfinite(terms).all():
-                        raise ValueError("Non-finite terms in series.")
-                    if abs(terms[-1]) <= tol:
-                        result[idx] = terms.sum()
-                        converged = True
-                        break
-                except Exception as e:
-                    msg = f"finneys_g failed at index {idx}: m={m_i}, z={z_i}, reason: {e}"
-                    warnings.warn(msg, RuntimeWarning)
-                    break
-            if not converged:
-                msg = f"finneys_g did not converge at index {idx}: m={m_i}, z={z_i}"
-                warnings.warn(msg, RuntimeWarning)
+        #for idx, (m_i, z_i) in enumerate(zip(m_arr, z_arr)):
+        #    converged = False
+        #    for block in range(1, max_iter+1):
+        #        n_terms = n_terms_inc * block
+        #        try:
+        #            terms = _terms(m_i, z_i, n_terms)
+        #            if not np.isfinite(terms).all():
+        #                raise ValueError("Non-finite terms in series.")
+        #            if abs(terms[-1]) <= tol:
+        #                result[idx] = terms.sum()
+        #                converged = True
+        #                break
+        #        except Exception as e:
+        #            msg = f"finneys_g failed at index {idx}: m={m_i}, z={z_i}, reason: {e}"
+        #            warnings.warn(msg, RuntimeWarning)
+        #            break
+        #    if not converged:
+        #        msg = f"finneys_g did not converge at index {idx}: m={m_i}, z={z_i}"
+        #        warnings.warn(msg, RuntimeWarning)
 
-        return float(result) if result.size == 1 else result
+        #return float(result) if result.size == 1 else result
 
     @staticmethod
     def ci_standard_approx(
