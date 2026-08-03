@@ -1630,18 +1630,9 @@ class Stats:
 
     @staticmethod
     def ci_lnorm_zou(mu_hat, sigma2_hat, n, ci_type, conf_level):
-        r"""
+        """
         Compute a confidence interval for a log-normal mean using Zou's
-        method:
-
-        .. math::
-
-            [ \hat{\theta}_{\mathrm{QMLE}} \exp\left\{ -\hat{\sigma} \sqrt{ \frac{z_{1-\alpha/2}^{\,2}}{n} + \frac{\hat{\sigma}^{2}}{4} \left( 1- \frac{n-1} {\chi^{2}_{1-\alpha/2,\,n-1}} \right)^{2} } \right\}, \; \hat{\theta}_{\mathrm{QMLE}} \exp\left\{ \hat{\sigma} \sqrt{ \frac{z_{1-\alpha/2}^{\,2}}{n} + \frac{\hat{\sigma}^{2}}{4} \left( \frac{n-1} {\chi^{2}_{\alpha/2,\,n-1}} -1 \right)^{2} } \right\} \right]
-            
-        Where :math:'\theta_{QMLE}' is the estimation of the lognormal mean 
-        computed with the QMLE method, :math:'\alpha' represents a quantile of 
-        both the z or :math:'\chi' distribution, n is the sample numerosity 
-        and :math:'\hat\sigma' is the standard deviation of the log-transformed data.
+        method.
         Separate confidence intervals are constructed for the mean and
         variance on the logarithmic scale. Their distances from the point
         estimates are then combined to obtain confidence limits for the
