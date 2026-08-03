@@ -1636,8 +1636,8 @@ class Stats:
 
         .. math::
 
-            \left[\hat\theta_{QMLE}e^{-\hat\sigma\sqrt{\frac{z^{2}_{1-\alpha/2}{n}}+\frac{\hat\sigma^2}{2}\left( 1-\frac{n-1}{\chi_{1-\alpha/2,n-1}} \right)^{2}}} ; \hat\theta_{QMLE}e^{\hat\sigma\sqrt{\frac{z^{2}_{1-\alpha/2}{n}}+\frac{\hat\sigma^2}{2}\left( \frac{n-1}{\chi_{1-\alpha/2,n-1}}-1 \right)^{2}}} \right]
-
+            [ \hat{\theta}_{\mathrm{QMLE}} \exp\left\{ -\hat{\sigma} \sqrt{ \frac{z_{1-\alpha/2}^{\,2}}{n} + \frac{\hat{\sigma}^{2}}{4} \left( 1- \frac{n-1} {\chi^{2}_{1-\alpha/2,\,n-1}} \right)^{2} } \right\}, \; \hat{\theta}_{\mathrm{QMLE}} \exp\left\{ \hat{\sigma} \sqrt{ \frac{z_{1-\alpha/2}^{\,2}}{n} + \frac{\hat{\sigma}^{2}}{4} \left( \frac{n-1} {\chi^{2}_{\alpha/2,\,n-1}} -1 \right)^{2} } \right\} \right]
+            
         Where :math:'\theta_{QMLE}' is the estimation of the lognormal mean 
         computed with the QMLE method, :math:'\alpha' represents a quantile of 
         both the z or :math:'\chi' distribution, n is the sample numerosity 
