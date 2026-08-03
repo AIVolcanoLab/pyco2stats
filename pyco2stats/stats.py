@@ -1292,14 +1292,20 @@ class Stats:
 
         .. math::
         
-            \theta = e^{\hat\mu}g_{n-1}\left(\frac{\hat\sigma^2}{2}\right) \\
+            \theta = e^{\hat\mu}g_{n-1}\left(\frac{\hat\sigma^2}{2}\right)
+
+        .. math::
+        
             \eta = e^{2\hat\mu}\left[ g_{n-1}\left(2\hat\sigma^2\right)-g_{n-1}\left( \frac{n-2}{n-1}\hat\sigma^2\right) \right]
 
         Where:
 
         .. math::
 
-            g_{n-1}(z) = 1 + \sum_{i=1}^{\infty}\frac{m^{2i-1}z^{i}}{i!(m+1)^{i}\prod_{j=1}^{i-1}(m+2j)} \\
+            g_{n-1}(z) = 1 + \sum_{i=1}^{\infty}\frac{m^{2i-1}z^{i}}{i!(m+1)^{i}\prod_{j=1}^{i-1}(m+2j)}
+
+        .. math::
+        
             \hat\mu = \frac{1}{N}\sum_{i=1}^{N}y_{i} \\
             \hat\sigma^2 = \frac{1}{n-1}\sum_{i=1}^{N}(y_{i}-\hat\mu)
             
@@ -1381,14 +1387,19 @@ class Stats:
 
         .. math::
 
-            \theta = e^{\hat\mu}{}_{0}F_{1}\left( ;\frac{n-1}{2};\frac{n-1}{4}\hat\sigma^2 \right) \\
+            \theta = e^{\hat\mu}{}_{0}F_{1}\left( ;\frac{n-1}{2};\frac{n-1}{4}\hat\sigma^2 \right)
+
+        .. math::
             \eta = \left(e^{\hat\sigma^2}-1\right)e^{2\hat\mu+\hat\sigma^2}
 
         Where: 
 
         .. math::
         
-            {}_{0}F_{1}(v,z) = \sum_{k=0}^{\infty}\frac{z^{k}}{(v)_{k}k!} \\
+            {}_{0}F_{1}(v,z) = \sum_{k=0}^{\infty}\frac{z^{k}}{(v)_{k}k!}
+
+        .. math::
+        
             \hat\mu = \frac{1}{N}\sum_{i=1}^{N}y_{i} \\
             \hat\sigma^2 = \frac{1}{n-1}\sum_{i=1}^{N}(y_{i}-\hat\mu)
 
@@ -1625,9 +1636,12 @@ class Stats:
 
         .. math::
 
-            \left[ \hat\theta_{QMLE}e^{-\hat\sigma\sqrt{\frac{z^{2}_{1-\alpha/2}{n}}+\frac{\hat\sigma^2}{2}\left( 1-\frac{n-1}{\chi_{1-\alpha/2,n-1}} \right)^{2}} ; \hat\theta_{QMLE}e^{\hat\sigma\sqrt{\frac{z^{2}_{1-\alpha/2}{n}}+\frac{\hat\sigma^2}{2}\left( \frac{n-1}{\chi_{1-\alpha/2,n-1}}-1 \right)^{2}} \right]
+            \left[\hat\theta_{QMLE}e^{-\hat\sigma\sqrt{\frac{z^{2}_{1-\alpha/2}{n}}+\frac{\hat\sigma^2}{2}\left( 1-\frac{n-1}{\chi_{1-\alpha/2,n-1}} \right)^{2}}} ; \hat\theta_{QMLE}e^{\hat\sigma\sqrt{\frac{z^{2}_{1-\alpha/2}{n}}+\frac{\hat\sigma^2}{2}\left( \frac{n-1}{\chi_{1-\alpha/2,n-1}}-1 \right)^{2}}} \right]
 
-        Where \theta_{QMLE} is the estimation of the lognormal mean computed with the QMLE method, \alpha represents a quantile of either the z or \chi distribution, n is the sample numerosity and \hat\sigma is the standard deviation of the log-transformed data.
+        Where :math:'\theta_{QMLE}' is the estimation of the lognormal mean 
+        computed with the QMLE method, :math:'\alpha' represents a quantile of 
+        both the z or :math:'\chi' distribution, n is the sample numerosity 
+        and :math:'\hat\sigma' is the standard deviation of the log-transformed data.
         Separate confidence intervals are constructed for the mean and
         variance on the logarithmic scale. Their distances from the point
         estimates are then combined to obtain confidence limits for the
