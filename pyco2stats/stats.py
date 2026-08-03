@@ -1292,15 +1292,15 @@ class Stats:
 
         .. math::
         
-            \theta = e^{\hat\mu}g_{n-1}\left(\frac{\hat\sigma^2}{2}\right)
+            \theta = e^{\hat\mu}g_{n-1}\left(\frac{\hat\sigma^2}{2}\right) \\
             \eta = e^{2\hat\mu}\left[ g_{n-1}\left(2\hat\sigma^2\right)-g_{n-1}\left( \frac{n-2}{n-1}\hat\sigma^2\right) \right]
 
         Where:
 
         .. math::
 
-            g_{n-1}(z) = 1 + \sum_{i=1}^{\infty}\frac{m^{2i-1}z^{i}}{i!(m+1)^{i}\prod_{j=1}^{i-1}(m+2j)}
-            \hat\mu = \frac{1}{N}\sum_{i=1}^{N}y_{i}
+            g_{n-1}(z) = 1 + \sum_{i=1}^{\infty}\frac{m^{2i-1}z^{i}}{i!(m+1)^{i}\prod_{j=1}^{i-1}(m+2j)} \\
+            \hat\mu = \frac{1}{N}\sum_{i=1}^{N}y_{i} \\
             \hat\sigma^2 = \frac{1}{n-1}\sum_{i=1}^{N}(y_{i}-\hat\mu)
             
         Parameters
@@ -1377,13 +1377,22 @@ class Stats:
         r"""
         Estimate the mean and variance of a log-normal population using
         Sichel's estimator. Functionally, this is identical to the Finney's UMVUE estimator,
-        but it is based on th ecomputation of the hypergeometric function:
+        but it is based on the computation of the hypergeometric function. THe formulation is:
 
         .. math::
 
-            {}_{0}F_{1}(v,z) = \sum_{k=0}^{\infty}\frac{z^{k}}{(v)_{k}k!}
+            \theta = e^{\hat\mu}{}_{0}F_{1}\left( ;\frac{n-1}{2};\frac{n-1}{4}\hat\sigma^2 \right) \\
+            \eta = \left(e^{\hat\sigma^2}-1\right)e^{2\hat\mu+\hat\sigma^2}
 
-        Where the term encompassing v is the rising factorial of v
+        Where: 
+
+        .. math::
+        
+            {}_{0}F_{1}(v,z) = \sum_{k=0}^{\infty}\frac{z^{k}}{(v)_{k}k!} \\
+            \hat\mu = \frac{1}{N}\sum_{i=1}^{N}y_{i} \\
+            \hat\sigma^2 = \frac{1}{n-1}\sum_{i=1}^{N}(y_{i}-\hat\mu)
+
+        Where the term encompassing v is the rising factorial of v.
         The method operates on log-transformed observations and uses the
         confluent hypergeometric limit function to compute the correction
         factor for the mean estimate.
@@ -1538,8 +1547,12 @@ class Stats:
         mu_hat, sigma2_hat, n,
         df=None, ci_type="two-sided", conf_level=0.95,
         lb=-math.inf, ub=math.inf, test_statistic="t"):
-        """
-        Compute a normal- or Student's t-based approximate confidence interval.
+        r"""
+        Compute a normal- or Student's t-based approximate confidence interval:
+
+        .. math::
+
+            \left[\theta-t_{1-\alpha/2}\hat\sigma_{\theta} ; \theta+t_{1-\alpha/2}\hat\sigma_{\theta}\right]
 
         The interval is constructed around ``mu_hat`` using the square root
         of ``sigma2_hat`` as its standard-error estimate. Optional lower and
@@ -1606,10 +1619,15 @@ class Stats:
 
     @staticmethod
     def ci_lnorm_zou(mu_hat, sigma2_hat, n, ci_type, conf_level):
-        """
+        r"""
         Compute a confidence interval for a log-normal mean using Zou's
-        method.
+        method:
 
+        .. math::
+
+            \left[ \hat\theta_{QMLE}e^{-\hat\sigma\sqrt{\frac{z^{2}_{1-\alpha/2}{n}}+\frac{\hat\sigma^2}{2}\left( 1-\frac{n-1}{\chi_{1-\alpha/2,n-1}} \right)^{2}} ; \hat\theta_{QMLE}e^{\hat\sigma\sqrt{\frac{z^{2}_{1-\alpha/2}{n}}+\frac{\hat\sigma^2}{2}\left( \frac{n-1}{\chi_{1-\alpha/2,n-1}}-1 \right)^{2}} \right]
+
+        Where \theta_{QMLE} is the estimation of the lognormal mean computed with the QMLE method, \alpha represents a quantile of either the z or \chi distribution, n is the sample numerosity and \hat\sigma is the standard deviation of the log-transformed data.
         Separate confidence intervals are constructed for the mean and
         variance on the logarithmic scale. Their distances from the point
         estimates are then combined to obtain confidence limits for the
