@@ -1280,7 +1280,7 @@ class Stats:
 
     @staticmethod
     def umvue_finney_lognormal_estimator(data):
-        """
+        r"""
         Estimate the mean and variance of a log-normal population using
         Finney's UMVUE method.
 
@@ -1288,6 +1288,21 @@ class Stats:
         from the mean and sample variance of the log-transformed data using
         Finney's correction function.
 
+        The mean and variance are computed then from:
+
+        .. math::
+        
+            \theta = e^{\hat\mu}g_{n-1}\left(\frac{\hat\sigma^2}{2}\right)
+            \eta = e^{2\hat\mu}\left[ g_{n-1}\left(2\hat\sigma^2\right)-g_{n-1}\left( \frac{n-2}{n-1}\hat\sigma^2\right) \right]
+
+        Where:
+
+        .. math::
+
+            g_{n-1}(z) = 1 + \sum_{i=1}^{\infty}\frac{m^{2i-1}z^{i}}{i!(m+1)^{i}\prod_{j=1}^{i-1}(m+2j)}
+            \hat\mu = \frac{1}{N}\sum_{i=1}^{N}y_{i}
+            \hat\sigma^2 = \frac{1}{n-1}\sum_{i=1}^{N}(y_{i}-\hat\mu)
+            
         Parameters
         ----------
         data : array-like
