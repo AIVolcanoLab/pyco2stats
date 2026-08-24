@@ -40,7 +40,7 @@ Citation
 
 If you use **pyco2stats** in your research, please cite:
 
-Petrelli, M., Ariano, A., Baroni, M., Ricci, L., Ágreda-López, M., Frondini, F., Saldi, G., Cardellini, C., Perugini, D., Chiodini, G.
+Ricci, L., Baroni, M., Ágreda-López, M., Ariano, A., Frondini, F., Saldi, G., Cardellini, C., Perugini, D., Chiodini, G., Petrelli, M.
 **PyCO2stats: A Python Library for Statistical Modeling of CO2 Fluxes and Geochemical Population Analysis in Volcanic and Environmental Systems**.
 *Journal/venue*, Year, DOI: XXX.
 
