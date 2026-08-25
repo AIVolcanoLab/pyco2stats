@@ -22,7 +22,7 @@ The library includes six main components:
    :align: center
 
 
-When can PYCO2stats be your ally?
+When can pyCO2stats be your ally?
 ----------------------------
 
 PyCO2stats is designed for geoscientists working with data across a broad range of applications, from volcanology and geothermal exploration to environmental research. It can be useful when you have a set of measurements (such as carbon, methane or sulfur fluxes from soils, metal abundances in streams and soils, or concentrations of key elements in geothermal exploration) and your data follow a log-normal distribution.
