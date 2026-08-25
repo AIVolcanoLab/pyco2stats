@@ -21,7 +21,7 @@ The library includes six main components:
    :width: 1000px
    :align: center
 
-============================
+
 When can pyCO2stats be your ally?
 ----------------------------
 
