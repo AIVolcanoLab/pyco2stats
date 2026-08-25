@@ -21,6 +21,7 @@ The library includes six main components:
    :width: 1000px
    :align: center
 
+
 When can PYCO2stats be your ally?
 ----------------------------
 
