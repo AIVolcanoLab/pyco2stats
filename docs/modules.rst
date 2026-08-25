@@ -1,7 +1,7 @@
 PyCO2stats Functions
 ====================
 
-This section documents the public functions and classes of PyCO2stats,
+This section documents the public functions and classes of pyCO2stats,
 grouped by module.
 
 
