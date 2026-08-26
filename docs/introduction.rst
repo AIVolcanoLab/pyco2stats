@@ -25,7 +25,7 @@ The library includes six main components:
 When can pyCO2stats be your ally?
 ----------------------------
 
-PyCO2stats is designed for geoscientists working with data across a broad range of applications, from volcanology and geothermal exploration to environmental research. It can be useful when you have a set of measurements (such as carbon, methane or sulfur fluxes from soils, metal abundances in streams and soils, or concentrations of key elements in geothermal exploration) and your data follow a log-normal distribution.
+PyCO2stats is designed for geoscientists working with data across a broad range of applications, from volcanology and geothermal exploration to environmental research. It can be useful when you have a set of measurements (such as carbon, methane or sulphur fluxes from soils, metal abundances in streams and soils, or concentrations of key elements in geothermal exploration) and your data follow a log-normal distribution.
 It helps you in the statistical description of your dataset, for example by calculating the mean and variance of the distribution.
 
 But what if your dataset is the result of multiple underlying geological processes?
