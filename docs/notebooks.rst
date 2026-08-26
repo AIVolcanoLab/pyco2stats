@@ -2,7 +2,7 @@ Notebooks
 =========
 
 
-Here are interactive demonstrations to show the capabilities of **pyco2stats**.
+Here some examples showing the capabilities of **pyco2stats** library. 
 
 .. toctree::
    :maxdepth: 1
