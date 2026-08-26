@@ -30,6 +30,7 @@ It helps you in the statistical description of your dataset, for example by calc
 
 But what if your dataset is the result of multiple underlying geological processes?
 In that case, pyCO2stats allows you to partition your dataset into x subpopulations and calculate the mean and confidence interval of each one.
+
 In short: give pyCO2stats your data, and let it help you uncover the stories hiding inside it!
 
 
