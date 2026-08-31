@@ -1,6 +1,11 @@
 Introduction and Citation
 ============================
 
+.. figure:: _static/logo2.png
+   :alt: 
+   :width: 1000px
+   :align: center
+
 Introduction
 ----------------------------
 
