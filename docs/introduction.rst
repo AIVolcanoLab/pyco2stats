@@ -21,7 +21,7 @@ The library includes six main components:
 * **Stats** — A collection of statistics utilities with emphasis on log-normal distributions.
 * **Visualize_MPL** and **Visualize_Plotly** — Statistical visualization via Matplotlib or Plotly.
 
-.. figure:: _static/co2stats.jpg
+.. figure:: _static/co2stats.jpeg
    :alt: Visual representation of PyCO2stats library.
    :width: 1000px
    :align: center
