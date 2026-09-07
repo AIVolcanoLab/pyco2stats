@@ -3,7 +3,7 @@
 Welcome to pyco2stats’s documentation!
 ======================================
 
-In this documentation you will found:
+In this documentation you will find:
 
 .. toctree::
    :maxdepth: 2
